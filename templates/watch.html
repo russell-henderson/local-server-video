@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Watch Video — {{ filename }}</title>
+
+  <!-- ── vendor CSS ─────────────────────────────────────────────── -->
+  <link rel="stylesheet"
+        href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link rel="stylesheet"
+        href="https://vjs.zencdn.net/7.20.3/video-js.css">
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+  <!-- ── color palette + component styles ─────────────────────── -->
+  <link rel="stylesheet"
+        href="{{ url_for('static', filename='theme.css') }}">
+  <link rel="stylesheet"
+        href="{{ url_for('static', filename='styles.css') }}">
+  
+  <!-- ── performance metrics ─────────────────────────────────────── -->
+  <script src="{{ url_for('static', filename='metrics.js') }}" defer></script>
+</head>
+<body>
+  {% include 'navbar.html' %}
+
+  <div class="container my-4">
+
+<!-- ── video info row ───────────────────────────────────────── -->
+<div class="video-info mb-4 d-flex flex-wrap align-items-center">
+
+  <h2 class="video-title mr-3 mb-2 mb-sm-0">{{ filename }}</h2>
+
+  <!-- ♥ Favorite toggle button -->
+  <button class="btn btn-sm favorite-btn mr-3 mb-2 mb-sm-0 touch-target"
+          data-filename="{{ filename }}"
+          title="Toggle Favorite"
+          aria-label="{% if filename in favorites_list %}Remove from favorites{% else %}Add to favorites{% endif %}">
+    <i class="fa{% if filename in favorites_list %}s{% else %}r{% endif %} fa-heart text-danger"></i>
+  </button>
+
+  <!-- rating -->
+  <div class="rating mr-3 mb-2 mb-sm-0" data-filename="{{ filename }}" role="group" aria-label="Rate this video">
+    {% set current_rating = ratings.get(filename, 0) %}
+    {% for i in range(1,6) %}
+      <i class="{{ 'fas' if i<=current_rating else 'far' }} fa-star touch-target"
+         data-value="{{ i }}"
+         role="button"
+         tabindex="0"
+         aria-label="Rate {{ i }} star{% if i != 1 %}s{% endif %}"></i>
+    {% endfor %}
+  </div>
+
+  <!-- view count -->
+  <div id="video-view-count" class="view-count mr-3 mb-2 mb-sm-0">
+    Views: {{ views.get(filename, 0) }}
+  </div>
+
+  <!-- tags -->
+  <div class="tags-container flex-grow-1">
+    <div id="existing-tags" class="mb-2">
+      {% for tag in tags %}
+        <span class="badge badge-primary tag-badge" data-tag="{{ tag }}">
+          {{ tag }} <span class="delete-tag">&times;</span>
+        </span>
+      {% endfor %}
+    </div>
+    <input id="new-tag"
+           class="form-control new-tag-input"
+           placeholder="Add tag">
+  </div>
+
+</div>
+
+
+    <!-- ── video player ─────────────────────────────────────────── -->
+    <div class="row video-container mb-4">
+      <div class="col-12">
+        <video id="my-video"
+               class="video-js vjs-default-skin vjs-fluid"
+               controls preload="metadata"
+               aria-label="Video player for {{ filename }}"
+               aria-describedby="video-description">
+          <source src="{{ url_for('stream_video', filename=filename) }}"
+                  type="video/mp4">
+          <p class="vjs-no-js">
+            To view this video please enable JavaScript
+            and upgrade to a browser that supports HTML5 video.
+          </p>
+        </video>
+        <div id="video-description" class="sr-only">
+          Video player with controls for {{ filename }}
+        </div>
+      </div>
+    </div>
+
+<!-- ── related videos grid ───────────────────────────────────── -->
+<div class="row thumbnail-grid mb-4">
+  <div class="col-12">
+    <h5 class="mb-3">Related Videos</h5>
+  </div>
+  {% if videos %}
+    {% for video in videos %}
+    <div class="col-sm-6 col-md-4 col-lg-3 mb-4">
+      <div class="card h-100" data-role="video-card" data-preview-delay="500">
+        <a href="{{ url_for('watch_video', filename=video.filename) }}">
+          {% set thumb_stem = video.filename.rsplit('.', 1)[0] %}
+          {% set thumb = 'thumbnails/' ~ thumb_stem ~ '.jpg' %}
+          <img class="card-img-top video-thumbnail"
+               src="{{ url_for('static', filename=thumb) | safe }}"
+               alt="{{ video.filename }}"
+               onerror="this.onerror=null;this.src='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';">
+        </a>
+        <div class="card-body p-2">
+          <h5 class="card-title text-truncate">{{ video.filename }}</h5>
+          <p class="mb-0 small">Views: {{ video.views }}</p>
+          <div class="rating small">
+            {% for i in range(1,6) %}
+              <i class="{{ 'fas' if i<=video.rating else 'far' }} fa-star"></i>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  {% else %}
+    <div class="col-12">
+      <p class="text-muted text-center">No related videos found.</p>
+    </div>
+  {% endif %}
+</div>
+
+<!-- ── pagination for related videos ─────────────────────────── -->
+{% if total_pages > 1 %}
+<nav class="mb-4">
+  <ul class="pagination justify-content-center">
+    {% for p in range(1, total_pages + 1) %}
+    <li class="page-item {% if p == page %}active{% endif %}">
+      <a class="page-link"
+         href="{{ url_for('watch_video', filename=filename, page=p) }}">{{ p }}</a>
+    </li>
+    {% endfor %}
+  </ul>
+</nav>
+{% endif %}
+
+<a class="btn btn-primary btn-block" href="{{ url_for('index') }}">
+  Back to List
+</a>
+  </div>
+
+  <!-- ── vendor JS ──────────────────────────────────────────────── -->
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://vjs.zencdn.net/7.20.3/video.min.js"></script>
+
+  <!-- ── Optimized utilities, VR support, video player, analytics, recently played and dark‑mode helper ──────────────────────────────────────── -->
+  <script src="{{ url_for('static', filename='optimized-utils.js') }}"></script>
+  <script src="{{ url_for('static', filename='vr-support.js') }}"></script>
+  <script src="{{ url_for('static', filename='vr-video-player.js') }}"></script>
+  <script src="{{ url_for('static', filename='video-analytics.js') }}"></script>
+  <script src="{{ url_for('static', filename='analytics-test.js') }}"></script>
+  <script src="{{ url_for('static', filename='recently-played.js') }}"></script>
+  <script src="{{ url_for('static', filename='dark.js') }}"></script>
+
+  <!-- ── page‑specific JS ──────────────────────────────────────── -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+      /* ---------- view counter (once per load) ----------------- */
+      const vid     = document.getElementById('my-video');
+      let viewSent  = false;
+      vid.addEventListener('play', () => {
+        if (viewSent) return;
+        viewSent = true;
+        fetch('/view', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({ filename:'{{ filename }}' })
+        })
+        .then(r=>r.json())
+        .then(d=>{
+          if (d.success){
+            document.getElementById('video-view-count').textContent =
+              'Views: ' + d.views;
+          }
+        }).catch(console.error);
+      });
+
+      /* ---------- Video.js skip‑ahead button ------------------- */
+      const player = videojs('my-video',{playbackRates:[0.5,1,1.5,2]});
+      player.ready(() => {
+        const btn = document.createElement('button');
+        btn.textContent = 'Skip 10 s';
+        btn.className   = 'vjs-skip-button';
+        btn.onclick     = () => player.currentTime(player.currentTime()+10);
+        player.controlBar.el().appendChild(btn);
+      });
+
+      /* ---------- rating widget ------------------------------- */
+      document.querySelectorAll('.rating i').forEach(star=>{
+        star.addEventListener('click', ()=>{
+          const rating   = parseInt(star.dataset.value);
+          const fileName = star.parentElement.dataset.filename;
+          fetch('/rate',{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({ filename:fileName, rating })
+          })
+          .then(r=>r.json())
+          .then(d=>{
+            if (d.success){
+              star.parentElement.querySelectorAll('i').forEach((s,i)=>{
+                s.className = (i+1)<=rating ? 'fas fa-star' : 'far fa-star';
+              });
+            }
+          }).catch(console.error);
+        });
+      });
+
+      /* ---------- tag add / delete helpers -------------------- */
+      const newTagInput = document.getElementById('new-tag');
+
+      newTagInput.addEventListener('keypress', e=>{
+        if (e.key!=='Enter') return;
+        const tag = newTagInput.value.trim();
+        if (!tag) return;
+
+        fetch('/tag',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({ filename:'{{ filename }}', tag })
+        })
+        .then(r=>r.json())
+        .then(d=>{
+          if (d.success){
+            renderTags(d.tags);
+            newTagInput.value='';
+          }
+        }).catch(console.error);
+      });
+
+      function renderTags(tags){
+        const wrap = document.getElementById('existing-tags');
+        wrap.innerHTML='';
+        tags.forEach(t=>{
+          const span = document.createElement('span');
+          span.className='badge badge-primary tag-badge';
+          span.dataset.tag=t;
+          span.innerHTML = `${t} <span class="delete-tag">&times;</span>`;
+          wrap.appendChild(span);
+        });
+        // attach delete listeners
+        wrap.querySelectorAll('.delete-tag').forEach(x=>{
+          x.onclick = e=>{
+            e.stopPropagation();
+            const t = x.parentElement.dataset.tag;
+            fetch('/delete_tag',{
+              method:'POST',
+              headers:{'Content-Type':'application/json'},
+              body:JSON.stringify({ filename:'{{ filename }}', tag:t })
+            })
+            .then(r=>r.json())
+            .then(d=>{ if(d.success) renderTags(d.tags); })
+            .catch(console.error);
+          };
+        });
+      }
+
+      /* initial tag render (from Jinja) */
+      renderTags(JSON.parse('{{ tags|tojson|safe }}'));
+    });
+  </script>
+  <script src="{{ url_for('static', filename='favorites.js') }}"></script>
+</body>
+</html>

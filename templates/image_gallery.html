@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Image Gallery</title>
+    <!-- Bootstrap CSS for quick styling -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .gallery {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .gallery img {
+            height: 200px;
+            object-fit: cover;
+            width: 100%;
+            border-radius: 8px;
+            transition: transform 0.2s;
+        }
+        .gallery-item {
+            flex: 1 0 200px;
+            max-width: 220px;
+        }
+        .gallery img:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body class="container py-5">
+    <h1 class="mb-4 text-center">Image Gallery</h1>
+    <div class="gallery">
+        {% for idx in range(images|length) %}
+            <div class="gallery-item">
+                <a href="{{ image_urls[idx] }}" target="_blank">
+                    <img src="{{ image_urls[idx] }}" alt="{{ images[idx] }}">
+                </a>
+            </div>
+        {% endfor %}
+    </div>
+</body>
+</html>
