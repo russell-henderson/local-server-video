@@ -1,0 +1,721 @@
+/**
+ * Hybrid Glassmorphic + Neomorphic Theme
+ * Combines the best of both design systems for a modern video server UI
+ */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   HYBRID THEME VARIABLES
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* Theme Selection */
+  --use-glassmorphism: 1; /* 1 for glass backgrounds, 0 for solid */
+  --use-neomorphism: 1;   /* 1 for neo controls, 0 for flat */
+  
+  /* Hybrid Colors */
+  --hybrid-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --hybrid-bg-dark: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+  --hybrid-surface: rgba(255, 255, 255, 0.1);
+  --hybrid-surface-solid: #e0e5ec;
+  --hybrid-surface-dark: rgba(255, 255, 255, 0.05);
+  --hybrid-surface-solid-dark: #374151;
+  
+  /* Dynamic Surface (switches between glass and solid) */
+  --surface: var(--hybrid-surface);
+  --surface-solid: var(--hybrid-surface-solid);
+}
+
+.dark-mode {
+  --hybrid-bg: var(--hybrid-bg-dark);
+  --surface: var(--hybrid-surface-dark);
+  --surface-solid: var(--hybrid-surface-solid-dark);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   HYBRID BODY AND LAYOUT
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.hybrid-theme {
+  background: var(--hybrid-bg);
+  min-height: 100vh;
+  position: relative;
+}
+
+.hybrid-theme::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.2) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   HYBRID NAVIGATION - GLASSMORPHIC BACKGROUND, NEOMORPHIC CONTROLS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.hybrid-nav {
+  background: var(--glass-gradient);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: none;
+  border-bottom: var(--glass-border);
+  box-shadow: var(--elevation-2);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  padding: 0.5rem 0;
+}
+
+.hybrid-nav .nav-link {
+  background: var(--neo-surface);
+  border-radius: 12px;
+  box-shadow: var(--neo-shadow-outset);
+  color: var(--neo-text);
+  font-weight: 600;
+  margin: 0 0.25rem;
+  padding: 0.5rem 1rem;
+  text-decoration: none;
+  transition: var(--neo-transition);
+}
+
+.hybrid-nav .nav-link:hover {
+  box-shadow: var(--neo-shadow-hover);
+  color: var(--neo-text);
+  text-decoration: none;
+  transform: translateY(-2px);
+}
+
+.hybrid-nav .nav-link:active,
+.hybrid-nav .nav-link.active {
+  box-shadow: var(--neo-shadow-pressed);
+  transform: translateY(0);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   HYBRID VIDEO CARDS - GLASSMORPHIC CONTAINER, NEOMORPHIC CONTROLS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.hybrid-video-card {
+  background: var(--glass-gradient);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
+  border-radius: 24px;
+  box-shadow: var(--elevation-2);
+  overflow: hidden;
+  position: relative;
+  transition: all 0.4s var(--ease-standard);
+}
+
+.hybrid-video-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--glass-gradient-accent);
+  opacity: 0;
+  transition: opacity 0.3s var(--ease-standard);
+}
+
+.hybrid-video-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: var(--elevation-4);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.hybrid-video-card:hover::before {
+  opacity: 1;
+}
+
+.hybrid-video-card .card-img-top {
+  border-radius: 20px 20px 0 0;
+  transition: all 0.4s var(--ease-standard);
+}
+
+.hybrid-video-card:hover .card-img-top {
+  transform: scale(1.05);
+}
+
+.hybrid-video-card .card-body {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1rem;
+}
+
+.hybrid-video-card .card-title {
+  color: rgba(255, 255, 255, 0.95);
+  font-weight: 600;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  margin-bottom: 0.75rem;
+}
+
+/* Neomorphic controls within glass cards */
+.hybrid-video-card .favorite-btn {
+  background: var(--neo-surface);
+  border: none;
+  border-radius: 50%;
+  box-shadow: var(--neo-shadow-outset);
+  color: var(--neo-text);
+  height: 36px;
+  transition: var(--neo-transition);
+  width: 36px;
+}
+
+.hybrid-video-card .favorite-btn:hover {
+  box-shadow: var(--neo-shadow-hover);
+  transform: translateY(-2px);
+}
+
+.hybrid-video-card .favorite-btn:active {
+  box-shadow: var(--neo-shadow-pressed);
+  transform: translateY(0);
+}
+
+.hybrid-video-card .rating {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.hybrid-video-card .rating i {
+  background: var(--neo-surface);
+  border-radius: 50%;
+  box-shadow: var(--neo-shadow-outset);
+  color: var(--neo-primary);
+  cursor: pointer;
+  height: 24px;
+  width: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  transition: var(--neo-transition);
+}
+
+.hybrid-video-card .rating i:hover {
+  box-shadow: var(--neo-shadow-hover);
+  transform: scale(1.1);
+}
+
+.hybrid-video-card .rating i:active {
+  box-shadow: var(--neo-shadow-pressed);
+  transform: scale(1);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   HYBRID VIDEO PLAYER - GLASSMORPHIC OVERLAY, NEOMORPHIC CONTROLS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.hybrid-video-player {
+  position: relative;
+  border-radius: 24px;
+  overflow: hidden;
+  background: #000;
+}
+
+.hybrid-video-controls {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  padding: 2rem 1.5rem 1.5rem;
+  transform: translateY(100%);
+  transition: all 0.4s var(--ease-standard);
+}
+
+.hybrid-video-player:hover .hybrid-video-controls {
+  transform: translateY(0);
+}
+
+.hybrid-progress-container {
+  margin-bottom: 1rem;
+}
+
+.hybrid-progress-bar {
+  background: var(--neo-surface);
+  border-radius: 10px;
+  box-shadow: var(--neo-shadow-inset);
+  height: 8px;
+  position: relative;
+  width: 100%;
+  cursor: pointer;
+}
+
+.hybrid-progress-fill {
+  background: linear-gradient(90deg, #4a90e2, #74b9ff);
+  border-radius: 10px;
+  height: 100%;
+  position: relative;
+  transition: width 0.1s ease;
+}
+
+.hybrid-progress-thumb {
+  background: linear-gradient(145deg, #ffffff, #e0e5ec);
+  border-radius: 50%;
+  box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3), -2px -2px 4px rgba(255, 255, 255, 0.1);
+  height: 16px;
+  position: absolute;
+  right: -8px;
+  top: -4px;
+  width: 16px;
+  transition: var(--neo-transition);
+}
+
+.hybrid-progress-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.4), -3px -3px 6px rgba(255, 255, 255, 0.2);
+}
+
+.hybrid-control-buttons {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.hybrid-control-btn {
+  background: var(--neo-surface);
+  border: none;
+  border-radius: 50%;
+  box-shadow: var(--neo-shadow-outset);
+  color: var(--neo-text);
+  cursor: pointer;
+  height: 48px;
+  transition: var(--neo-transition);
+  width: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hybrid-control-btn:hover {
+  box-shadow: var(--neo-shadow-hover);
+  transform: translateY(-2px);
+}
+
+.hybrid-control-btn:active {
+  box-shadow: var(--neo-shadow-pressed);
+  transform: translateY(0);
+}
+
+.hybrid-control-btn.play {
+  height: 56px;
+  width: 56px;
+  background: linear-gradient(145deg, #5ba0f2, #4a90e2);
+  color: white;
+  box-shadow: 4px 4px 8px #3d7bc7, -4px -4px 8px #57a3fd;
+}
+
+.hybrid-control-btn.play:hover {
+  box-shadow: 6px 6px 12px #3d7bc7, -6px -6px 12px #57a3fd;
+}
+
+.hybrid-control-btn.play:active {
+  box-shadow: inset 2px 2px 4px #3d7bc7, inset -2px -2px 4px #57a3fd;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   HYBRID FORMS - GLASSMORPHIC CONTAINERS, NEOMORPHIC INPUTS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.hybrid-form-container {
+  background: var(--glass-gradient);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
+  border-radius: 24px;
+  box-shadow: var(--elevation-3);
+  padding: 2rem;
+}
+
+.hybrid-input {
+  background: var(--neo-surface);
+  border: none;
+  border-radius: 16px;
+  box-shadow: var(--neo-shadow-inset);
+  color: var(--neo-text);
+  font-size: 1rem;
+  padding: 0.75rem 1rem;
+  transition: var(--neo-transition);
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.hybrid-input::placeholder {
+  color: var(--neo-text-muted);
+}
+
+.hybrid-input:focus {
+  outline: none;
+  box-shadow: var(--neo-shadow-inset), 0 0 0 3px rgba(74, 144, 226, 0.3);
+}
+
+.hybrid-btn {
+  background: linear-gradient(145deg, #5ba0f2, #4a90e2);
+  border: none;
+  border-radius: 16px;
+  box-shadow: var(--neo-shadow-outset);
+  color: white;
+  cursor: pointer;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  transition: var(--neo-transition);
+}
+
+.hybrid-btn:hover {
+  box-shadow: var(--neo-shadow-hover);
+  transform: translateY(-2px);
+}
+
+.hybrid-btn:active {
+  box-shadow: var(--neo-shadow-pressed);
+  transform: translateY(0);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   HYBRID MODALS - GLASSMORPHIC OVERLAY, NEOMORPHIC CONTENT
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.hybrid-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 1050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s var(--ease-standard);
+}
+
+.hybrid-modal-overlay.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.hybrid-modal {
+  background: var(--glass-gradient);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
+  border-radius: 24px;
+  box-shadow: var(--elevation-5);
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow: hidden;
+  transform: scale(0.8) translateY(20px);
+  transition: all 0.3s var(--ease-standard);
+}
+
+.hybrid-modal-overlay.show .hybrid-modal {
+  transform: scale(1) translateY(0);
+}
+
+.hybrid-modal-header {
+  background: rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1.5rem;
+}
+
+.hybrid-modal-body {
+  padding: 1.5rem;
+}
+
+.hybrid-modal-footer {
+  background: rgba(255, 255, 255, 0.05);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1rem 1.5rem;
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   HYBRID ANIMATIONS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@keyframes hybridFloat {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  33% {
+    transform: translateY(-10px) rotate(1deg);
+  }
+  66% {
+    transform: translateY(-5px) rotate(-1deg);
+  }
+}
+
+.hybrid-float {
+  animation: hybridFloat 8s ease-in-out infinite;
+}
+
+@keyframes hybridPulse {
+  0%, 100% {
+    box-shadow: var(--neo-shadow-outset);
+  }
+  50% {
+    box-shadow: var(--neo-shadow-hover);
+  }
+}
+
+.hybrid-pulse {
+  animation: hybridPulse 2s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   THEME SWITCHER
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.theme-switcher {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1100;
+}
+
+.theme-toggle {
+  background: var(--glass-gradient);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
+  border-radius: 50px;
+  padding: 0.5rem;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.theme-option {
+  background: var(--neo-surface);
+  border: none;
+  border-radius: 50%;
+  box-shadow: var(--neo-shadow-outset);
+  color: var(--neo-text);
+  cursor: pointer;
+  height: 40px;
+  transition: var(--neo-transition);
+  width: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.theme-option:hover {
+  box-shadow: var(--neo-shadow-hover);
+  transform: translateY(-2px);
+}
+
+.theme-option.active {
+  box-shadow: var(--neo-shadow-pressed);
+  background: linear-gradient(145deg, #5ba0f2, #4a90e2);
+  color: white;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RESPONSIVE DESIGN
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  .hybrid-video-card,
+  .hybrid-form-container,
+  .hybrid-modal {
+    border-radius: 16px;
+  }
+  
+  .hybrid-video-controls {
+    padding: 1rem;
+  }
+  
+  .hybrid-control-btn {
+    height: 40px;
+    width: 40px;
+  }
+  
+  .hybrid-control-btn.play {
+    height: 48px;
+    width: 48px;
+  }
+  
+  .theme-switcher {
+    top: 10px;
+    right: 10px;
+  }
+  
+  .theme-option {
+    height: 32px;
+    width: 32px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ACCESSIBILITY
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  .hybrid-float,
+  .hybrid-pulse {
+    animation: none;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .hybrid-nav,
+  .hybrid-video-card,
+  .hybrid-form-container,
+  .hybrid-modal,
+  .hybrid-video-controls {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: var(--surface-solid);
+  }
+}
+
+@media (prefers-contrast: high) {
+  .hybrid-video-card,
+  .hybrid-form-container,
+  .hybrid-modal {
+    border-width: 2px;
+    border-color: rgba(255, 255, 255, 0.8);
+  }
+}/* ═
+══════════════════════════════════════════════════════════════════════════
+   FAVORITE HEART STYLING
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Bootstrap text-danger class for red color */
+.text-danger,
+.favorite-btn .fa-heart {
+  color: #dc3545 !important;
+}
+
+/* Filled heart (favorited) */
+.favorite-btn .fas.fa-heart {
+  color: #dc3545 !important;
+  text-shadow: 0 0 10px rgba(220, 53, 69, 0.5);
+  filter: drop-shadow(0 2px 4px rgba(220, 53, 69, 0.3));
+}
+
+/* Outline heart (not favorited) */
+.favorite-btn .far.fa-heart {
+  color: #dc3545 !important;
+  opacity: 0.7;
+  transition: all 0.3s var(--ease-standard);
+}
+
+/* Hover effects */
+.favorite-btn:hover .fa-heart {
+  transform: scale(1.1);
+  text-shadow: 0 0 15px rgba(220, 53, 69, 0.8);
+  filter: drop-shadow(0 4px 8px rgba(220, 53, 69, 0.4));
+}
+
+/* Active/click animation */
+.favorite-btn:active .fa-heart {
+  transform: scale(0.95);
+  transition: transform 0.1s ease;
+}
+
+/* Hybrid favorite button styling */
+.favorite-btn {
+  background: linear-gradient(145deg, 
+    rgba(255, 255, 255, 0.1), 
+    rgba(255, 255, 255, 0.05)
+  );
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  box-shadow: 
+    0 4px 15px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transition: all 0.3s var(--ease-standard);
+}
+
+.favorite-btn:hover {
+  background: linear-gradient(145deg, 
+    rgba(255, 255, 255, 0.15), 
+    rgba(255, 255, 255, 0.08)
+  );
+  border-color: rgba(220, 53, 69, 0.3);
+  transform: translateY(-1px);
+  box-shadow: 
+    0 6px 20px rgba(220, 53, 69, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+/* === Touch Target Guarantees (44px minimum) === */
+/* Minimum touch target size for tap-friendly controls */
+button,
+[role="button"],
+input[type="checkbox"],
+input[type="radio"],
+.player-control,
+.icon-btn,
+.touch-target {
+  min-width: 44px;
+  min-height: 44px;
+  /* Preserve visual size but pad hitbox */
+  padding: max(0.5rem, env(safe-area-inset-top)) max(0.5rem, env(safe-area-inset-left));
+}
+
+/* Visually small, functionally large target */
+.hitbox-44 {
+  position: relative;
+}
+.hitbox-44::after {
+  content: "";
+  position: absolute;
+  inset: -6px; /* expands hitbox around smaller icons */
+}
+
+/* === Focus Indicators & High Contrast Mode === */
+/* Focus indicators for keyboard navigation */
+:root {
+  --focus-ring: 2px solid #7aa2ff;  /* adjust per theme */
+  --focus-offset: 2px;
+}
+
+:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+  border-radius: 10px;
+}
+
+/* High contrast mode (toggle via HTML data attribute) */
+html[data-contrast="high"] {
+  --focus-ring: 3px solid #ffffff;
+}
+
+/* High contrast mode enhancements */
+html[data-contrast="high"] .hybrid-video-card,
+html[data-contrast="high"] .hybrid-form-container,
+html[data-contrast="high"] .hybrid-modal {
+  border-width: 3px;
+  border-color: rgba(255, 255, 255, 1);
+}
+
+html[data-contrast="high"] .hybrid-nav .nav-link,
+html[data-contrast="high"] .hybrid-video-card .card-title,
+html[data-contrast="high"] .hybrid-btn {
+  color: rgba(255, 255, 255, 1);
+  text-shadow: 0 0 4px rgba(0, 0, 0, 1);
+}

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Local Video Server - Implementation Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
+        .test-item { margin: 10px 0; padding: 10px; background: #f5f5f5; border-radius: 4px; }
+        .pass { background: #d4edda; border-left: 4px solid #28a745; }
+        .fail { background: #f8d7da; border-left: 4px solid #dc3545; }
+        .info { background: #d1ecf1; border-left: 4px solid #17a2b8; }
+        button { margin: 5px; padding: 8px 16px; border-radius: 4px; border: 1px solid #ccc; cursor: pointer; }
+        .touch-target { min-width: 44px; min-height: 44px; }
+        .hitbox-44 { position: relative; }
+        .hitbox-44::after { content: ""; position: absolute; inset: -6px; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Local Video Server - Implementation Test</h1>
+    
+    <div class="test-section">
+        <h2>🎨 Theme System Test</h2>
+        
+        <div class="test-item info">
+            <strong>Theme Switcher:</strong> Look for theme buttons in top-right corner
+        </div>
+        
+        <div class="test-item">
+            <strong>Keyboard Shortcuts Test:</strong>
+            <button onclick="testKeyboardShortcuts()">Test Ctrl+1-4, Ctrl+D</button>
+            <span id="shortcut-result"></span>
+        </div>
+        
+        <div class="test-item">
+            <strong>High Contrast Mode:</strong>
+            <button onclick="toggleHighContrast()" class="touch-target">Toggle High Contrast</button>
+            <span id="contrast-result"></span>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>📱 Mobile Preview Test</h2>
+        
+        <div class="test-item info">
+            <strong>Video Cards:</strong> Should have <code>data-role="video-card"</code> and <code>data-preview-delay="500"</code>
+        </div>
+        
+        <div class="test-item">
+            <strong>Touch Targets:</strong> All buttons should be 44px minimum
+            <button class="touch-target">Touch Target Test</button>
+            <button class="hitbox-44">Hitbox Test</button>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>📊 Performance Metrics Test</h2>
+        
+        <div class="test-item">
+            <strong>Metrics Collection:</strong>
+            <button onclick="checkMetrics()">Check Metrics</button>
+            <pre id="metrics-result"></pre>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>♿ Accessibility Test</h2>
+        
+        <div class="test-item">
+            <strong>ARIA Labels:</strong> Check console for accessibility info
+            <button onclick="checkAccessibility()" class="touch-target" aria-label="Check accessibility features">Check A11y</button>
+        </div>
+        
+        <div class="test-item">
+            <strong>Focus Indicators:</strong> Tab through elements to see focus rings
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🔍 Quick Commands</h2>
+        
+        <div class="test-item info">
+            <strong>Console Commands:</strong>
+            <ul>
+                <li><code>__LVS_METRICS()</code> - View performance metrics</li>
+                <li><code>window.themeManager.switchTheme('glassmorphic')</code> - Switch themes</li>
+                <li><code>window.themeManager.toggleHighContrast()</code> - Toggle high contrast</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Test keyboard shortcuts
+        function testKeyboardShortcuts() {
+            const result = document.getElementById('shortcut-result');
+            result.innerHTML = '<span style="color: orange;">Press Ctrl+1, Ctrl+2, Ctrl+3, Ctrl+4, or Ctrl+D to test</span>';
+            
+            // Listen for theme shortcut events
+            window.addEventListener('ux:themeShortcut', (e) => {
+                result.innerHTML = `<span style="color: green;">✅ ${e.detail.action} - ${e.detail.theme || 'dark mode'}</span>`;
+            });
+        }
+        
+        // Toggle high contrast
+        function toggleHighContrast() {
+            const result = document.getElementById('contrast-result');
+            const html = document.documentElement;
+            const current = html.getAttribute('data-contrast') || 'normal';
+            const newMode = current === 'high' ? 'normal' : 'high';
+            
+            html.setAttribute('data-contrast', newMode);
+            localStorage.setItem('high-contrast', newMode);
+            
+            result.innerHTML = `<span style="color: green;">✅ High contrast: ${newMode}</span>`;
+        }
+        
+        // Check metrics
+        function checkMetrics() {
+            const result = document.getElementById('metrics-result');
+            if (window.__LVS_METRICS) {
+                const metrics = window.__LVS_METRICS();
+                result.textContent = JSON.stringify(metrics, null, 2);
+            } else {
+                result.textContent = '❌ Metrics not available';
+            }
+        }
+        
+        // Check accessibility
+        function checkAccessibility() {
+            console.log('🔍 Accessibility Check:');
+            console.log('- Touch targets:', document.querySelectorAll('.touch-target').length);
+            console.log('- ARIA labels:', document.querySelectorAll('[aria-label]').length);
+            console.log('- Focusable elements:', document.querySelectorAll('[tabindex]').length);
+            console.log('- Role attributes:', document.querySelectorAll('[role]').length);
+        }
+        
+        // Auto-check on load
+        window.addEventListener('load', () => {
+            console.log('🧪 Implementation Test Page Loaded');
+            console.log('✅ Theme Manager:', !!window.themeManager);
+            console.log('✅ Video Preview:', !!window.VideoPreviewManager);
+            console.log('✅ Metrics:', !!window.__LVS_METRICS);
+        });
+    </script>
+</body>
+</html>

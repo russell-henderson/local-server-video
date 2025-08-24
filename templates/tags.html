@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>All Tags</title>
+
+  <!-- ── vendor CSS ─────────────────────────────────────────────── -->
+  <link rel="stylesheet"
+        href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+  <!-- ── colour‑variable palette + component styles ─────────────── -->
+  <link rel="stylesheet"
+        href="{{ url_for('static', filename='theme.css') }}">
+  <link rel="stylesheet"
+        href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  {% include 'navbar.html' %}
+
+  <div class="container padding-top-70">
+    <h1 class="text-center mb-4">All Tags</h1>
+
+    <div class="tag-list text-center">
+      {% for tag in tags %}
+        <a class="badge badge-secondary tag-item"
+           href="{{ url_for('tag_videos', tag=tag.lstrip('#')) }}">
+          {{ tag }}
+        </a>
+      {% endfor %}
+    </div>
+
+    <div class="text-center mt-3">
+      <a class="btn btn-primary" href="{{ url_for('index') }}">Back to Home</a>
+    </div>
+  </div>
+
+  <!-- ── vendor JS ──────────────────────────────────────────────── -->
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- ── dark‑mode helper ──────────────────────────────────────── -->
+  <script src="{{ url_for('static', filename='dark.js') }}"></script>
+</body>
+</html>

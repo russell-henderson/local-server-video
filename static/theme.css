@@ -1,0 +1,88 @@
+/* ────────────────────────────────────────────────
+   LIGHT THEME (default)
+   ──────────────────────────────────────────────── */
+   :root{
+    /* palette */
+    --primary-color   : #007bff;   /* blue  */
+    --secondary-color : #6c757d;   /* gray  */
+    --accent-color    : #17a2b8;   /* teal  */
+  
+    /* surfaces & text */
+    --background-color: #f8f9fa;
+    --card-background : #ffffff;
+    --text-color      : #212529;
+  
+    /* navbar / badges */
+    --navbar-bg   : var(--primary-color);
+    --navbar-text : #ffffff;
+    --badge-bg    : var(--primary-color);
+    --badge-text  : #ffffff;
+  
+    /* icon colour (e.g. moon) follows navbar text */
+    --icon-color  : var(--navbar-text);
+  }
+  
+  /* ────────────────────────────────────────────────
+     DARK THEME  (trigger: .dark-mode on <html|body>)
+     ──────────────────────────────────────────────── */
+  .dark-mode{
+    --background-color: #121212;
+    --card-background : #1e1e1e;
+    --text-color      : #e0e0e0;
+  
+    --primary-color   : #343a40;   /* dark gray */
+    --accent-color    : #17a2b8;
+  
+    --navbar-bg   : #2c2f33;
+    --navbar-text : #ffffff;
+  
+    --badge-bg    : #17a2b8;
+    --badge-text  : #ffffff;
+  
+    --icon-color  : var(--navbar-text);
+  }
+  
+  /* ────────────────────────────────────────────────
+     COMPONENTS  (consume variables)
+     ──────────────────────────────────────────────── */
+  body{
+    background: var(--background-color);
+    color     : var(--text-color);
+  }
+  
+  /* navbar colours */
+  .navbar{
+    background: var(--navbar-bg) !important;
+  }
+  .navbar .navbar-brand,
+  .navbar .nav-link,
+  .navbar .navbar-toggler,
+  .navbar .navbar-toggler-icon,
+  #toggle-dark-mode,
+  #toggle-dark-mode i{
+    color: var(--icon-color) !important;
+  }
+  
+  /* cards & badges */
+  .card{
+    background: var(--card-background);
+    color     : var(--text-color);
+  }
+  .badge{
+    background: var(--badge-bg);
+    color     : var(--badge-text);
+  }
+  
+  /* buttons that honour theme */
+  .btn-primary{
+    background-color: var(--primary-color);
+    border-color    : var(--primary-color);
+  }
+  .btn-primary:hover{
+    filter: brightness(90%);
+  }
+  
+  /* links follow accent colour */
+  a{ color: var(--accent-color); }
+  a:hover{ filter: brightness(85%); }
+  

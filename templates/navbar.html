@@ -1,0 +1,46 @@
+<!-- templates/navbar.html  (ASCII hyphens only) -->
+<nav id="main-nav" class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+
+  <!-- Brand -->
+  <a class="navbar-brand font-weight-bold" href="{{ url_for('index') }}">
+    Video Rocker
+  </a>
+
+  <!-- Burger -->
+  <button class="navbar-toggler" type="button"
+          data-toggle="collapse" data-target="#navbarNav"
+          aria-controls="navbarNav" aria-expanded="false"
+          aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <!-- Links -->
+  <div class="collapse navbar-collapse" id="navbarNav">
+    <ul class="navbar-nav mr-auto">
+      <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('index') }}">Home</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('random_video') }}">Random</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('tags_page') }}">Tags</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('favorites_page') }}">⭐ Favorites</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('best_of') }}">🏆 Best of</a>
+      </li>
+    </ul>
+
+
+
+    <!-- Dark‑mode toggle -->
+    <button id="toggle-dark-mode"
+            class="btn btn-outline-secondary ml-2"
+            title="Toggle Dark Mode">
+      <i class="fas fa-moon"></i>
+    </button>
+  </div>
+</nav>

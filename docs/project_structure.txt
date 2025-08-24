@@ -1,0 +1,23 @@
+Project structure for '.':
+Generated on: 04/02/2025 05:56:04
+
++-- static/
+    +-- thumbnails/
+    +-- style.css
+    +-- styles.css
+    +-- theme.css
++-- templates/
+    +-- index.html
+    +-- navbar.html
+    +-- tag_videos.html
+    +-- tags.html
+    +-- watch.html
++-- videos/
++-- export-project-structure-no-media.ps1
++-- export-project-structure.ps1
++-- main.py
++-- package-lock.json
++-- project_structure.txt
++-- ratings.json
++-- tags.json
++-- views.json
