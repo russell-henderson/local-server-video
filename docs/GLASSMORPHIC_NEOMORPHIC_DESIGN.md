@@ -170,19 +170,22 @@ class ThemeManager {
 ## 🎯 User Experience Features
 
 ### Theme Switching
+
 - **Visual Controls**: Floating theme switcher in top-right corner
-- **Keyboard Shortcuts**: 
+- **Keyboard Shortcuts**:
   - `Ctrl/Cmd + 1-4`: Switch themes
   - `Ctrl/Cmd + D`: Toggle dark mode
 - **Persistence**: Theme choice saved in localStorage
 - **Notifications**: Visual feedback when switching themes
 
 ### Dark Mode Support
+
 - **Automatic Variables**: CSS variables adapt to dark mode
 - **Improved Contrast**: Enhanced visibility in dark environments
 - **Consistent Experience**: All themes support dark mode
 
 ### Accessibility
+
 - **Reduced Motion**: Respects `prefers-reduced-motion`
 - **Reduced Transparency**: Respects `prefers-reduced-transparency`
 - **High Contrast**: Enhanced borders and text in high contrast mode
@@ -192,17 +195,20 @@ class ThemeManager {
 ## 📱 Responsive Design
 
 ### Mobile Adaptations
+
 - **Smaller Border Radius**: Reduced from 24px to 16px on mobile
 - **Touch-Friendly Controls**: Minimum 44px touch targets
 - **Simplified Effects**: Reduced blur and shadow complexity
 - **Performance Optimizations**: Lighter effects on mobile devices
 
 ### Tablet Optimizations
+
 - **Medium Complexity**: Balanced between desktop and mobile
 - **Touch Interactions**: Optimized for finger navigation
 - **Landscape/Portrait**: Adaptive layouts for orientation changes
 
 ### Desktop Enhancements
+
 - **Full Effects**: Complete glassmorphic and neomorphic effects
 - **Hover States**: Rich hover animations and transitions
 - **Keyboard Shortcuts**: Full keyboard control support
