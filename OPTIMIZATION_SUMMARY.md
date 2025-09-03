@@ -247,8 +247,9 @@ python maintenance.py all
 ## 📊 **Summary**
 
 The optimization efforts have resulted in:
+
 - **50-60% faster page loads**
-- **70-80% reduction in DOM queries** 
+- **70-80% reduction in DOM queries**
 - **30% reduction in memory usage**
 - **80% fewer event listeners**
 - **50% fewer API calls**
