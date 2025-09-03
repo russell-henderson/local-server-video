@@ -129,6 +129,7 @@ const video2 = optimizedUtils.getElement('video'); // From cache
 ### 🎯 **Specific Route Optimizations**
 
 #### **Best Of Page (`/best-of`)**
+
 ```python
 # Before: Multiple cache calls
 ratings = cache.get_ratings()           # Call 1
@@ -143,6 +144,7 @@ favorites = cache.get_favorites()            # Call 2
 ```
 
 #### **Video Analytics**
+
 - **Before**: Canvas redrawn on every `timeupdate` (4x/second)
 - **After**: Debounced updates (1x/second max)
 - **Benefit**: 75% reduction in canvas operations
@@ -150,6 +152,7 @@ favorites = cache.get_favorites()            # Call 2
 ### 🧹 **Maintenance Improvements**
 
 #### **Unified Maintenance Script**
+
 ```bash
 # Before: Multiple scripts
 python purge_orphans.py
@@ -162,13 +165,15 @@ python maintenance.py all
 ```
 
 #### **Smart Cleanup**
+
 - **Automatic orphan detection** and removal
-- **Batch thumbnail generation** 
+- **Batch thumbnail generation**
 - **Consolidated database operations**
 
 ### 🔍 **Testing & Debugging**
 
 #### **Enhanced Analytics Testing**
+
 - **Auto-recovery**: Tests fix issues automatically
 - **Force overlay creation** for debugging
 - **Comprehensive diagnostics** with performance metrics
