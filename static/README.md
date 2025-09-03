@@ -39,7 +39,6 @@ A feature-rich, high-performance Flask-based local video server with AI chat int
 - **Search by Tags**: Find videos by tag categories
 - **Random Video**: Discover content with random selection
 
-
 ### ⚡ Performance Optimizations
 
 - **Hybrid Caching**: In-memory cache with SQLite/JSON backend support
@@ -114,7 +113,6 @@ The application automatically handles database setup:
 CACHE_TTL=300                        # Cache refresh interval (seconds)
 ```
 
-
 ### Directory Structure
 
 ├── videos/                    # Video files (.mp4, .webm, .ogg)
@@ -158,7 +156,6 @@ CACHE_TTL=300                        # Cache refresh interval (seconds)
 - Click the ❤️ heart icon on any video
 - Access favorites from navigation menu
 - Quick way to bookmark preferred content
-
 
 ### Video Preview
 
@@ -346,7 +343,6 @@ pre-commit install
 3. **Add JavaScript** functionality
 4. **Update Navigation** in `navbar.html`
 
-
 ### Testing
 
 ```bash
@@ -423,7 +419,6 @@ python -c "from database_migration import VideoDatabase; db = VideoDatabase(); p
 
 - **Solution**: Update to Flask 3.x compatible version (already fixed)
 
-
 #### `Database locked` errors
 
 - **Solution**: Restart application
@@ -462,7 +457,6 @@ python main.py
 ```
 
 ## 💰 Cost Analysis
-
 
 ## 📄 License
 
