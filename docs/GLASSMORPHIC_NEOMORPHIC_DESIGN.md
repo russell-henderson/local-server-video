@@ -216,16 +216,19 @@ class ThemeManager {
 ## 🚀 Performance Considerations
 
 ### Glassmorphic Performance
+
 - **Backdrop Filter**: GPU-intensive, may impact older devices
 - **Optimization**: Limited concurrent blur effects
 - **Fallbacks**: Solid backgrounds for unsupported browsers
 
 ### Neomorphic Performance
+
 - **CSS Shadows**: Lighter than backdrop filters
 - **Rendering**: Efficient box-shadow rendering
 - **Scalability**: Performs well on most devices
 
 ### Hybrid Performance
+
 - **Combined Effects**: Most resource-intensive theme
 - **Smart Loading**: Progressive enhancement approach
 - **Device Detection**: Automatic fallbacks for low-end devices
@@ -233,6 +236,7 @@ class ThemeManager {
 ## 🎨 Customization Guide
 
 ### Color Schemes
+
 ```css
 /* Custom color palette */
 :root {
@@ -243,6 +247,7 @@ class ThemeManager {
 ```
 
 ### Animation Timing
+
 ```css
 /* Custom animation curves */
 :root {
@@ -252,6 +257,7 @@ class ThemeManager {
 ```
 
 ### Component Variants
+
 ```css
 /* Custom glass variant */
 .glass-custom {
@@ -264,6 +270,7 @@ class ThemeManager {
 ## 🔧 Implementation Examples
 
 ### Video Card with Glassmorphic Theme
+
 ```html
 <div class="glassmorphic-card">
   <img class="card-img-top" src="thumbnail.jpg" alt="Video">
@@ -277,6 +284,7 @@ class ThemeManager {
 ```
 
 ### Video Controls with Neomorphic Theme
+
 ```html
 <div class="neo-video-controls">
   <div class="neo-progress">
@@ -294,6 +302,7 @@ class ThemeManager {
 ```
 
 ### Hybrid Form Example
+
 ```html
 <div class="hybrid-form-container">
   <input type="text" class="hybrid-input" placeholder="Search videos...">
