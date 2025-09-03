@@ -31,16 +31,19 @@
 ### 🗄️ **Backend Optimizations**
 
 #### **1. Reduced Cache Calls**
+
 - **Before**: Multiple separate cache calls per route
 - **After**: Batch data retrieval in single calls
 - **Example**: `best_of()` route now makes 2 cache calls instead of 4-6
 
 #### **2. In-Memory Filtering**
+
 - **Before**: Database queries for filtering
 - **After**: Get all data once, filter in Python
 - **Benefit**: Faster response times, reduced database load
 
 #### **3. Eliminated Redundant Database Queries**
+
 - **Before**: Individual `get_video_by_filename()` calls in loops
 - **After**: Bulk operations with set-based filtering
 - **Benefit**: O(n) instead of O(n²) complexity
