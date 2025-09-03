@@ -7,12 +7,14 @@ The Adaptive Bitrate Streaming (ABR) system automatically adjusts video quality 
 ## 🚀 Key Features
 
 ### **Intelligent Quality Selection**
+
 - **Auto Mode**: Automatically selects optimal quality based on real-time conditions
 - **Manual Override**: Users can manually select specific quality levels
 - **Device-Aware**: Considers screen resolution and device capabilities
 - **Network-Adaptive**: Responds to changing network conditions
 
 ### **Quality Levels Supported**
+
 - **4K (2160p)**: 25 Mbps - Ultra HD for premium devices
 - **1440p**: 16 Mbps - High definition for large screens
 - **1080p**: 8 Mbps - Full HD standard quality
@@ -22,12 +24,14 @@ The Adaptive Bitrate Streaming (ABR) system automatically adjusts video quality 
 - **240p**: 0.5 Mbps - Emergency fallback
 
 ### **Smart Network Monitoring**
+
 - **Real-Time Speed Testing**: Continuous bandwidth measurement
 - **Connection Quality Assessment**: Evaluates network stability
 - **Trend Analysis**: Predicts network performance changes
 - **Multiple Data Sources**: Combines Connection API with actual measurements
 
 ### **Buffer Health Management**
+
 - **Proactive Monitoring**: Tracks buffer levels continuously
 - **Predictive Switching**: Prevents buffering before it occurs
 - **Recovery Optimization**: Quickly recovers from buffering events
@@ -38,6 +42,7 @@ The Adaptive Bitrate Streaming (ABR) system automatically adjusts video quality 
 ### **Core Components**
 
 #### **1. AdaptiveStreamingController**
+
 ```javascript
 class AdaptiveStreamingController {
   // Main controller managing quality decisions
@@ -49,6 +54,7 @@ class AdaptiveStreamingController {
 ```
 
 #### **2. NetworkMonitor**
+
 ```javascript
 class NetworkMonitor {
   // Network condition monitoring
@@ -60,6 +66,7 @@ class NetworkMonitor {
 ```
 
 #### **3. AdaptiveStreamingManager**
+
 ```javascript
 class AdaptiveStreamingManager {
   // System initialization and coordination
