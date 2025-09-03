@@ -7,18 +7,21 @@ This document describes the comprehensive glassmorphic and neomorphic design sys
 ## 🎯 Design Philosophy
 
 ### Glassmorphism
+
 - **Transparency & Blur**: Creates depth through layered, semi-transparent elements
 - **Frosted Glass Effect**: Uses backdrop-filter for realistic glass appearance  
 - **Floating Elements**: Components appear to hover above background content
 - **Light & Airy**: Emphasizes lightness and modern aesthetics
 
 ### Neomorphism
+
 - **Soft Shadows**: Creates tactile, embossed appearance
 - **Subtle Depth**: Elements appear carved into or raised from the surface
 - **Monochromatic**: Uses subtle color variations for depth
 - **Tactile Feel**: Buttons and controls feel physically interactive
 
 ### Hybrid Approach
+
 - **Best of Both**: Combines glassmorphic backgrounds with neomorphic controls
 - **Visual Hierarchy**: Glass for containers, neo for interactive elements
 - **Balanced Aesthetics**: Modern transparency with tactile interactions
@@ -26,23 +29,27 @@ This document describes the comprehensive glassmorphic and neomorphic design sys
 ## 🎭 Available Themes
 
 ### 1. Default Theme
+
 - **Description**: Clean, standard Bootstrap-based design
 - **Use Case**: Users who prefer traditional interfaces
 - **Performance**: Lightest weight, fastest rendering
 
 ### 2. Glassmorphic Theme
+
 - **Description**: Frosted glass elements with blur effects
 - **Use Case**: Modern, premium feel for media consumption
 - **Performance**: Moderate (backdrop-filter effects)
 - **Best For**: Desktop users, high-end devices
 
 ### 3. Neomorphic Theme  
+
 - **Description**: Soft, embossed elements with subtle shadows
 - **Use Case**: Tactile, app-like interface
 - **Performance**: Good (CSS shadows only)
 - **Best For**: Touch devices, accessibility-focused users
 
 ### 4. Hybrid Theme
+
 - **Description**: Glassmorphic containers with neomorphic controls
 - **Use Case**: Premium experience with tactile interactions
 - **Performance**: Moderate to heavy (combines both effects)
