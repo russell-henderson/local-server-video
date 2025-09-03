@@ -51,6 +51,7 @@
 ### 📱 **Frontend Optimizations**
 
 #### **1. Event Delegation**
+
 ```javascript
 // Before: Individual listeners on each element
 document.querySelectorAll('.favorite-btn').forEach(btn => {
@@ -66,6 +67,7 @@ document.addEventListener('click', (e) => {
 ```
 
 #### **2. Smart Caching**
+
 ```javascript
 // Before: Repeated queries
 const video = document.querySelector('video');
@@ -77,6 +79,7 @@ const video2 = optimizedUtils.getElement('video'); // From cache
 ```
 
 #### **3. Batch DOM Operations**
+
 - **Before**: Individual style updates causing reflows
 - **After**: Batched updates with `display: none` technique
 - **Benefit**: Reduced layout thrashing
