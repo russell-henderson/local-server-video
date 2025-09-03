@@ -9,21 +9,25 @@
 - **Evidence**: `index()`, `watch_video()`, `favorites_page()` all call `load_ratings()`, `load_views()`, `load_tags()`, `load_favorites()`
 
 ### 2. **Inefficient Video Directory Scanning** ⚠️ **HIGH PRIORITY**
+
 - **Problem**: `get_video_list()` scans entire video directory on every call
 - **Impact**: Directory listing + file existence checks for 333+ videos per request
 - **Evidence**: Called from index page, tag filtering, random video selection
 
 ### 3. **Redundant Thumbnail Generation** ⚠️ **MEDIUM PRIORITY**
+
 - **Problem**: Synchronous FFmpeg calls block request processing
 - **Impact**: 30+ second delays for missing thumbnails
 - **Evidence**: `generate_thumbnail()` called in `get_video_list()` loop
 
 ### 4. **No Caching Layer** ⚠️ **HIGH PRIORITY**
+
 - **Problem**: Same data processed repeatedly across requests
 - **Impact**: CPU waste, memory allocation overhead
 - **Evidence**: Video metadata reconstruction in multiple routes
 
 ### 5. **JSON File Limitations** ⚠️ **MEDIUM PRIORITY**
+
 - **Problem**: Atomic writes require full file rewrite, no indexing
 - **Impact**: Write contention, slow queries, memory usage
 - **Evidence**: 17KB+ JSON files loaded entirely for single updates
@@ -31,6 +35,7 @@
 ## Optimization Solutions Implemented
 
 ### 1. **Cache Manager** (`cache_manager.py`)
+
 ```python
 # Before: 4 JSON file reads per request
 ratings = load_ratings()
@@ -44,6 +49,7 @@ ratings = cache.get_ratings()  # Cached in memory
 ```
 
 **Benefits**:
+
 - ✅ Reduces disk I/O by 95%+
 - ✅ Sub-millisecond data access
 - ✅ Write-through persistence
@@ -51,6 +57,7 @@ ratings = cache.get_ratings()  # Cached in memory
 - ✅ Configurable TTL (5 minutes default)
 
 ### 2. **Optimized Main Application** (`main_optimized.py`)
+
 ```python
 # Before: Multiple file operations per route
 def index():
@@ -68,12 +75,14 @@ def index():
 ```
 
 **Benefits**:
+
 - ✅ Bulk data operations
 - ✅ Background thumbnail generation
 - ✅ Efficient video streaming with caching headers
 - ✅ Reduced route complexity
 
 ### 3. **Database Migration** (`database_migration.py`)
+
 ```python
 # Before: JSON file operations
 def update_rating(filename, rating):
@@ -90,13 +99,15 @@ def update_rating(filename, rating):
 ```
 
 **Benefits**:
+
 - ✅ Indexed queries (sub-millisecond lookups)
-- ✅ Atomic operations 
+- ✅ Atomic operations
 - ✅ ACID compliance
 - ✅ Efficient joins and aggregations
 - ✅ Automatic cleanup of orphaned data
 
 ### 4. **Performance Monitoring** (`performance_monitor.py`)
+
 ```python
 @performance_monitor("route_index")
 def index():
@@ -110,6 +121,7 @@ system_stats = get_system_stats()  # System resources
 ```
 
 **Benefits**:
+
 - ✅ Real-time performance metrics
 - ✅ Cache hit rate monitoring
 - ✅ Route timing analysis
@@ -119,7 +131,9 @@ system_stats = get_system_stats()  # System resources
 ## Migration Path
 
 ### Phase 1: Immediate Improvements (Low Risk)
+
 1. **Deploy Cache Manager**
+
    ```bash
    # Backup current application
    cp main.py main_backup.py
@@ -132,6 +146,7 @@ system_stats = get_system_stats()  # System resources
    ```
 
 2. **Enable Performance Monitoring**
+
    ```python
    from performance_monitor import flask_route_monitor, monitor
    
@@ -144,24 +159,29 @@ system_stats = get_system_stats()  # System resources
    ```
 
 ### Phase 2: Database Migration (Medium Risk)
+
 1. **Test Migration**
+
    ```bash
    python database_migration.py
    ```
 
 2. **Backup JSON Files**
+
    ```bash
    mkdir backup_json
    cp *.json backup_json/
    ```
 
 3. **Switch to Database Backend**
+
    ```python
    # Replace cache_manager.py with database backend
    from database_migration import VideoDatabase
    ```
 
 ### Phase 3: Advanced Optimizations (Higher Risk)
+
 1. **Add Redis for Distributed Caching**
 2. **Implement CDN for Static Assets**
 3. **Add Database Connection Pooling**
@@ -170,6 +190,7 @@ system_stats = get_system_stats()  # System resources
 ## Expected Performance Improvements
 
 ### Response Time Improvements
+
 | Route | Before | After | Improvement |
 |-------|--------|-------|-------------|
 | `/` (Home) | 200-500ms | 50-100ms | **60-80% faster** |
@@ -178,6 +199,7 @@ system_stats = get_system_stats()  # System resources
 | `/tag/<tag>` | 300-600ms | 50-100ms | **80-85% faster** |
 
 ### Resource Usage Improvements
+
 | Metric | Before | After | Improvement |
 |--------|--------|-------|-------------|
 | Memory Usage | 50-100MB | 30-60MB | **40% reduction** |
@@ -188,6 +210,7 @@ system_stats = get_system_stats()  # System resources
 ## Quick Wins Implementation
 
 ### 1. Add Basic Caching (5 minutes)
+
 ```python
 # Add to existing main.py
 from functools import lru_cache
@@ -208,6 +231,7 @@ def get_video_list_cached():
 ```
 
 ### 2. Background Thumbnail Generation (10 minutes)
+
 ```python
 from concurrent.futures import ThreadPoolExecutor
 import threading
@@ -225,6 +249,7 @@ for video in videos:
 ```
 
 ### 3. Add Response Caching Headers (2 minutes)
+
 ```python
 @app.route('/video/<path:filename>')
 def stream_video(filename):
@@ -236,6 +261,7 @@ def stream_video(filename):
 ## Monitoring and Maintenance
 
 ### 1. Performance Monitoring Endpoints
+
 ```python
 @app.route('/admin/stats')
 def admin_stats():
@@ -247,6 +273,7 @@ def admin_stats():
 ```
 
 ### 2. Cache Health Checks
+
 ```python
 @app.route('/admin/cache/status')
 def cache_status():
@@ -258,6 +285,7 @@ def cache_status():
 ```
 
 ### 3. Database Maintenance (if using SQLite)
+
 ```bash
 # Weekly maintenance
 python -c "
@@ -270,6 +298,7 @@ db.cleanup_orphaned_data()
 ## Load Testing
 
 ### Basic Load Test
+
 ```bash
 # Install requirements
 pip install requests
@@ -282,6 +311,7 @@ results = load_test_simulation('http://localhost:5000', 100)
 ```
 
 ### Advanced Load Testing with Apache Bench
+
 ```bash
 # Install Apache Bench
 # Windows: Download Apache HTTP Server
@@ -298,12 +328,14 @@ ab -n 300 -c 3 http://localhost:5000/tags
 ### Common Issues
 
 1. **Cache Not Updating**
+
    ```python
    # Force cache refresh
    cache.refresh_all()
    ```
 
 2. **High Memory Usage**
+
    ```python
    # Check cache size
    print(f"Cache entries: {len(cache._video_metadata)}")
@@ -313,6 +345,7 @@ ab -n 300 -c 3 http://localhost:5000/tags
    ```
 
 3. **Database Lock Errors**
+
    ```python
    # Increase timeout
    VideoDatabase(db_path="video_metadata.db")
@@ -320,6 +353,7 @@ ab -n 300 -c 3 http://localhost:5000/tags
    ```
 
 4. **Thumbnail Generation Hanging**
+
    ```python
    # Add timeout to FFmpeg calls
    subprocess.run([...], timeout=30)
@@ -336,6 +370,7 @@ ab -n 300 -c 3 http://localhost:5000/tags
 ## Summary
 
 The current application has significant performance bottlenecks due to:
+
 - Excessive file I/O operations (4 JSON files per request)
 - Inefficient directory scanning (333+ files per request)
 - No caching layer
