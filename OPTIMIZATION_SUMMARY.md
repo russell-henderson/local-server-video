@@ -87,12 +87,14 @@ const video2 = optimizedUtils.getElement('video'); // From cache
 ### 🔧 **Code Cleanup**
 
 #### **Files Removed/Consolidated:**
+
 - ❌ **M3U8 functionality** - Completely removed (unused)
 - ❌ **Duplicate maintenance scripts** - Consolidated into `maintenance.py`
 - ❌ **Redundant project structure files** - Kept only in `docs/`
 - ❌ **Orphaned cache files** - Cleaned up `__pycache__/`
 
 #### **Code Deduplication:**
+
 - **Before**: 15+ separate `document.querySelector` patterns
 - **After**: Centralized in `optimized-utils.js`
 - **Before**: 8+ separate event listener patterns  
