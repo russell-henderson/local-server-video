@@ -59,6 +59,7 @@ This project is a local video server designed to manage, serve, and organize a c
 │   └── watch.html
 ├── videos/
 │   └── *.mp4
+
 ```
 .
 ├── cache_manager.py
