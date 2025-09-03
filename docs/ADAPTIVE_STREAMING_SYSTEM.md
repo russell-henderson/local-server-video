@@ -123,17 +123,20 @@ async function measureNetworkSpeed() {
 ## 🎮 User Interface
 
 ### **Quality Selector**
+
 - **Location**: Top-left corner of video player
 - **Auto-Hide**: Appears on hover, hides when not needed
 - **Accessibility**: Full keyboard navigation support
 - **Visual Feedback**: Shows current quality and available options
 
 ### **Network Indicator**
+
 - **Real-Time Speed**: Shows current network speed
 - **Connection Quality**: Visual indicator of network health
 - **Buffer Status**: Color-coded buffer health bar
 
 ### **Quality Menu**
+
 - **Quality Options**: All available quality levels
 - **Bitrate Display**: Shows required bandwidth for each quality
 - **Active Indicator**: Highlights currently selected quality
@@ -142,6 +145,7 @@ async function measureNetworkSpeed() {
 ## 📊 Performance Monitoring
 
 ### **Real-Time Statistics**
+
 ```javascript
 {
   currentSpeed: 8500000,        // Current network speed (bps)
@@ -156,9 +160,11 @@ async function measureNetworkSpeed() {
 ```
 
 ### **Debug Mode**
+
 Enable with URL parameter: `?streaming-debug=true`
 
 **Debug Panel Shows:**
+
 - Current quality level
 - Network speed
 - Buffer health
