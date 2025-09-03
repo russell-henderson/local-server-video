@@ -175,6 +175,7 @@ Enable with URL parameter: `?streaming-debug=true`
 ## 🔧 Configuration Options
 
 ### **Quality Thresholds**
+
 ```javascript
 const qualityConfig = {
   bufferHealthThreshold: 10,    // Target buffer health (seconds)
@@ -186,6 +187,7 @@ const qualityConfig = {
 ```
 
 ### **Device Capabilities**
+
 ```javascript
 const deviceCaps = {
   maxResolution: '1080p',       // Maximum supported resolution
@@ -200,6 +202,7 @@ const deviceCaps = {
 ## 🎯 Integration Guide
 
 ### **Basic Setup**
+
 ```html
 <!-- Include CSS -->
 <link rel="stylesheet" href="adaptive-streaming.css">
@@ -211,6 +214,7 @@ const deviceCaps = {
 ```
 
 ### **Video Enhancement**
+
 ```javascript
 // Videos are automatically enhanced when detected
 // Manual enhancement:
@@ -218,6 +222,7 @@ window.adaptiveStreamingManager.enhanceVideo(videoElement);
 ```
 
 ### **Quality Control**
+
 ```javascript
 // Set specific quality
 window.adaptiveStreamingManager.setQuality('1080p');
@@ -230,6 +235,7 @@ const stats = window.adaptiveStreamingManager.getStats();
 ```
 
 ### **Preset Configurations**
+
 ```javascript
 // Apply preset configurations
 window.adaptiveStreamingManager.applyPreset('high-quality');
@@ -240,18 +246,21 @@ window.adaptiveStreamingManager.applyPreset('mobile-optimized');
 ## 📱 Platform-Specific Optimizations
 
 ### **Desktop**
+
 - **Full Quality Range**: Supports up to 4K quality
 - **Aggressive Buffering**: Larger buffer targets
 - **Quick Switching**: Faster quality transitions
 - **Advanced UI**: Full quality selector with detailed options
 
 ### **Mobile**
+
 - **Conservative Quality**: Caps at 1080p by default
 - **Data-Aware**: Respects data saver settings
 - **Battery Optimization**: Reduces processing overhead
 - **Touch-Friendly UI**: Larger touch targets
 
 ### **VR Devices**
+
 - **Performance Priority**: Prioritizes smooth playback
 - **Lower Quality Caps**: Prevents performance issues
 - **Simplified UI**: Streamlined controls for VR interaction
@@ -262,6 +271,7 @@ window.adaptiveStreamingManager.applyPreset('mobile-optimized');
 ### **Common Issues**
 
 #### **Quality Not Switching**
+
 ```javascript
 // Check if auto mode is enabled
 console.log(window.adaptiveStreamingManager.getController().autoMode);
@@ -274,6 +284,7 @@ console.log('Last switch:', Date.now() - controller.lastSwitchTime);
 ```
 
 #### **Poor Quality Selection**
+
 ```javascript
 // Check device capabilities
 console.log(controller.deviceCapabilities);
@@ -286,6 +297,7 @@ console.log(controller.getQualityHistory());
 ```
 
 #### **Buffer Issues**
+
 ```javascript
 // Check buffer health calculation
 const video = document.querySelector('video');
@@ -296,6 +308,7 @@ console.log('Threshold:', controller.bufferHealthThreshold);
 ```
 
 ### **Debug Commands**
+
 ```javascript
 // Enable debug mode
 window.adaptiveStreamingManager.enableDebugMode();
@@ -313,16 +326,19 @@ window.adaptiveStreamingManager.getController().networkMonitor.measurements = []
 ## 🚀 Performance Impact
 
 ### **CPU Usage**
+
 - **Network Monitoring**: ~1-2% CPU usage
 - **Quality Switching**: Minimal impact during switches
 - **UI Updates**: <1% CPU for interface updates
 
 ### **Memory Usage**
+
 - **Base System**: ~2-5MB additional memory
 - **Measurement History**: ~1KB per measurement
 - **UI Components**: ~500KB for interface elements
 
 ### **Network Overhead**
+
 - **Speed Tests**: 100KB every 10 seconds
 - **Measurement Accuracy**: ±10% typical accuracy
 - **Bandwidth Usage**: <1% of total video bandwidth
@@ -330,18 +346,21 @@ window.adaptiveStreamingManager.getController().networkMonitor.measurements = []
 ## 🔮 Future Enhancements
 
 ### **Planned Features**
+
 - **Machine Learning**: AI-powered quality prediction
 - **CDN Integration**: Multi-CDN quality optimization
 - **P2P Streaming**: Peer-to-peer quality sharing
 - **Advanced Analytics**: Detailed performance metrics
 
 ### **Server-Side Integration**
+
 - **Multi-Bitrate Encoding**: Server generates multiple quality streams
 - **Manifest Files**: HLS/DASH playlist generation
 - **Edge Caching**: CDN-based quality delivery
 - **Real-Time Transcoding**: On-demand quality generation
 
 ### **Advanced Algorithms**
+
 - **Predictive Switching**: Machine learning for quality prediction
 - **Context-Aware**: Time of day, device type, user preferences
 - **Collaborative Filtering**: Learn from other users' experiences
