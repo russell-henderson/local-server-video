@@ -15,7 +15,10 @@
   --glass-success: rgba(76, 175, 80, 0.3);
   --glass-warning: rgba(255, 193, 7, 0.3);
   --glass-error: rgba(244, 67, 54, 0.3);
+
   
+  /* 
+
   /* Glass Effects */
   --glass-blur: blur(20px);
   --glass-blur-strong: blur(40px);

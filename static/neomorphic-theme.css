@@ -20,6 +20,8 @@
   --neo-shadow: #a3b1c6;
   --neo-shadow-dark: #1a202c;
   
+  
+
   /* Neomorphic Shadows */
   --neo-shadow-inset: inset 6px 6px 12px var(--neo-shadow), inset -6px -6px 12px var(--neo-light);
   --neo-shadow-outset: 6px 6px 12px var(--neo-shadow), -6px -6px 12px var(--neo-light);
