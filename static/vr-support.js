@@ -8,6 +8,8 @@ class VRSupport {
         this.isVR = this.detectVR();
         this.touchStartTime = 0;
         this.longPressThreshold = 500; // ms for long press
+        this.debounceTimers = new Map();
+        this.eventListeners = new Map();
         this.init();
     }
 
@@ -206,23 +208,27 @@ class VRSupport {
             const touchDuration = Date.now() - touchStartTime;
             if (touchDuration > this.longPressThreshold) {
                 e.preventDefault();
-                startPreview();
+                this.throttle(`preview-${container.dataset.filename || 'unknown'}`, startPreview, 1000);
             }
         });
 
-        // Click handler for VR controllers (secondary button)
+        // Click handler for VR controllers (secondary button) - debounced
         container.addEventListener('contextmenu', (e) => {
             e.preventDefault();
-            if (isPlaying) {
-                stopPreview();
-            } else {
-                startPreview();
-            }
+            this.debounce(`context-preview-${container.dataset.filename || 'unknown'}`, () => {
+                if (isPlaying) {
+                    stopPreview();
+                } else {
+                    startPreview();
+                }
+            }, 300);
         });
 
-        // Fallback hover for desktop users
+        // Fallback hover for desktop users - throttled
         if (!this.isVR) {
-            container.addEventListener('mouseenter', startPreview);
+            container.addEventListener('mouseenter', () => {
+                this.throttle(`hover-preview-${container.dataset.filename || 'unknown'}`, startPreview, 500);
+            });
             container.addEventListener('mouseleave', stopPreview);
         }
     }
@@ -249,48 +255,64 @@ class VRSupport {
         immersiveBtn.innerHTML = '🥽';
         immersiveBtn.title = 'Enter VR Immersive Mode';
         
-        immersiveBtn.addEventListener('click', async () => {
-            try {
-                if (navigator.xr) {
-                    const session = await navigator.xr.requestSession('immersive-vr');
-                    console.log('🥽 Entered VR immersive mode');
-                    
-                    // Handle VR session
-                    session.addEventListener('end', () => {
-                        console.log('🥽 Exited VR immersive mode');
-                    });
+        const clickHandler = async () => {
+            this.debounce('immersive-mode', async () => {
+                try {
+                    if (navigator.xr) {
+                        const session = await navigator.xr.requestSession('immersive-vr');
+                        console.log('🥽 Entered VR immersive mode');
+                        
+                        // Handle VR session
+                        session.addEventListener('end', () => {
+                            console.log('🥽 Exited VR immersive mode');
+                        });
+                    }
+                } catch (error) {
+                    console.log('VR immersive mode not available:', error);
+                    // Fallback to fullscreen
+                    if (document.documentElement.requestFullscreen) {
+                        document.documentElement.requestFullscreen();
+                    }
                 }
-            } catch (error) {
-                console.log('VR immersive mode not available:', error);
-                // Fallback to fullscreen
-                if (document.documentElement.requestFullscreen) {
-                    document.documentElement.requestFullscreen();
-                }
-            }
+            }, 500);
+        };
+        
+        immersiveBtn.addEventListener('click', clickHandler);
+        this.eventListeners.set('immersive-btn', { 
+            element: immersiveBtn, 
+            event: 'click', 
+            handler: clickHandler 
         });
 
         document.body.appendChild(immersiveBtn);
     }
 
     addVRKeyboardShortcuts() {
-        document.addEventListener('keydown', (e) => {
-            // VR-specific shortcuts
+        const keyHandler = (e) => {
+            // VR-specific shortcuts with debouncing
             switch(e.key) {
                 case 'v':
                 case 'V':
                     if (e.ctrlKey) {
                         e.preventDefault();
-                        this.toggleVROptimizations();
+                        this.debounce('toggle-vr', () => this.toggleVROptimizations(), 300);
                     }
                     break;
                 case 'f':
                 case 'F':
                     if (e.ctrlKey && e.shiftKey) {
                         e.preventDefault();
-                        this.enterFullscreen();
+                        this.debounce('vr-fullscreen', () => this.enterFullscreen(), 300);
                     }
                     break;
             }
+        };
+
+        document.addEventListener('keydown', keyHandler);
+        this.eventListeners.set('vr-keyboard', { 
+            element: document, 
+            event: 'keydown', 
+            handler: keyHandler 
         });
     }
 
@@ -366,6 +388,56 @@ class VRSupport {
 
     static isVRDevice() {
         return new VRSupport().detectVR();
+    }
+
+    // Performance utilities
+    debounce(key, func, delay = 250) {
+        if (this.debounceTimers.has(key)) {
+            clearTimeout(this.debounceTimers.get(key));
+        }
+
+        const timer = setTimeout(() => {
+            func();
+            this.debounceTimers.delete(key);
+        }, delay);
+
+        this.debounceTimers.set(key, timer);
+    }
+
+    throttle(key, func, delay = 250) {
+        if (this.debounceTimers.has(key)) {
+            return; // Already running
+        }
+
+        func();
+        const timer = setTimeout(() => {
+            this.debounceTimers.delete(key);
+        }, delay);
+
+        this.debounceTimers.set(key, timer);
+    }
+
+    // Cleanup method for memory management
+    cleanup() {
+        // Clear timers
+        this.debounceTimers.forEach(timer => clearTimeout(timer));
+        this.debounceTimers.clear();
+        
+        // Remove event listeners
+        this.eventListeners.forEach(({ element, event, handler }) => {
+            element.removeEventListener(event, handler);
+        });
+        this.eventListeners.clear();
+        
+        // Remove VR-specific DOM elements
+        const vrIndicator = document.querySelector('.vr-indicator');
+        if (vrIndicator) vrIndicator.remove();
+        
+        const vrBtn = document.querySelector('.vr-immersive-btn');
+        if (vrBtn) vrBtn.remove();
+        
+        const vrStyles = document.querySelector('#vr-styles');
+        if (vrStyles) vrStyles.remove();
     }
 }
 

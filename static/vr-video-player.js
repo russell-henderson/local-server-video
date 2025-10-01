@@ -149,6 +149,115 @@ class VRVideoPlayer {
                 object-fit: contain;
             }
 
+            .vr-ui-overlay {
+                position: absolute;
+                bottom: 80px;
+                left: 50%;
+                transform: translateX(-50%);
+                display: flex;
+                gap: 2rem;
+                background: rgba(0, 0, 0, 0.9);
+                padding: 1.5rem;
+                border-radius: 16px;
+                backdrop-filter: blur(20px);
+                border: 2px solid rgba(255, 255, 255, 0.1);
+                max-width: 90vw;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .vr-video-info {
+                text-align: center;
+                color: white;
+                min-width: 200px;
+            }
+
+            .vr-video-title {
+                font-size: 1.2rem;
+                margin: 0 0 0.5rem 0;
+                color: #fff;
+                text-overflow: ellipsis;
+                overflow: hidden;
+                white-space: nowrap;
+                max-width: 300px;
+            }
+
+            .vr-view-count {
+                font-size: 0.9rem;
+                color: #ccc;
+            }
+
+            .vr-rating-container {
+                text-align: center;
+                min-width: 200px;
+            }
+
+            .vr-ui-title {
+                color: white;
+                font-size: 1rem;
+                margin-bottom: 1rem;
+                font-weight: 600;
+            }
+
+            .vr-rating {
+                display: flex;
+                gap: 0.75rem;
+                justify-content: center;
+            }
+
+            .vr-rating i {
+                color: #ffb300;
+                font-size: 2rem;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                min-width: 50px;
+                min-height: 50px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 8px;
+                background: rgba(255, 255, 255, 0.1);
+            }
+
+            .vr-rating i:hover {
+                transform: scale(1.2);
+                background: rgba(255, 179, 0, 0.2);
+                box-shadow: 0 0 20px rgba(255, 179, 0, 0.4);
+            }
+
+            .vr-favorite-container {
+                display: flex;
+                align-items: center;
+                min-width: 200px;
+            }
+
+            .vr-favorite-btn {
+                background: rgba(255, 255, 255, 0.1);
+                border: 2px solid rgba(255, 255, 255, 0.2);
+                color: white;
+                padding: 1rem 1.5rem;
+                border-radius: 12px;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                font-size: 1rem;
+                width: 100%;
+                justify-content: center;
+            }
+
+            .vr-favorite-btn:hover {
+                background: rgba(255, 255, 255, 0.2);
+                border-color: rgba(255, 255, 255, 0.4);
+                transform: scale(1.05);
+            }
+
+            .vr-favorite-btn i {
+                font-size: 1.5rem;
+                transition: all 0.2s ease;
+            }
+
             .vr-exit-immersive {
                 position: fixed;
                 top: 20px;
@@ -322,20 +431,27 @@ class VRVideoPlayer {
         const originalParent = this.video.parentNode;
         const originalNextSibling = this.video.nextSibling;
         
+        // Store original elements for restoration
+        this.originalParent = originalParent;
+        this.originalNextSibling = originalNextSibling;
+        
+        // Create VR UI overlay with ratings and favorites
+        const vrOverlay = this.createVROverlay();
+        
         immersiveContainer.appendChild(this.video);
+        immersiveContainer.appendChild(vrOverlay);
         immersiveContainer.appendChild(exitBtn);
         document.body.appendChild(immersiveContainer);
         
-        // Store original position for restoration
-        this.originalParent = originalParent;
-        this.originalNextSibling = originalNextSibling;
+        // Add keyboard shortcuts for VR mode
+        this.addVRModeKeyboardShortcuts();
         
         // Enter fullscreen if available
         if (immersiveContainer.requestFullscreen) {
             immersiveContainer.requestFullscreen();
         }
         
-        console.log('🥽 Entered VR immersive mode');
+        console.log('🥽 Entered VR immersive mode with ratings & favorites');
     }
 
     exitVRMode() {
@@ -348,8 +464,9 @@ class VRVideoPlayer {
                 this.originalParent.appendChild(this.video);
             }
             
-            // Remove immersive container
+            // Remove immersive container and all VR-specific event listeners
             immersiveContainer.remove();
+            this.cleanupVRModeListeners();
             
             // Exit fullscreen
             if (document.exitFullscreen) {
@@ -358,6 +475,266 @@ class VRVideoPlayer {
             
             console.log('🥽 Exited VR immersive mode');
         }
+    }
+
+    createVROverlay() {
+        const overlay = document.createElement('div');
+        overlay.className = 'vr-ui-overlay';
+        
+        // Get current video filename for ratings/favorites
+        const filename = this.getVideoFilename();
+        if (!filename) return overlay;
+        
+        // Create VR-optimized rating interface
+        const ratingSection = this.createVRRating(filename);
+        
+        // Create VR-optimized favorite interface  
+        const favoriteSection = this.createVRFavorite(filename);
+        
+        // Create video info section
+        const infoSection = this.createVRVideoInfo(filename);
+        
+        overlay.appendChild(infoSection);
+        overlay.appendChild(ratingSection);
+        overlay.appendChild(favoriteSection);
+        
+        return overlay;
+    }
+
+    createVRRating(filename) {
+        const container = document.createElement('div');
+        container.className = 'vr-rating-container';
+        
+        const title = document.createElement('div');
+        title.className = 'vr-ui-title';
+        title.textContent = 'Rate Video';
+        
+        const ratingDiv = document.createElement('div');
+        ratingDiv.className = 'vr-rating';
+        ratingDiv.setAttribute('data-filename', filename);
+        
+        // Get current rating from DOM or fetch from server
+        const currentRating = this.getCurrentRating(filename);
+        
+        for (let i = 1; i <= 5; i++) {
+            const star = document.createElement('i');
+            star.className = i <= currentRating ? 'fas fa-star' : 'far fa-star';
+            star.setAttribute('data-value', i);
+            star.setAttribute('role', 'button');
+            star.setAttribute('tabindex', '0');
+            star.setAttribute('aria-label', `Rate ${i} star${i !== 1 ? 's' : ''}`);
+            
+            // Add VR-optimized click handler with debouncing
+            star.addEventListener('click', this.debounce(`vr-rating-${i}`, () => {
+                this.handleVRRating(filename, i, ratingDiv);
+            }, 300));
+            
+            ratingDiv.appendChild(star);
+        }
+        
+        container.appendChild(title);
+        container.appendChild(ratingDiv);
+        return container;
+    }
+
+    createVRFavorite(filename) {
+        const container = document.createElement('div');
+        container.className = 'vr-favorite-container';
+        
+        const favoriteBtn = document.createElement('button');
+        favoriteBtn.className = 'vr-favorite-btn';
+        favoriteBtn.setAttribute('data-filename', filename);
+        favoriteBtn.setAttribute('aria-label', 'Toggle favorite');
+        
+        const isFavorited = this.getCurrentFavoriteStatus(filename);
+        
+        const icon = document.createElement('i');
+        icon.className = isFavorited ? 'fas fa-heart' : 'far fa-heart';
+        icon.style.color = '#ff4757';
+        
+        const label = document.createElement('span');
+        label.textContent = isFavorited ? 'Remove from Favorites' : 'Add to Favorites';
+        
+        favoriteBtn.appendChild(icon);
+        favoriteBtn.appendChild(label);
+        
+        // Add VR-optimized click handler with debouncing
+        favoriteBtn.addEventListener('click', this.debounce(`vr-favorite-${filename}`, () => {
+            this.handleVRFavorite(filename, favoriteBtn);
+        }, 300));
+        
+        container.appendChild(favoriteBtn);
+        return container;
+    }
+
+    createVRVideoInfo(filename) {
+        const container = document.createElement('div');
+        container.className = 'vr-video-info';
+        
+        const title = document.createElement('h3');
+        title.className = 'vr-video-title';
+        title.textContent = decodeURIComponent(filename);
+        
+        const viewCount = document.createElement('div');
+        viewCount.className = 'vr-view-count';
+        viewCount.textContent = this.getCurrentViewCount(filename);
+        
+        container.appendChild(title);
+        container.appendChild(viewCount);
+        return container;
+    }
+
+    // Utility methods
+    getVideoFilename() {
+        const src = this.video.src || this.video.getAttribute('src');
+        if (src && src.includes('/video/')) {
+            return decodeURIComponent(src.split('/video/')[1]);
+        }
+        
+        // Fallback: try to get from page context
+        const videoInfo = document.querySelector('.video-info');
+        const favoriteBtn = videoInfo?.querySelector('.favorite-btn');
+        return favoriteBtn?.getAttribute('data-filename') || null;
+    }
+
+    getCurrentRating(filename) {
+        const ratingElement = document.querySelector(`.rating[data-filename="${filename}"]`);
+        if (ratingElement) {
+            const filledStars = ratingElement.querySelectorAll('.fas.fa-star');
+            return filledStars.length;
+        }
+        return 0;
+    }
+
+    getCurrentFavoriteStatus(filename) {
+        const favoriteBtn = document.querySelector(`.favorite-btn[data-filename="${filename}"]`);
+        if (favoriteBtn) {
+            const icon = favoriteBtn.querySelector('i');
+            return icon?.classList.contains('fas');
+        }
+        return false;
+    }
+
+    getCurrentViewCount(filename) {
+        const viewElement = document.querySelector('#video-view-count');
+        return viewElement?.textContent || 'Views: 0';
+    }
+
+    // VR-specific event handlers
+    handleVRRating(filename, rating, ratingDiv) {
+        fetch('/rate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ filename, rating })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                // Update VR rating display
+                const stars = ratingDiv.querySelectorAll('i');
+                stars.forEach((star, index) => {
+                    star.className = (index + 1) <= rating ? 'fas fa-star' : 'far fa-star';
+                });
+                
+                // Update main page rating if visible
+                if (window.optimizedUtils) {
+                    window.optimizedUtils.updateRatingDisplay(
+                        document.querySelector(`.rating[data-filename="${filename}"]`), 
+                        rating
+                    );
+                }
+                
+                console.log('🥽 VR rating updated:', rating);
+            }
+        })
+        .catch(console.error);
+    }
+
+    handleVRFavorite(filename, favoriteBtn) {
+        fetch('/favorite', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ filename })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                const isFavorited = data.favorites.includes(filename);
+                
+                // Update VR favorite display
+                const icon = favoriteBtn.querySelector('i');
+                const label = favoriteBtn.querySelector('span');
+                
+                icon.className = isFavorited ? 'fas fa-heart' : 'far fa-heart';
+                label.textContent = isFavorited ? 'Remove from Favorites' : 'Add to Favorites';
+                
+                // Update main page favorite buttons if visible
+                if (window.optimizedUtils) {
+                    window.optimizedUtils.updateFavoriteButtons(filename, isFavorited);
+                }
+                
+                console.log('🥽 VR favorite updated:', isFavorited);
+            }
+        })
+        .catch(console.error);
+    }
+
+    addVRModeKeyboardShortcuts() {
+        this.vrKeyboardHandler = (e) => {
+            if (!document.querySelector('.vr-immersive-video')) return;
+            
+            switch(e.key) {
+                case '1':
+                case '2':
+                case '3':
+                case '4':
+                case '5':
+                    e.preventDefault();
+                    const filename = this.getVideoFilename();
+                    if (filename) {
+                        this.handleVRRating(filename, parseInt(e.key), 
+                            document.querySelector('.vr-rating'));
+                    }
+                    break;
+                case 'f':
+                case 'F':
+                    if (!e.ctrlKey) {
+                        e.preventDefault();
+                        const filename = this.getVideoFilename();
+                        if (filename) {
+                            const favoriteBtn = document.querySelector('.vr-favorite-btn');
+                            this.handleVRFavorite(filename, favoriteBtn);
+                        }
+                    }
+                    break;
+            }
+        };
+        
+        document.addEventListener('keydown', this.vrKeyboardHandler);
+    }
+
+    cleanupVRModeListeners() {
+        if (this.vrKeyboardHandler) {
+            document.removeEventListener('keydown', this.vrKeyboardHandler);
+            this.vrKeyboardHandler = null;
+        }
+    }
+
+    // Debounce utility
+    debounce(key, func, delay = 250) {
+        if (!this.debounceTimers) this.debounceTimers = new Map();
+        
+        if (this.debounceTimers.has(key)) {
+            clearTimeout(this.debounceTimers.get(key));
+        }
+
+        const timer = setTimeout(() => {
+            func();
+            this.debounceTimers.delete(key);
+        }, delay);
+
+        this.debounceTimers.set(key, timer);
+        return func; // Return the function for the event listener
     }
 
     // Static method to initialize VR video player
