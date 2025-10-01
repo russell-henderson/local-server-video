@@ -12,8 +12,14 @@ class ThemeManager {
             hybrid: 'Hybrid Glass + Neo'
         };
         
-        this.currentTheme = this.getStoredTheme() || 'default';
-        this.darkMode = this.getStoredDarkMode();
+    this.currentTheme = this.getStoredTheme() || 'default';
+    this.darkMode = this.getStoredDarkMode();
+
+    // Track elements that we modify so removal is limited and fast
+    this._themedElements = new Set();
+
+    // Keep track of which theme stylesheets have been injected (preload and toggle)
+    this._stylesheets = new Map();
         
         this.init();
     }
@@ -53,7 +59,7 @@ class ThemeManager {
             </div>
         `;
         
-        document.body.appendChild(themeSwitcher);
+    document.body.appendChild(themeSwitcher);
         
         // If there's an existing dark mode toggle, integrate with it
         if (existingDarkToggle) {
@@ -123,31 +129,28 @@ class ThemeManager {
     }
 
     applyTheme(themeName) {
-        // Remove existing theme classes
-        document.body.classList.remove('glassmorphic-theme', 'neomorphic-theme', 'hybrid-theme');
-        
-        // Remove existing theme stylesheets
-        this.removeThemeStylesheets();
-        
-        // Apply new theme
+        // Remove existing theme classes we previously applied
+        this._removeTrackedThemeClasses();
+
+        // Apply new theme (use preloaded stylesheets when possible)
         switch(themeName) {
             case 'glassmorphic':
                 document.body.classList.add('glassmorphic-theme');
-                this.loadStylesheet('glassmorphic-theme.css');
+                this._ensureStylesheet('glassmorphic-theme.css');
                 this.applyGlassmorphicClasses();
                 break;
                 
             case 'neomorphic':
                 document.body.classList.add('neomorphic-theme');
-                this.loadStylesheet('neomorphic-theme.css');
+                this._ensureStylesheet('neomorphic-theme.css');
                 this.applyNeomorphicClasses();
                 break;
                 
             case 'hybrid':
                 document.body.classList.add('hybrid-theme');
-                this.loadStylesheet('glassmorphic-theme.css');
-                this.loadStylesheet('neomorphic-theme.css');
-                this.loadStylesheet('hybrid-theme.css');
+                this._ensureStylesheet('glassmorphic-theme.css');
+                this._ensureStylesheet('neomorphic-theme.css');
+                this._ensureStylesheet('hybrid-theme.css');
                 this.applyHybridClasses();
                 break;
                 
@@ -163,23 +166,27 @@ class ThemeManager {
         const navbar = document.querySelector('.navbar');
         if (navbar) {
             navbar.classList.add('glassmorphic-nav');
+            this._trackElement(navbar, 'glassmorphic-nav');
         }
 
         const cards = document.querySelectorAll('.card');
         cards.forEach(card => {
             card.classList.add('glassmorphic-card');
+            this._trackElement(card, 'glassmorphic-card');
         });
 
         const buttons = document.querySelectorAll('.btn');
         buttons.forEach(btn => {
             if (!btn.classList.contains('theme-option')) {
                 btn.classList.add('glass-btn');
+                this._trackElement(btn, 'glass-btn');
             }
         });
 
         const inputs = document.querySelectorAll('input, textarea');
         inputs.forEach(input => {
             input.classList.add('glass-input');
+            this._trackElement(input, 'glass-input');
         });
     }
 
@@ -188,27 +195,32 @@ class ThemeManager {
         const navbar = document.querySelector('.navbar');
         if (navbar) {
             navbar.classList.add('neo-nav');
+            this._trackElement(navbar, 'neo-nav');
         }
 
         const cards = document.querySelectorAll('.card');
         cards.forEach(card => {
             card.classList.add('neo-card');
+            this._trackElement(card, 'neo-card');
         });
 
         const buttons = document.querySelectorAll('.btn');
         buttons.forEach(btn => {
             if (!btn.classList.contains('theme-option')) {
                 btn.classList.add('neo-btn');
+                this._trackElement(btn, 'neo-btn');
             }
         });
 
         const inputs = document.querySelectorAll('input, textarea');
         inputs.forEach(input => {
             input.classList.add('neo-input');
+            this._trackElement(input, 'neo-input');
         });
 
-        // Apply neomorphic background
+        // Apply neomorphic background via tracking so it can be removed later
         document.body.style.background = 'var(--neo-bg)';
+        this._trackElement(document.body, 'body-neo-bg');
     }
 
     applyHybridClasses() {
@@ -216,42 +228,37 @@ class ThemeManager {
         const navbar = document.querySelector('.navbar');
         if (navbar) {
             navbar.classList.add('hybrid-nav');
+            this._trackElement(navbar, 'hybrid-nav');
         }
 
         const cards = document.querySelectorAll('.card');
         cards.forEach(card => {
             card.classList.add('hybrid-video-card');
+            this._trackElement(card, 'hybrid-video-card');
         });
 
         const buttons = document.querySelectorAll('.btn');
         buttons.forEach(btn => {
             if (!btn.classList.contains('theme-option')) {
                 btn.classList.add('hybrid-btn');
+                this._trackElement(btn, 'hybrid-btn');
             }
         });
 
         const inputs = document.querySelectorAll('input, textarea');
         inputs.forEach(input => {
             input.classList.add('hybrid-input');
+            this._trackElement(input, 'hybrid-input');
         });
     }
 
     removeThemeClasses() {
-        // Remove all theme-specific classes
-        const elements = document.querySelectorAll('*');
-        elements.forEach(el => {
-            el.classList.remove(
-                'glassmorphic-nav', 'glassmorphic-card', 'glass-btn', 'glass-input',
-                'neo-nav', 'neo-card', 'neo-btn', 'neo-input',
-                'hybrid-nav', 'hybrid-video-card', 'hybrid-btn', 'hybrid-input'
-            );
-        });
-
-        // Reset body background
-        document.body.style.background = '';
+        // Keep for backward compatibility but prefer tracked removal
+        this._removeTrackedThemeClasses();
     }
 
     loadStylesheet(filename) {
+        // Legacy loader kept for compatibility (but prefer _ensureStylesheet)
         const existingLink = document.querySelector(`link[href*="${filename}"]`);
         if (!existingLink) {
             const link = document.createElement('link');
@@ -259,12 +266,53 @@ class ThemeManager {
             link.href = `/static/${filename}`;
             link.className = 'theme-stylesheet';
             document.head.appendChild(link);
+            this._stylesheets.set(filename, link);
         }
     }
 
     removeThemeStylesheets() {
-        const themeStylesheets = document.querySelectorAll('.theme-stylesheet');
-        themeStylesheets.forEach(sheet => sheet.remove());
+        // Remove only stylesheets we injected
+        for (const [name, link] of this._stylesheets.entries()) {
+            if (link && link.parentNode) link.parentNode.removeChild(link);
+            this._stylesheets.delete(name);
+        }
+    }
+
+    // Ensure a stylesheet is preloaded and referenced; keep it disabled until needed
+    _ensureStylesheet(filename) {
+        if (this._stylesheets.has(filename)) return;
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = `/static/${filename}`;
+        link.className = 'theme-stylesheet';
+        // We don't disable link elements in all browsers; instead, keep them but let CSS specificity handle theme classes
+        document.head.appendChild(link);
+        this._stylesheets.set(filename, link);
+    }
+
+    // Track elements we changed and what class we added so we can revert quickly
+    _trackElement(element, className) {
+        if (!element) return;
+        this._themedElements.add({ el: element, cls: className });
+    }
+
+    // Remove only classes we tracked
+    _removeTrackedThemeClasses() {
+        // Iterate and remove
+        for (const entry of Array.from(this._themedElements)) {
+            try {
+                if (entry.el && entry.el.classList) {
+                    if (entry.cls === 'body-neo-bg') {
+                        entry.el.style.background = '';
+                    } else {
+                        entry.el.classList.remove(entry.cls);
+                    }
+                }
+            } catch (e) {
+                // ignore removed elements
+            }
+            this._themedElements.delete(entry);
+        }
     }
 
     toggleDarkMode() {
@@ -562,33 +610,37 @@ window.ThemeManager = ThemeManager;
 
   const isCtrl = (e) => e.ctrlKey || e.metaKey; // allow Cmd on macOS
 
-  const tm = window.ThemeManager || null;
-  if (!tm || typeof tm.switchTheme !== "function") return;
+    // Always register the keydown listener; resolve the runtime theme manager when handling events
+    window.addEventListener("keydown", (e) => {
+        const key = e.key.toLowerCase();
+        const tm = window.themeManager || null;
 
-  window.addEventListener("keydown", (e) => {
-    const key = e.key.toLowerCase();
+        // Ctrl + D -> toggle dark mode
+        if (isCtrl(e) && key === "d") {
+            e.preventDefault();
+            if (tm && typeof tm.toggleDarkMode === "function") {
+                tm.toggleDarkMode();
+            } else {
+                // Fallback: flip data-theme to dark/light
+                const html = document.documentElement;
+                const isDark = html.getAttribute("data-color-scheme") === "dark";
+                html.setAttribute("data-color-scheme", isDark ? "light" : "dark");
+                localStorage.setItem("color-scheme", isDark ? "light" : "dark");
+            }
+            window.dispatchEvent(new CustomEvent("ux:themeShortcut", { detail: { action: "toggleDark" } }));
+            return;
+        }
 
-    // Ctrl + D -> toggle dark mode
-    if (isCtrl(e) && key === "d") {
-      e.preventDefault();
-      if (typeof tm.toggleDarkMode === "function") {
-        tm.toggleDarkMode();
-      } else {
-        // Fallback: flip data-theme to dark/light
-        const html = document.documentElement;
-        const isDark = html.getAttribute("data-color-scheme") === "dark";
-        html.setAttribute("data-color-scheme", isDark ? "light" : "dark");
-        localStorage.setItem("color-scheme", isDark ? "light" : "dark");
-      }
-      window.dispatchEvent(new CustomEvent("ux:themeShortcut", { detail: { action: "toggleDark" } }));
-      return;
-    }
-
-    // Ctrl + 1..4 -> switch theme
-    if (isCtrl(e) && map[key]) {
-      e.preventDefault();
-      tm.switchTheme(map[key]);
-      window.dispatchEvent(new CustomEvent("ux:themeShortcut", { detail: { action: "switchTheme", theme: map[key] } }));
-    }
-  });
+        // Ctrl + 1..4 -> switch theme
+        if (isCtrl(e) && map[key]) {
+            e.preventDefault();
+            if (tm && typeof tm.switchTheme === "function") {
+                tm.switchTheme(map[key]);
+            } else {
+                // If manager not ready, store desired theme and apply when manager initializes
+                localStorage.setItem('video-server-theme', map[key]);
+            }
+            window.dispatchEvent(new CustomEvent("ux:themeShortcut", { detail: { action: "switchTheme", theme: map[key] } }));
+        }
+    });
 })();

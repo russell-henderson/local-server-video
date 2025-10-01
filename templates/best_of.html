@@ -110,7 +110,7 @@
 
   <!-- ── your scripts ───────────────────────────────────────────── -->
   <script src="{{ url_for('static', filename='vr-support.js') }}"></script>
-  <script src="{{ url_for('static', filename='video-analytics.js') }}"></script>
+  <!-- analytics script removed to avoid 404 when analytics are not enabled -->
   <script src="{{ url_for('static', filename='recently-played.js') }}"></script>
   <script src="{{ url_for('static', filename='dark.js') }}"></script>
 
@@ -218,6 +218,6 @@
     });
   </script>
 
-  <script src="{{ url_for('static', filename='favorites.js') }}"></script>
+  <!-- favorites.js removed: handled by optimized-utils.js to avoid duplicate event handlers -->
 </body>
 </html>

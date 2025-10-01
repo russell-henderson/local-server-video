@@ -11,93 +11,11 @@ class AnalyticsTest {
     }
 
     init() {
-        this.createTestPanel();
-        this.addTestControls();
-        console.log('🧪 Analytics Test Suite initialized');
+        // Analytics test panel UI removed
+        console.log('🧪 Analytics Test Suite initialized (UI removed)');
     }
 
-    createTestPanel() {
-        // Create floating test panel
-        const testPanel = document.createElement('div');
-        testPanel.id = 'analytics-test-panel';
-        testPanel.className = 'analytics-test-panel';
-        testPanel.innerHTML = `
-            <div class="test-panel-header">
-                <h6>📊 Analytics Test Panel</h6>
-                <button class="test-panel-toggle" title="Toggle Panel">−</button>
-            </div>
-            <div class="test-panel-content">
-                <div class="test-section">
-                    <h7>Quick Tests</h7>
-                    <div class="test-buttons">
-                        <button class="btn btn-sm btn-primary test-btn" onclick="analyticsTest.testBasicTracking()">
-                            Test Basic Tracking
-                        </button>
-                        <button class="btn btn-sm btn-success test-btn" onclick="analyticsTest.simulateViewing()">
-                            Simulate Viewing
-                        </button>
-                        <button class="btn btn-sm btn-info test-btn" onclick="analyticsTest.testTimeline()">
-                            Test Timeline
-                        </button>
-                        <button class="btn btn-sm btn-warning test-btn" onclick="analyticsTest.debugMode = !analyticsTest.debugMode; analyticsTest.updateDebugStatus()">
-                            Toggle Debug
-                        </button>
-                        <button class="btn btn-sm btn-success test-btn" onclick="analyticsTest.forceCreateOverlay()">
-                            Force Create Overlay
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="test-section">
-                    <h7>Analytics Status</h7>
-                    <div id="analytics-status" class="analytics-status">
-                        <div class="status-item">
-                            <span class="status-label">Analytics System:</span>
-                            <span id="system-status" class="status-value">Checking...</span>
-                        </div>
-                        <div class="status-item">
-                            <span class="status-label">Current Video:</span>
-                            <span id="current-video-status" class="status-value">None</span>
-                        </div>
-                        <div class="status-item">
-                            <span class="status-label">Tracking Active:</span>
-                            <span id="tracking-status" class="status-value">No</span>
-                        </div>
-                        <div class="status-item">
-                            <span class="status-label">Debug Mode:</span>
-                            <span id="debug-status" class="status-value">Off</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="test-section">
-                    <h7>Test Results</h7>
-                    <div id="test-results" class="test-results">
-                        No tests run yet
-                    </div>
-                </div>
-
-                <div class="test-section">
-                    <h7>Analytics Data</h7>
-                    <div class="test-buttons">
-                        <button class="btn btn-sm btn-secondary test-btn" onclick="analyticsTest.showStoredData()">
-                            Show Stored Data
-                        </button>
-                        <button class="btn btn-sm btn-danger test-btn" onclick="analyticsTest.clearAnalytics()">
-                            Clear Analytics
-                        </button>
-                        <button class="btn btn-sm btn-info test-btn" onclick="analyticsTest.exportTestData()">
-                            Export Test Data
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
-
-        document.body.appendChild(testPanel);
-        this.addTestStyles();
-        this.updateStatus();
-    }
+    // createTestPanel removed
 
     addTestStyles() {
         const styles = document.createElement('style');
@@ -642,11 +560,7 @@ class AnalyticsTest {
 }
 
 // Auto-initialize after a delay to ensure other systems are loaded
-document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(() => {
-        AnalyticsTest.init();
-    }, 2000);
-});
+// Auto-initialization of analytics test panel removed
 
 // Export for manual use
 window.AnalyticsTest = AnalyticsTest;
