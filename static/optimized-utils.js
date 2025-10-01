@@ -290,7 +290,8 @@ class OptimizedUtils {
         
         // Execute all callbacks once
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => {
+            // Use originalAddEventListener to ensure our listener is actually registered
+            originalAddEventListener.call(document, 'DOMContentLoaded', () => {
                 callbacks.forEach(callback => {
                     try {
                         callback();
@@ -309,7 +310,7 @@ class OptimizedUtils {
                 }
             });
         }
-        
+
         // Restore original addEventListener
         document.addEventListener = originalAddEventListener;
     }
@@ -360,11 +361,31 @@ class OptimizedUtils {
 
     updateFavoriteButtons(filename, isFavorite) {
         const buttons = this.getElements(`[data-filename="${filename}"].favorite-btn`);
+        // Debug: log the attempt so we can trace per-theme issues
+        try {
+            console.debug('[OptimizedUtils] updateFavoriteButtons', { filename, isFavorite, count: buttons.length });
+        } catch (e) { /* ignore logging errors in older consoles */ }
+
         buttons.forEach(btn => {
             const icon = btn.querySelector('i');
-            if (icon) {
-                icon.className = isFavorite ? 'fas fa-heart text-danger' : 'far fa-heart text-danger';
-            }
+            if (!icon) return;
+
+            // Preserve any existing classes (e.g., fa-heart, text-danger) and only toggle the style family
+            // Remove existing style families if present
+            icon.classList.remove('fas', 'far', 'fal', 'fab', 'fad');
+            // Add the requested family and ensure base heart class exists
+            icon.classList.add(isFavorite ? 'fas' : 'far');
+            if (!icon.classList.contains('fa-heart')) icon.classList.add('fa-heart');
+            if (!icon.classList.contains('text-danger')) icon.classList.add('text-danger');
+
+            // Set ARIA and data attributes for easier visual debugging and CSS hooks
+            try { btn.setAttribute('aria-pressed', isFavorite ? 'true' : 'false'); } catch (e) {}
+            try { icon.setAttribute('data-favorited', isFavorite ? 'true' : 'false'); } catch (e) {}
+
+            // Debug: report the icon classes after change
+            try {
+                console.debug('[OptimizedUtils] favorite-button-updated', { filename, btn, className: icon.className });
+            } catch (e) {}
         });
     }
 
