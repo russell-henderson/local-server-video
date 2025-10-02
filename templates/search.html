@@ -1,0 +1,371 @@
+{% extends "_base.html" %}
+
+{% block title %}Advanced Search - Local Video Server{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/advanced-search.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Search Header -->
+    <div class="search-header">
+        <h1><i class="fas fa-search"></i> Advanced Search</h1>
+        <p>Search through your video collection with powerful filters and intelligent matching</p>
+    </div>
+
+    <!-- Main Search Container -->
+    <div class="search-container">
+        <div class="search-input-wrapper">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" id="search-input" placeholder="Search videos, performers, tags..." autocomplete="off">
+            <button class="search-clear" id="search-clear" style="display: none;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <!-- Search Suggestions -->
+        <div id="search-suggestions"></div>
+    </div>
+
+    <!-- Search Stats -->
+    <div id="search-stats" class="search-stats">
+        <div class="stat-item">
+            <span class="stat-value">{{ total_videos or 0 }}</span>
+            <span class="stat-label">Videos Indexed</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-value">0</span>
+            <span class="stat-label">Total Searches</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-value">0.0s</span>
+            <span class="stat-label">Avg Search Time</span>
+        </div>
+    </div>
+
+    <!-- Search Filters -->
+    <div class="search-filters">
+        <div class="filter-section">
+            <h4><i class="fas fa-filter"></i> Search Options</h4>
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label>
+                        <input type="checkbox" id="fuzzy-search" class="search-filter" checked>
+                        Enable fuzzy matching (finds typos)
+                    </label>
+                </div>
+                <div class="filter-group">
+                    <label for="result-limit">Results per page</label>
+                    <select id="result-limit" class="search-filter">
+                        <option value="25">25</option>
+                        <option value="50" selected>50</option>
+                        <option value="100">100</option>
+                        <option value="200">200</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="filter-section">
+            <h4><i class="fas fa-sliders-h"></i> Content Filters</h4>
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label for="min-duration">Min Duration (minutes)</label>
+                    <input type="number" id="min-duration" class="search-filter" min="0" placeholder="0">
+                </div>
+                <div class="filter-group">
+                    <label for="max-duration">Max Duration (minutes)</label>
+                    <input type="number" id="max-duration" class="search-filter" min="0" placeholder="∞">
+                </div>
+                <div class="filter-group">
+                    <label for="min-rating">Min Rating</label>
+                    <select id="min-rating" class="search-filter">
+                        <option value="">Any</option>
+                        <option value="1">1+ Stars</option>
+                        <option value="2">2+ Stars</option>
+                        <option value="3">3+ Stars</option>
+                        <option value="4">4+ Stars</option>
+                        <option value="5">5 Stars</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        {% if available_tags %}
+        <div class="filter-section">
+            <h4><i class="fas fa-tags"></i> Popular Tags</h4>
+            <div class="tag-filters">
+                {% for tag in available_tags[:20] %}
+                <label class="tag-filter">
+                    <input type="checkbox" name="tag" value="{{ tag }}" class="search-filter">
+                    {{ tag }}
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="filter-section">
+            <h4><i class="fas fa-calendar"></i> Date Filters</h4>
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label for="date-from">Added After</label>
+                    <input type="date" id="date-from" class="search-filter">
+                </div>
+                <div class="filter-group">
+                    <label for="date-to">Added Before</label>
+                    <input type="date" id="date-to" class="search-filter">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Results Header -->
+    <div class="search-results-header" style="display: none;">
+        <div id="result-count"></div>
+        <div class="sort-controls">
+            <label for="sort-by">Sort by:</label>
+            <select id="sort-by">
+                <option value="relevance">Relevance</option>
+                <option value="name">Name</option>
+                <option value="rating">Rating</option>
+                <option value="duration">Duration</option>
+                <option value="views">Views</option>
+                <option value="date">Date Added</option>
+            </select>
+            <select id="sort-order">
+                <option value="desc">Descending</option>
+                <option value="asc">Ascending</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    <div id="search-loading">
+        <div class="loading-spinner"></div>
+        <p>Searching your video collection...</p>
+    </div>
+
+    <!-- Search Results -->
+    <div id="search-results"></div>
+
+    <!-- Search History Sidebar -->
+    <div class="search-sidebar" style="display: none;">
+        <div class="search-history">
+            <h4><i class="fas fa-history"></i> Recent Searches</h4>
+            <div id="search-history"></div>
+        </div>
+        
+        <div class="popular-searches">
+            <h4><i class="fas fa-fire"></i> Popular Searches</h4>
+            <div id="popular-searches"></div>
+        </div>
+    </div>
+
+    <!-- Search Tips -->
+    <div class="search-tips" style="margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px;">
+        <h4><i class="fas fa-lightbulb"></i> Search Tips</h4>
+        <ul style="color: #ccc; margin: 10px 0 0 20px;">
+            <li><strong>Exact phrases:</strong> Use quotes "exact phrase" for precise matching</li>
+            <li><strong>Multiple terms:</strong> All terms are searched by default (AND logic)</li>
+            <li><strong>Fuzzy matching:</strong> Automatically finds similar terms and typos</li>
+            <li><strong>Tag search:</strong> Select tags to filter by specific categories</li>
+            <li><strong>Advanced filters:</strong> Use duration, rating, and date filters to narrow results</li>
+            <li><strong>Sort options:</strong> Sort by relevance, name, rating, duration, or views</li>
+        </ul>
+    </div>
+</div>
+
+<!-- Quick Actions Floating Button -->
+<div class="floating-actions" style="position: fixed; bottom: 20px; right: 20px; z-index: 1000;">
+    <button class="btn-floating" onclick="clearAllFilters()" title="Clear all filters">
+        <i class="fas fa-eraser"></i>
+    </button>
+    <button class="btn-floating" onclick="showSearchHistory()" title="Show search history">
+        <i class="fas fa-history"></i>
+    </button>
+    <button class="btn-floating" onclick="exportSearchResults()" title="Export results">
+        <i class="fas fa-download"></i>
+    </button>
+</div>
+
+<style>
+.search-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.search-header h1 {
+    margin: 0 0 10px 0;
+    color: #fff;
+}
+
+.search-header p {
+    color: #ccc;
+    font-size: 16px;
+}
+
+.btn-floating {
+    display: block;
+    width: 50px;
+    height: 50px;
+    background: #007acc;
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    margin-bottom: 10px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+}
+
+.btn-floating:hover {
+    background: #005a9e;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.search-tips h4 {
+    margin: 0 0 15px 0;
+    color: #fff;
+}
+
+.search-tips ul li {
+    margin-bottom: 8px;
+    line-height: 1.4;
+}
+
+.search-tips strong {
+    color: #007acc;
+}
+
+@media (max-width: 768px) {
+    .floating-actions {
+        bottom: 80px;
+        right: 10px;
+    }
+    
+    .btn-floating {
+        width: 45px;
+        height: 45px;
+        margin-bottom: 8px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='advanced-search.js') }}"></script>
+<script>
+// Global helper functions
+function clearAllFilters() {
+    document.querySelectorAll('.search-filter').forEach(filter => {
+        if (filter.type === 'checkbox') {
+            filter.checked = filter.id === 'fuzzy-search'; // Keep fuzzy search enabled
+        } else {
+            filter.value = '';
+        }
+    });
+    
+    // Reset sort to relevance
+    document.getElementById('sort-by').value = 'relevance';
+    document.getElementById('sort-order').value = 'desc';
+    
+    // Trigger search if there's a current query
+    if (advancedSearch && advancedSearch.currentQuery) {
+        advancedSearch.performSearch(advancedSearch.currentQuery);
+    }
+    
+    // Clear search history preferences
+    localStorage.removeItem('searchFilters');
+}
+
+function showSearchHistory() {
+    const sidebar = document.querySelector('.search-sidebar');
+    if (sidebar) {
+        sidebar.style.display = sidebar.style.display === 'none' ? 'block' : 'none';
+    }
+}
+
+function exportSearchResults() {
+    // Get current search results
+    const results = document.querySelectorAll('.search-result-card');
+    if (results.length === 0) {
+        alert('No search results to export');
+        return;
+    }
+    
+    // Create CSV data
+    const csvData = [];
+    csvData.push(['Title', 'Filename', 'Duration', 'Rating', 'Tags', 'Match Type', 'Relevance']);
+    
+    results.forEach(result => {
+        const title = result.querySelector('.result-title a').textContent;
+        const filename = result.dataset.videoPath;
+        const duration = result.querySelector('.result-duration').textContent;
+        const rating = result.querySelector('.result-rating') ? 
+            result.querySelector('.result-rating').textContent.replace(/\s+/g, ' ').trim() : 'No rating';
+        const tags = Array.from(result.querySelectorAll('.result-tags .tag'))
+            .map(tag => tag.textContent).join('; ');
+        const matchType = result.querySelector('.result-match-type').textContent;
+        const relevance = result.querySelector('.relevance-score').textContent;
+        
+        csvData.push([title, filename, duration, rating, tags, matchType, relevance]);
+    });
+    
+    // Convert to CSV
+    const csv = csvData.map(row => 
+        row.map(field => `"${field.replace(/"/g, '""')}"`).join(',')
+    ).join('\n');
+    
+    // Download file
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `search-results-${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+function playVideo(videoPath) {
+    // Navigate to video player
+    const filename = videoPath.split('/').pop();
+    window.location.href = `/watch/${encodeURIComponent(filename)}`;
+}
+
+function toggleFavorite(videoPath) {
+    // Toggle favorite status (implement based on your favorites system)
+    console.log('Toggle favorite for:', videoPath);
+    // You can implement this based on your existing favorites functionality
+}
+
+function showVideoInfo(videoPath) {
+    // Show video information modal or navigate to info page
+    console.log('Show info for:', videoPath);
+    // Implement based on your video info system
+}
+
+// Clear search input functionality
+document.getElementById('search-input').addEventListener('input', function() {
+    const clearBtn = document.getElementById('search-clear');
+    clearBtn.style.display = this.value ? 'block' : 'none';
+});
+
+document.getElementById('search-clear').addEventListener('click', function() {
+    const searchInput = document.getElementById('search-input');
+    searchInput.value = '';
+    searchInput.focus();
+    this.style.display = 'none';
+    
+    // Clear results
+    if (advancedSearch) {
+        advancedSearch.clearResults();
+        advancedSearch.hideSuggestions();
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,80 @@
+<!-- templates/_player.html -->
+<div class="player" data-player>
+  <video 
+    src="{{ url_for('stream_video', filename=filename) }}" 
+    playsinline
+    preload="metadata"
+    data-filename="{{ filename }}"
+  ></video>
+  
+  <!-- Subtitle overlay -->
+  <div class="subtitle-overlay" id="subtitle-overlay"></div>
+  
+  <div class="player-controls" data-controls>
+    <!-- Skip back 10 seconds -->
+    <button data-action="back10" aria-label="Back 10 seconds" title="Back 10s (J)">
+      ⟲10
+    </button>
+    
+    <!-- Play/Pause -->
+    <button data-action="play" aria-label="Play/Pause" title="Play/Pause (K or Space)">
+      ⏯
+    </button>
+    
+    <!-- Skip forward 10 seconds -->
+    <button data-action="fwd10" aria-label="Forward 10 seconds" title="Forward 10s (L)">
+      10⟳
+    </button>
+    
+    <!-- Seek bar -->
+    <input 
+      type="range" 
+      data-role="seek" 
+      min="0" 
+      max="100" 
+      value="0" 
+      aria-label="Seek"
+      title="Seek timeline"
+    />
+    
+    <!-- Time display -->
+    <span class="time-display" data-time>
+      <span data-current-time>0:00</span> / <span data-duration>0:00</span>
+    </span>
+    
+    <!-- Mute button -->
+    <button data-action="mute" aria-label="Mute" title="Mute (M)">
+      🔇
+    </button>
+    
+    <!-- Volume control -->
+    <input 
+      type="range" 
+      data-role="volume" 
+      min="0" 
+      max="1" 
+      step="0.05" 
+      value="1" 
+      aria-label="Volume"
+      title="Volume (↑/↓)"
+    />
+    
+    <!-- Subtitle controls -->
+    <div class="subtitle-controls">
+      <button data-action="subtitle-toggle" aria-label="Toggle Subtitles" title="Toggle Subtitles" class="subtitle-toggle-btn">
+        <span class="cc-text">CC</span>
+      </button>
+      <button data-action="subtitle-generate" aria-label="Generate Subtitles" title="Generate Subtitles" class="subtitle-generate-btn">
+        <span class="generate-text">Generate</span>
+        <span class="loading-text">
+          <i class="fas fa-spinner fa-spin"></i> Generating...
+        </span>
+      </button>
+    </div>
+
+    <!-- Fullscreen button -->
+    <button data-action="fullscreen" aria-label="Fullscreen" title="Fullscreen (F)">
+      ⛶
+    </button>
+  </div>
+</div>

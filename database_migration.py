@@ -243,6 +243,18 @@ class VideoDatabase:
             
             return videos
     
+    def get_all_filenames(self) -> List[str]:
+        """Get all video filenames"""
+        with self.get_connection() as conn:
+            cursor = conn.execute("SELECT filename FROM videos ORDER BY filename")
+            return [row['filename'] for row in cursor]
+    
+    def delete_video_by_filename(self, filename: str) -> None:
+        """Delete a video and all its associated data"""
+        with self.get_connection() as conn:
+            conn.execute("DELETE FROM videos WHERE filename = ?", (filename,))
+            conn.commit()
+    
     def get_video_by_filename(self, filename: str) -> Optional[Dict]:
         """Get single video with all metadata"""
         with self.get_connection() as conn:

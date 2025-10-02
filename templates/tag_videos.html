@@ -1,58 +1,95 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+{% extends "_base.html" %}
 
-  <title>Videos with Tag #{{ tag }}</title>
+{% block title %}Videos with Tag #{{ tag }}{% endblock %}
 
-  <!-- ── vendor CSS ─────────────────────────────────────────────── -->
-  <link rel="stylesheet"
-        href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+{% block content %}
+<h1 class="text-center mb-4">Videos with Tag: #{{ tag }}</h1>
 
-  <!-- ── colour palette + component styles ─────────────────────── -->
-  <link rel="stylesheet"
-        href="{{ url_for('static', filename='theme.css') }}">
-  <link rel="stylesheet"
-        href="{{ url_for('static', filename='styles.css') }}">
-</head>
-<body>
-  {% include 'navbar.html' %}
-
-  <div class="container">
-    <h1 class="text-center mb-4">Videos with Tag: #{{ tag }}</h1>
-
-    <div class="row">
-      {% for video in videos %}
-      <div class="col-sm-6 col-md-4 col-lg-3 mb-4">
-        <div class="card h-100">
-          <a href="{{ url_for('watch_video', filename=video.filename) }}">
-            {% set thumb_stem = video.filename.rsplit('.',1)[0] %}
-            {% set thumbnail = 'thumbnails/' ~ thumb_stem ~ '.jpg' %}
-            <img class="card-img-top video-thumbnail"
-                 src="{{ url_for('static', filename=thumbnail) | safe }}"
-                 alt="{{ video.filename }}"
-                 onerror="this.onerror=null;this.src='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';">
-          </a>
-          <div class="card-body p-2">
-            <h5 class="card-title text-truncate">{{ video.filename }}</h5>
-          </div>
+<div class="row">
+  {% for video in videos %}
+  <div class="col-sm-6 col-md-4 col-lg-3 mb-4">
+    <div class="card h-100">
+      <a href="{{ url_for('watch_video', filename=video.filename) }}">
+        {% set thumb_stem = video.filename.rsplit('.',1)[0] %}
+        {% set thumbnail = 'thumbnails/' ~ thumb_stem ~ '.jpg' %}
+        <img class="card-img-top video-thumbnail"
+             src="{{ url_for('static', filename=thumbnail) | safe }}"
+             alt="{{ video.filename }}"
+             onerror="this.onerror=null;this.src='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';">
+      </a>
+      <div class="card-body p-2">
+        <h5 class="card-title text-truncate">{{ video.filename }}</h5>
+        
+        <!-- Rating widget -->
+        <div class="rating" data-filename="{{ video.filename }}" role="group" aria-label="Rate this video">
+          {% for i in range(1,6) %}
+            <i class="{{ 'fas' if i<=video.rating else 'far' }} fa-star"
+               data-value="{{ i }}"
+               role="button"
+               tabindex="0"
+               aria-label="Rate {{ i }} star{% if i != 1 %}s{% endif %}"></i>
+          {% endfor %}
         </div>
+        
+        <!-- View count -->
+        <p class="view-count"
+           id="view-count-{{ video.filename|replace('.', '-') }}">
+           Views: {{ video.views }}
+        </p>
       </div>
-      {% endfor %}
-    </div>
-
-    <div class="text-center mt-3">
-      <a class="btn btn-primary" href="{{ url_for('index') }}">Back to Home</a>
     </div>
   </div>
+  {% endfor %}
+</div>
 
-  <!-- ── vendor JS ──────────────────────────────────────────────── -->
-  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+<div class="text-center mt-3">
+  <a class="btn btn-primary" href="{{ url_for('index') }}">Back to Home</a>
+  <a class="btn btn-secondary" href="{{ url_for('tags_page') }}">All Tags</a>
+</div>
+{% endblock %}
 
-  <!-- ── dark‑mode helper (toggles .dark-mode & navbar palette) ── -->
+{% block extra_scripts %}
+  <script src="{{ url_for('static', filename='optimized-utils.js') }}"></script>
   <script src="{{ url_for('static', filename='dark.js') }}"></script>
-  <!-- favorites.js removed: handled by optimized-utils.js to avoid duplicate event handlers -->
-</body>
-</html>
+
+  <script>
+    /* Rating widget + live view count updates */
+    document.addEventListener('DOMContentLoaded', () => {
+      // Rating functionality
+      document.querySelectorAll('.rating i').forEach(star => {
+        star.addEventListener('click', () => {
+          const rating = star.dataset.value;
+          const container = star.parentElement;
+          const filename = container.dataset.filename;
+
+          fetch('/rate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ filename, rating })
+          })
+          .then(r => r.json())
+          .then(data => {
+            if (data.success) {
+              container.querySelectorAll('i').forEach((s, idx) => {
+                s.className = (idx + 1) <= rating ? 'fas fa-star' : 'far fa-star';
+              });
+            }
+          })
+          .catch(console.error);
+        });
+      });
+
+      // Live view counts
+      fetch('/get_views')
+        .then(r => r.json())
+        .then(data => {
+          for (const [file, count] of Object.entries(data)) {
+            const id = 'view-count-' + file.replace(/\./g, '-');
+            const el = document.getElementById(id);
+            if (el) el.textContent = 'Views: ' + count;
+          }
+        })
+        .catch(console.error);
+    });
+  </script>
+{% endblock %}

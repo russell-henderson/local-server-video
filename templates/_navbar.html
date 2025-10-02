@@ -1,0 +1,41 @@
+<nav class="navbar navbar-expand-lg">
+  <a class="navbar-brand font-weight-bold" href="{{ url_for('index') }}">
+    Video Rocker
+  </a>
+
+  <button class="navbar-toggler" type="button"
+          data-bs-toggle="collapse" data-bs-target="#navbarNav"
+          aria-controls="navbarNav" aria-expanded="false"
+          aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="collapse navbar-collapse" id="navbarNav">
+    <ul class="navbar-nav me-auto">
+      <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('index') }}">Home</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('search_page') }}">🔍 Search</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('random_video') }}">Random</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('tags_page') }}">Tags</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('favorites_page') }}">⭐ Favorites</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('best_of') }}">🏆 Best of</a>
+      </li>
+    </ul>
+
+    <button id="toggle-dark-mode"
+            class="btn btn-outline-secondary ms-2"
+            title="Dark Mode (Always On)">
+      <i class="fas fa-moon"></i>
+    </button>
+  </div>
+</nav>

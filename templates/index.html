@@ -1,45 +1,24 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+{% extends "_base.html" %}
 
-  <title>Local Video Server</title>
+{% block title %}Local Video Server{% endblock %}
 
-  <!-- ── vendor CSS ─────────────────────────────────────────────── -->
-  <link rel="stylesheet"
-        href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-  <link rel="stylesheet"
-        href="https://vjs.zencdn.net/7.20.3/video-js.css">
-  <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-
-  <!-- ── adaptive streaming CSS ──────────────────────────────────── -->
-  <link rel="stylesheet"
-        href="{{ url_for('static', filename='adaptive-streaming.css') }}">
-
-  <!-- ── your unified palette + component styles ───────────────── -->
-  <link rel="stylesheet"
-        href="{{ url_for('static', filename='theme.css') }}">
-  <link rel="stylesheet"
-        href="{{ url_for('static', filename='styles.css') }}">
-  
-  <!-- ── performance metrics ─────────────────────────────────────── -->
+{% block extra_head %}
+  <!-- Performance metrics -->
   <script src="{{ url_for('static', filename='metrics.js') }}" defer></script>
-</head>
-<body>
-  <!-- NAVBAR (includes the dark‑mode toggle) -->
-  {% include 'navbar.html' %}
+  
+  <!-- Additional CSS for video grid -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='adaptive-streaming.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+{% endblock %}
 
-  <div class="container my-4">
+{% block content %}
+<h1 class="mb-4 text-center">Videos</h1>
 
-    <h1 class="mb-4 text-center">Videos</h1>
-
-    <!-- ── sorting links ────────────────────────────────────────── -->
-    <div class="sorting-links mb-4 text-center">
-  <span>Sort by :</span>
+<!-- Sorting links -->
+<div class="sorting-links mb-4 text-center">
+  <span>Sort by:</span>
   {% set next_order = 'asc' if current_order == 'desc' else 'desc' %}
-
+  
   <a href="{{ url_for('index', sort='rating', order=next_order if current_sort == 'rating' else 'desc') }}"
      class="{% if current_sort == 'rating' %}active{% endif %}">Rating</a>
 
@@ -48,12 +27,12 @@
 
   <a href="{{ url_for('index', sort='views', order=next_order if current_sort == 'views' else 'desc') }}"
      class="{% if current_sort == 'views' %}active{% endif %}">Views</a>
-
+  
   <a href="{{ url_for('index', sort='date', order=next_order if current_sort == 'date' else 'desc') }}"
      class="{% if current_sort == 'date' %}active{% endif %}">Date Added</a>
 </div>
 
- <!-- ── video grid ───────────────────────────────────────────── -->
+<!-- Video grid -->
 <div class="row">
   {% for video in videos %}
   <div class="col-sm-6 col-md-4 col-lg-3 mb-4">
@@ -77,11 +56,10 @@
       </a>
 
       <div class="card-body p-2">
-
         <div class="d-flex justify-content-between align-items-center mb-1">
           <h5 class="card-title text-truncate mb-0">{{ video.filename }}</h5>
 
-          <!-- ♥ Favorite Toggle Button -->
+          <!-- Favorite Toggle Button -->
           <button class="btn btn-sm favorite-btn touch-target"
                   data-filename="{{ video.filename }}"
                   title="Toggle Favorite"
@@ -90,7 +68,7 @@
           </button>
         </div>
 
-        <!-- rating widget -->
+        <!-- Rating widget -->
         <div class="rating" data-filename="{{ video.filename }}" role="group" aria-label="Rate this video">
           {% for i in range(1,6) %}
             <i class="{{ 'fas' if i<=video.rating else 'far' }} fa-star touch-target"
@@ -101,25 +79,20 @@
           {% endfor %}
         </div>
 
-        <!-- live view count -->
+        <!-- Live view count -->
         <p class="view-count"
            id="view-count-{{ video.filename|replace('.', '-') }}">
-           Views: {{ video.views }}
+           Views: {{ video.views }}
         </p>
       </div>
     </div>
   </div>
   {% endfor %}
 </div>
-</div>
+{% endblock %}
 
-
-
-  <!-- ── vendor JS ──────────────────────────────────────────────── -->
-  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
-
-  <!-- ── your scripts ───────────────────────────────────────────── -->
+{% block extra_scripts %}
+  <!-- Additional scripts -->
   <script src="{{ url_for('static', filename='device-detection.js') }}"></script>
   <script src="{{ url_for('static', filename='video-preview-enhanced.js') }}"></script>
   <script src="{{ url_for('static', filename='video-preview-debug.js') }}"></script>
@@ -130,21 +103,20 @@
   <script src="{{ url_for('static', filename='theme-integration.js') }}"></script>
   <script src="{{ url_for('static', filename='optimized-utils.js') }}"></script>
   <script src="{{ url_for('static', filename='vr-support.js') }}"></script>
-  <!-- analytics script removed to avoid 404 when analytics are not enabled -->
   <script src="{{ url_for('static', filename='recently-played.js') }}"></script>
   <script src="{{ url_for('static', filename='dark.js') }}"></script>
 
   <script>
-    /* rating widget + live view‑count updates */
+    /* Rating widget + live view count updates */
     document.addEventListener('DOMContentLoaded', () => {
       // Video preview is now handled by video-preview-enhanced.js
       
-      // ----- rating -----
+      // Rating functionality
       document.querySelectorAll('.rating i').forEach(star => {
         star.addEventListener('click', () => {
-          const rating         = star.dataset.value;
-          const container      = star.parentElement;
-          const filename       = container.dataset.filename;
+          const rating = star.dataset.value;
+          const container = star.parentElement;
+          const filename = container.dataset.filename;
 
           fetch('/rate', {
             method: 'POST',
@@ -153,9 +125,9 @@
           })
           .then(r => r.json())
           .then(data => {
-            if (data.success){
+            if (data.success) {
               container.querySelectorAll('i').forEach((s, idx) => {
-                s.className = (idx+1)<=rating ? 'fas fa-star' : 'far fa-star';
+                s.className = (idx + 1) <= rating ? 'fas fa-star' : 'far fa-star';
               });
             }
           })
@@ -163,12 +135,12 @@
         });
       });
 
-      // ----- live view counts -----
+      // Live view counts
       fetch('/get_views')
         .then(r => r.json())
         .then(data => {
-          for (const [file, count] of Object.entries(data)){
-            const id = 'view-count-' + file.replace(/\./g,'-');
+          for (const [file, count] of Object.entries(data)) {
+            const id = 'view-count-' + file.replace(/\./g, '-');
             const el = document.getElementById(id);
             if (el) el.textContent = 'Views: ' + count;
           }
@@ -176,7 +148,4 @@
         .catch(console.error);
     });
   </script>
-
-<!-- favorites.js removed: handled by optimized-utils.js to avoid duplicate event handlers -->
-</body>
-</html>
+{% endblock %}

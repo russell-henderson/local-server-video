@@ -1,69 +1,82 @@
 # 🎬 Local Video Server
 
-A modern, feature-rich local video server with advanced streaming capabilities, beautiful UI themes, intelligent video management, and **100% accessibility compliance**. Built with Flask and enhanced with cutting-edge web technologies.
+A modern, feature-rich local video server with a unified video player, clean dark mode interface, and comprehensive video management. Built with Flask and vanilla JavaScript for maximum performance and simplicity.
 
 ![Video Server](https://img.shields.io/badge/Video-Server-blue?style=for-the-badge)
 ![Python](https://img.shields.io/badge/Python-3.13+-green?style=for-the-badge&logo=python)
 ![Flask](https://img.shields.io/badge/Flask-Web%20Framework-red?style=for-the-badge&logo=flask)
-![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-yellow?style=for-the-badge&logo=javascript)
-![Accessibility](https://img.shields.io/badge/Accessibility-WCAG%20AA-green?style=for-the-badge&logo=accessibility)
+![JavaScript](https://img.shields.io/badge/JavaScript-Vanilla-yellow?style=for-the-badge&logo=javascript)
+![Dark Mode](https://img.shields.io/badge/Dark%20Mode-Only-black?style=for-the-badge)
 
 ## ✨ Features
 
-### 🎥 **Advanced Video Streaming**
+### 🎥 **Unified Video Player**
 
-- **Adaptive Bitrate Streaming (ABR)** - Netflix-level quality adaptation
-- **Multi-Quality Support** - 7 quality levels from 240p to 4K
-- **Real-time Network Monitoring** - Intelligent bandwidth detection
-- **Cross-Platform Compatibility** - Desktop, mobile, tablet, and VR support
-- **Smart Buffer Management** - Prevents buffering with predictive loading
+- **Shared Player Component** - Single video player used across all pages
+- **±10 Second Skip** - Quick navigation with buttons and keyboard shortcuts
+- **Keyboard Controls** - Full keyboard support (J/L = ±10s, K/Space = play/pause, F = fullscreen, M = mute, ↑/↓ = volume)
+- **Resume Playback** - Automatic position saving and resume prompts via localStorage
+- **URL Time Parameters** - Support for `?t=SECONDS` to start at specific time
+- **Range Streaming** - Efficient HTTP range requests for large video files
 
-### 🎨 **Modern UI Themes & Accessibility**
+### 🎨 **Clean Dark Mode Interface**
 
-- **Glassmorphic Design** - Frosted glass effects with blur and transparency
-- **Neomorphic Interface** - Soft shadows and tactile button elements
-- **Hybrid Theme** - Best of both glassmorphism and neomorphism
-- **Dark Mode Support** - Eye-friendly viewing in low light
-- **High Contrast Mode** - WCAG AA compliant accessibility enhancement
-- **Keyboard Navigation** - Full keyboard shortcuts (Ctrl+1-4 for themes, Ctrl+D for dark mode)
-- **Touch-Friendly Interface** - 44px minimum touch targets for mobile/VR
+- **Dark Mode Only** - Optimized for comfortable viewing
+- **Consistent Styling** - Single CSS framework across all pages
+- **Responsive Design** - Works on desktop, mobile, and Quest 2 browser
+- **Bootstrap Integration** - Grid system and utilities for responsive layouts
+- **Font Awesome Icons** - Professional iconography throughout
+
+### 📊 **Smart Video Management**
+
+- **Favorites System** - Heart-based favoriting with instant visual feedback
+- **5-Star Rating System** - User ratings with click-to-rate interface
+- **Tagging System** - Organize videos with custom tags (add/remove dynamically)
+- **View Analytics** - Track view counts and engagement
+- **Sorting Options** - Sort by rating, title, views, or date added
+- **Best of Collection** - Automatically curated high-rated videos (4+ stars)
 
 ### 🔍 **Enhanced Video Previews**
 
-- **Live Thumbnails** - Mouse-over scrubbing for instant scene preview
-- **Mobile Tap-to-Preview** - Touch-friendly preview system for mobile/VR devices
-- **Scene Thumbnails** - Visual scrub bar with frame previews
-- **VR-Optimized Controls** - Touch-friendly interface for VR devices
-- **Memory Management** - Efficient preview loading and cleanup
-- **Fallback Strategies** - Works on constrained devices
+- **Hover Preview** - Mouse-over video preview on thumbnails (desktop)
+- **Touch-Friendly** - Disabled on touch devices for better mobile experience
+- **Play Overlays** - Visual feedback on thumbnail hover
+- **Fallback Thumbnails** - Graceful handling of missing thumbnails
 
-### 📊 **Smart Management & Analytics**
+### 🚀 **Performance & Architecture**
 
-- **Favorites System** - Heart-based favoriting with visual feedback
-- **Rating System** - User ratings and recommendations
-- **Tagging System** - Organize videos with custom tags
-- **View Analytics** - Track viewing patterns and statistics
-- **Metadata Management** - Rich video information storage
-- **Performance Metrics** - Real-time FPS, memory usage, and UX event tracking
-- **Cache Performance** - Monitor cache hit rates and response times
-
-### 🚀 **Performance & Reliability**
-
-- **Intelligent Caching** - Fast thumbnail and metadata loading with SQLite backend
+- **Framework-Free Architecture** - Vanilla JavaScript for maximum performance
+- **Modular Design** - Shared components and templates
+- **Efficient Caching** - Fast thumbnail and metadata loading with SQLite backend
 - **Database Optimization** - SQLite with automatic JSON migration support
-- **Performance Monitoring** - Real-time server health tracking
 - **Error Handling** - Graceful degradation and recovery
-- **Debug Tools** - Comprehensive troubleshooting utilities
 - **Background Processing** - Non-blocking thumbnail generation
 
-### ♿ **Accessibility Features (WCAG AA Compliant)**
+## 📺 **Available Pages**
 
-- **Screen Reader Support** - Complete ARIA labels and roles
-- **Keyboard Navigation** - Full tab navigation with visible focus indicators
-- **High Contrast Mode** - Toggle for enhanced visibility
-- **Touch Targets** - 44px minimum for mobile accessibility
-- **Reduced Motion** - Respects `prefers-reduced-motion` system setting
-- **Color Contrast** - Minimum 4.5:1 ratio maintained across all themes
+- **Home** - Video gallery with sorting and filtering options
+- **Watch** - Dedicated video player page with rating, tagging, and related videos
+- **Random** - Redirects to a random video for discovery
+- **Best of** - Curated collection of highest-rated videos (4+ stars)
+- **Favorites** - Personal collection of hearted videos
+- **Tags** - Browse all available tags
+- **Tag Videos** - View videos filtered by specific tag
+
+## ⌨️ **Keyboard Shortcuts**
+
+### Video Player Controls
+
+- **J** - Skip backward 10 seconds
+- **L** - Skip forward 10 seconds  
+- **K** or **Space** - Play/Pause toggle
+- **F** - Toggle fullscreen
+- **M** - Toggle mute
+- **↑/↓** - Volume up/down
+
+### General Navigation
+
+- **Tab** - Navigate through interactive elements
+- **Enter** - Activate buttons and links
 
 ## 🛠️ Installation
 
@@ -132,22 +145,30 @@ local-video-server/
 ├── 📄 performance_monitor.py     # Performance tracking
 ├── 📄 database_migration.py      # Database management
 ├── 📁 static/                    # Frontend assets
-│   ├── 🎨 glassmorphic-theme.css # Glassmorphic UI theme
-│   ├── 🎨 neomorphic-theme.css   # Neomorphic UI theme
-│   ├── 🎨 hybrid-theme.css       # Hybrid UI theme
-│   ├── ⚡ adaptive-streaming.js  # ABR streaming engine
-│   ├── 📱 device-detection.js    # Cross-platform detection
-│   ├── 🎬 video-preview-enhanced.js # Advanced video previews
-│   ├── 🌐 network-monitor.js     # Network speed monitoring
-│   ├── 🎯 theme-manager.js       # Theme switching system
-│   ├── ❤️ favorites.js           # Favorites management
-│   ├── 📊 metrics.js             # Performance metrics collection
-│   └── 🖼️ thumbnails/           # Generated thumbnails
+│   ├── 📁 css/                   # Stylesheets
+│   │   ├── 🎨 theme.css         # Dark mode theme variables
+│   │   └── 🎨 app.css           # Main application styles
+│   ├── � js/                    # JavaScript modules
+│   │   ├── ⚡ player.js         # Shared video player component
+│   │   └── � ui.js             # UI helpers and interactions
+│   ├── 📁 thumbnails/           # Generated video thumbnails
+│   └── 🎬 video-preview-enhanced.js # Lightweight video previews
 ├── 📁 templates/                 # HTML templates
+│   ├── � _base.html            # Base template with shared layout
+│   ├── � _navbar.html          # Navigation component
+│   ├── � _player.html          # Shared video player component
 │   ├── 🏠 index.html            # Main video gallery
 │   ├── ▶️ watch.html            # Video player page
 │   ├── ⭐ favorites.html        # Favorites collection
-│   └── 🏷️ tags.html            # Tag management
+│   ├── 🏆 best_of.html          # Best rated videos
+│   ├── 🏷️ tags.html            # All tags overview
+│   └── 📁 tag_videos.html       # Videos by tag
+├── 📁 videos/                    # Video files directory
+├── 📁 docs/                      # Documentation
+│   └── 📁 deferred/             # Removed features documentation
+└── 🗄️ *.json                   # Data files (ratings, favorites, tags, views)
+```
+
 ├── 📁 videos/                    # Your video files
 ├── 📁 docs/                      # Documentation
 │   ├── 📖 ADAPTIVE_STREAMING_SYSTEM.md
@@ -161,6 +182,7 @@ local-video-server/
 ├── 📄 tags.json                  # Video tags data
 ├── 📄 views.json                 # View analytics data
 └── 📄 video_metadata.db          # SQLite database
+
 ```
 
 ## 🎮 Usage Guide

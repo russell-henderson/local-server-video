@@ -1,51 +1,34 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+{% extends "_base.html" %}
 
-  <title>Watch Video — {{ filename }}</title>
+{% block title %}Watch Video — {{ filename }}{% endblock %}
 
-  <!-- ── vendor CSS ─────────────────────────────────────────────── -->
-  <link rel="stylesheet"
-        href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-  <link rel="stylesheet"
-        href="https://vjs.zencdn.net/7.20.3/video-js.css">
-  <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-
-  <!-- ── color palette + component styles ─────────────────────── -->
-  <link rel="stylesheet"
-        href="{{ url_for('static', filename='theme.css') }}">
-  <link rel="stylesheet"
-        href="{{ url_for('static', filename='styles.css') }}">
-  
-  <!-- ── performance metrics ─────────────────────────────────────── -->
+{% block extra_head %}
+  <!-- Performance metrics -->
   <script src="{{ url_for('static', filename='metrics.js') }}" defer></script>
-</head>
-<body>
-  {% include 'navbar.html' %}
+  
+  <!-- Subtitle controls -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/subtitle-controls.css') }}">
+  <script src="{{ url_for('static', filename='subtitle-controls.js') }}" defer></script>
+{% endblock %}
 
-  <div class="container my-4">
-
-<!-- ── video info row ───────────────────────────────────────── -->
+{% block content %}
+<!-- Video info row -->
 <div class="video-info mb-4 d-flex flex-wrap align-items-center">
+  <h2 class="video-title me-3 mb-2 mb-sm-0">{{ filename }}</h2>
 
-  <h2 class="video-title mr-3 mb-2 mb-sm-0">{{ filename }}</h2>
-
-  <!-- ♥ Favorite toggle button -->
-  <button class="btn btn-sm favorite-btn mr-3 mb-2 mb-sm-0 touch-target"
+  <!-- Favorite toggle button -->
+  <button class="btn btn-sm favorite-btn me-3 mb-2 mb-sm-0"
           data-filename="{{ filename }}"
           title="Toggle Favorite"
           aria-label="{% if filename in favorites_list %}Remove from favorites{% else %}Add to favorites{% endif %}">
     <i class="fa{% if filename in favorites_list %}s{% else %}r{% endif %} fa-heart text-danger"></i>
   </button>
 
-  <!-- rating -->
-  <div class="rating mr-3 mb-2 mb-sm-0" data-filename="{{ filename }}" role="group" aria-label="Rate this video">
+  <!-- Rating -->
+  <div class="rating me-3 mb-2 mb-sm-0" data-filename="{{ filename }}" role="group" aria-label="Rate this video">
     {% set current_rating = ratings.get(filename, 0) %}
     {% for i in range(1,6) %}
-      <i class="{{ 'fas' if i<=current_rating else 'far' }} fa-star touch-target"
+      <i class="{{ 'fas' if i<=current_rating else 'far' }} fa-star"
          data-value="{{ i }}"
          role="button"
          tabindex="0"
@@ -53,16 +36,16 @@
     {% endfor %}
   </div>
 
-  <!-- view count -->
-  <div id="video-view-count" class="view-count mr-3 mb-2 mb-sm-0">
-    Views: {{ views.get(filename, 0) }}
+  <!-- View count -->
+  <div id="video-view-count" class="view-count me-3 mb-2 mb-sm-0">
+    Views: {{ views.get(filename, 0) }}
   </div>
 
-  <!-- tags -->
+  <!-- Tags -->
   <div class="tags-container flex-grow-1">
     <div id="existing-tags" class="mb-2">
       {% for tag in tags %}
-        <span class="badge badge-primary tag-badge" data-tag="{{ tag }}">
+        <span class="badge tag-badge" data-tag="{{ tag }}">
           {{ tag }} <span class="delete-tag">&times;</span>
         </span>
       {% endfor %}
@@ -71,32 +54,16 @@
            class="form-control new-tag-input"
            placeholder="Add tag">
   </div>
-
 </div>
 
+<!-- Video player using shared component -->
+<div class="row video-container mb-4">
+  <div class="col-12">
+    {% include '_player.html' %}
+  </div>
+</div>
 
-    <!-- ── video player ─────────────────────────────────────────── -->
-    <div class="row video-container mb-4">
-      <div class="col-12">
-        <video id="my-video"
-               class="video-js vjs-default-skin vjs-fluid"
-               controls preload="metadata"
-               aria-label="Video player for {{ filename }}"
-               aria-describedby="video-description">
-          <source src="{{ url_for('stream_video', filename=filename) }}"
-                  type="video/mp4">
-          <p class="vjs-no-js">
-            To view this video please enable JavaScript
-            and upgrade to a browser that supports HTML5 video.
-          </p>
-        </video>
-        <div id="video-description" class="sr-only">
-          Video player with controls for {{ filename }}
-        </div>
-      </div>
-    </div>
-
-<!-- ── related videos grid ───────────────────────────────────── -->
+<!-- Related videos grid -->
 <div class="row thumbnail-grid mb-4">
   <div class="col-12">
     <h5 class="mb-3">Related Videos</h5>
@@ -104,18 +71,23 @@
   {% if videos %}
     {% for video in videos %}
     <div class="col-sm-6 col-md-4 col-lg-3 mb-4">
-      <div class="card h-100" data-role="video-card" data-preview-delay="500">
+      <div class="card h-100" data-role="video-card">
         <a href="{{ url_for('watch_video', filename=video.filename) }}">
           {% set thumb_stem = video.filename.rsplit('.', 1)[0] %}
           {% set thumb = 'thumbnails/' ~ thumb_stem ~ '.jpg' %}
-          <img class="card-img-top video-thumbnail"
-               src="{{ url_for('static', filename=thumb) | safe }}"
-               alt="{{ video.filename }}"
-               onerror="this.onerror=null;this.src='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';">
+          <div class="thumbnail-container">
+            <img class="card-img-top video-thumbnail"
+                 src="{{ url_for('static', filename=thumb) | safe }}"
+                 alt="{{ video.filename }}"
+                 onerror="this.onerror=null;this.src='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';">
+            <div class="play-overlay">
+              <i class="fas fa-play"></i>
+            </div>
+          </div>
         </a>
         <div class="card-body p-2">
           <h5 class="card-title text-truncate">{{ video.filename }}</h5>
-          <p class="mb-0 small">Views: {{ video.views }}</p>
+          <p class="mb-0 small view-count">Views: {{ video.views }}</p>
           <div class="rating small">
             {% for i in range(1,6) %}
               <i class="{{ 'fas' if i<=video.rating else 'far' }} fa-star"></i>
@@ -132,7 +104,7 @@
   {% endif %}
 </div>
 
-<!-- ── pagination for related videos ─────────────────────────── -->
+<!-- Pagination for related videos -->
 {% if total_pages > 1 %}
 <nav class="mb-4">
   <ul class="pagination justify-content-center">
@@ -146,132 +118,111 @@
 </nav>
 {% endif %}
 
-<a class="btn btn-primary btn-block" href="{{ url_for('index') }}">
+<a class="btn btn-primary" href="{{ url_for('index') }}">
   Back to List
 </a>
-  </div>
+{% endblock %}
 
-  <!-- ── vendor JS ──────────────────────────────────────────────── -->
-  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="https://vjs.zencdn.net/7.20.3/video.min.js"></script>
-
-  <!-- ── Optimized utilities, VR support, video player, analytics, recently played and dark‑mode helper ──────────────────────────────────────── -->
-  <script src="{{ url_for('static', filename='optimized-utils.js') }}"></script>
-  <script src="{{ url_for('static', filename='vr-support.js') }}"></script>
-  <script src="{{ url_for('static', filename='vr-video-player.js') }}"></script>
-  <!-- analytics scripts removed to avoid 404s when analytics are not enabled -->
-  <script src="{{ url_for('static', filename='recently-played.js') }}"></script>
-  <script src="{{ url_for('static', filename='dark.js') }}"></script>
-
-  <!-- ── page‑specific JS ──────────────────────────────────────── -->
+{% block extra_scripts %}
+  <!-- Watch page specific scripts -->
+  <script src="{{ url_for('static', filename='js/ui.js') }}"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-
-      /* ---------- view counter (once per load) ----------------- */
-      const vid     = document.getElementById('my-video');
-      let viewSent  = false;
-      vid.addEventListener('play', () => {
-        if (viewSent) return;
-        viewSent = true;
-        fetch('/view', {
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({ filename:'{{ filename }}' })
-        })
-        .then(r=>r.json())
-        .then(d=>{
-          if (d.success){
-            document.getElementById('video-view-count').textContent =
-              'Views: ' + d.views;
-          }
-        }).catch(console.error);
-      });
-
-      /* ---------- Video.js skip‑ahead button ------------------- */
-      const player = videojs('my-video',{playbackRates:[0.5,1,1.5,2]});
-      player.ready(() => {
-        const btn = document.createElement('button');
-        btn.textContent = 'Skip 10 s';
-        btn.className   = 'vjs-skip-button';
-        btn.onclick     = () => player.currentTime(player.currentTime()+10);
-        player.controlBar.el().appendChild(btn);
-      });
-
-      /* ---------- rating widget ------------------------------- */
-      document.querySelectorAll('.rating i').forEach(star=>{
-        star.addEventListener('click', ()=>{
-          const rating   = parseInt(star.dataset.value);
-          const fileName = star.parentElement.dataset.filename;
-          fetch('/rate',{
-            method:'POST',
-            headers:{'Content-Type':'application/json'},
-            body:JSON.stringify({ filename:fileName, rating })
+      /* View counter (once per load) */
+      const video = document.querySelector('[data-player] video');
+      let viewSent = false;
+      
+      if (video) {
+        video.addEventListener('play', () => {
+          if (viewSent) return;
+          viewSent = true;
+          fetch('/view', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ filename: '{{ filename }}' })
           })
-          .then(r=>r.json())
-          .then(d=>{
-            if (d.success){
-              star.parentElement.querySelectorAll('i').forEach((s,i)=>{
-                s.className = (i+1)<=rating ? 'fas fa-star' : 'far fa-star';
+          .then(r => r.json())
+          .then(d => {
+            if (d.success) {
+              document.getElementById('video-view-count').textContent = 'Views: ' + d.views;
+            }
+          }).catch(console.error);
+        });
+      }
+
+      /* Rating widget */
+      document.querySelectorAll('.rating i').forEach(star => {
+        star.addEventListener('click', () => {
+          const rating = parseInt(star.dataset.value);
+          const fileName = star.parentElement.dataset.filename;
+          fetch('/rate', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ filename: fileName, rating })
+          })
+          .then(r => r.json())
+          .then(d => {
+            if (d.success) {
+              star.parentElement.querySelectorAll('i').forEach((s, i) => {
+                s.className = (i + 1) <= rating ? 'fas fa-star' : 'far fa-star';
               });
             }
           }).catch(console.error);
         });
       });
 
-      /* ---------- tag add / delete helpers -------------------- */
+      /* Tag management */
       const newTagInput = document.getElementById('new-tag');
 
-      newTagInput.addEventListener('keypress', e=>{
-        if (e.key!=='Enter') return;
+      newTagInput.addEventListener('keypress', e => {
+        if (e.key !== 'Enter') return;
         const tag = newTagInput.value.trim();
         if (!tag) return;
 
-        fetch('/tag',{
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({ filename:'{{ filename }}', tag })
+        fetch('/tag', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ filename: '{{ filename }}', tag })
         })
-        .then(r=>r.json())
-        .then(d=>{
-          if (d.success){
+        .then(r => r.json())
+        .then(d => {
+          if (d.success) {
             renderTags(d.tags);
-            newTagInput.value='';
+            newTagInput.value = '';
           }
         }).catch(console.error);
       });
 
-      function renderTags(tags){
+      function renderTags(tags) {
         const wrap = document.getElementById('existing-tags');
-        wrap.innerHTML='';
-        tags.forEach(t=>{
+        wrap.innerHTML = '';
+        tags.forEach(t => {
           const span = document.createElement('span');
-          span.className='badge badge-primary tag-badge';
-          span.dataset.tag=t;
+          span.className = 'badge tag-badge';
+          span.dataset.tag = t;
           span.innerHTML = `${t} <span class="delete-tag">&times;</span>`;
           wrap.appendChild(span);
         });
-        // attach delete listeners
-        wrap.querySelectorAll('.delete-tag').forEach(x=>{
-          x.onclick = e=>{
+        
+        // Attach delete listeners
+        wrap.querySelectorAll('.delete-tag').forEach(x => {
+          x.onclick = e => {
             e.stopPropagation();
             const t = x.parentElement.dataset.tag;
-            fetch('/delete_tag',{
-              method:'POST',
-              headers:{'Content-Type':'application/json'},
-              body:JSON.stringify({ filename:'{{ filename }}', tag:t })
+            fetch('/delete_tag', {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({ filename: '{{ filename }}', tag: t })
             })
-            .then(r=>r.json())
-            .then(d=>{ if(d.success) renderTags(d.tags); })
+            .then(r => r.json())
+            .then(d => { if(d.success) renderTags(d.tags); })
             .catch(console.error);
           };
         });
       }
 
-      /* initial tag render (from Jinja) */
+      /* Initial tag render */
       renderTags(JSON.parse('{{ tags|tojson|safe }}'));
     });
   </script>
-  <!-- favorites.js removed: handled by optimized-utils.js to avoid duplicate event handlers -->
-</body>
-</html>
+{% endblock %}
