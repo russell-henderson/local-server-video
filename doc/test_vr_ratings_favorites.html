@@ -1,0 +1,63 @@
+```html
+<!-- archived in archive/root_files/test_vr_ratings_favorites.html -->
+				document.getElementById('test-status').textContent = '✅ VR Video Player initialized';
+			} else {
+				// Test entering VR mode
+				testVRPlayer.enterVRMode();
+				document.getElementById('test-status').textContent = '🥽 Entered VR immersive mode - check for ratings & favorites overlay';
+			}
+		}
+        
+		function testOptimizations() {
+			// Test performance optimizations
+			const start = performance.now();
+            
+			// Simulate rapid interactions
+			for (let i = 0; i < 100; i++) {
+				const event = new MouseEvent('click', { bubbles: true });
+				document.querySelector('.favorite-btn').dispatchEvent(event);
+			}
+            
+			const end = performance.now();
+			document.getElementById('test-status').textContent = 
+				`⚡ Performance test completed in ${(end - start).toFixed(2)}ms (optimized with debouncing)`;
+		}
+        
+		function resetTest() {
+			if (testVRPlayer) {
+				testVRPlayer.exitVRMode();
+				testVRPlayer = null;
+			}
+			document.body.classList.remove('vr-mode');
+			document.getElementById('vr-status').textContent = '🖥️ Desktop Mode Active';
+			document.getElementById('test-status').textContent = 'Test reset';
+		}
+        
+		// Initialize on load
+		document.addEventListener('DOMContentLoaded', () => {
+			const vrStatus = document.getElementById('vr-status');
+			if (window.vrSupport && window.vrSupport.isVR) {
+				vrStatus.textContent = '🥽 VR Device detected!';
+			} else {
+				vrStatus.textContent = '🖥️ Desktop browser (VR features available for testing)';
+			}
+		});
+        
+		// Add keyboard help
+		document.addEventListener('keydown', (e) => {
+			if (e.key === 'h' || e.key === 'H') {
+				alert(`🥽 VR Keyboard Shortcuts:
+                
+• 1-5: Rate video (in VR mode)
+• F: Toggle favorite (in VR mode)  
+• Ctrl+V: Toggle VR optimizations
+• Ctrl+Shift+F: Enter fullscreen
+• Escape: Exit VR mode
+• H: Show this help`);
+			}
+		});
+	</script>
+</body>
+</html>
+```
+
