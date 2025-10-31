@@ -143,13 +143,14 @@ Use the comprehensive testing template in `docs/QA_TESTING_TEMPLATE.md`:
 
 ## 📚 Documentation
 
-Comprehensive documentation is available in the `docs/` folder:
+Comprehensive, consolidated documentation is available in the `docs/` folder. For most developer and maintenance tasks, start with these top-level documents:
 
-- **[Adaptive Streaming System](docs/ADAPTIVE_STREAMING_SYSTEM.md)** - ABR implementation details
-- **[UI Design System](docs/GLASSMORPHIC_NEOMORPHIC_DESIGN.md)** - Theme architecture and customization
-- **[Video Preview System](docs/VIDEO_PREVIEW_IMPROVEMENTS.md)** - Cross-platform preview implementation
-- **[Performance Analysis](docs/PERFORMANCE_ANALYSIS_SUMMARY.md)** - Optimization strategies and results
-- **[QA Testing Guide](docs/QA_TESTING_GUIDE.md)** - Complete testing procedures and verification
+- **[Implementation & Architecture](docs/IMPLEMENTATION.md)** — code structure, key components, and developer guidance
+- **[Performance & Optimization](docs/PERFORMANCE.md)** — profiling results, optimization notes, and action items
+- **[UI & Player Guide](docs/UI.md)** — UI patterns, player behavior, and theme details
+- **[Project Todos & Roadmap](docs/TODOS.md)** — high-level tasks and remaining work
+
+More specialized or historical documents have been archived under `docs/deferred/` for reference.
 
 ## 🛣️ Roadmap
 

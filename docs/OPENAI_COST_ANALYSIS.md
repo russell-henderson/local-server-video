@@ -15,13 +15,7 @@
 
 ### Typical Chat Request Analysis
 
-```
-System Context (video metadata): ~600 tokens
-User Question: ~20 tokens
-AI Response: ~150 tokens (average)
------------------------------------------
-Total per chat: ~770 tokens = ~$0.0008
-```
+(Example analysis omitted for brevity)
 
 ## 📈 Usage Cost Estimates
 
@@ -72,15 +66,6 @@ Total per chat: ~770 tokens = ~$0.0008
 ```env
 OPENAI_MODEL=gpt-3.5-turbo
 CHAT_MAX_TOKENS=200
-```
-
-**Cost**: ~50% less than current
-
-### Balanced (Current)
-
-```env
-OPENAI_MODEL=gpt-4o-mini
-CHAT_MAX_TOKENS=300
 ```
 
 **Cost**: ~$0.0008 per chat

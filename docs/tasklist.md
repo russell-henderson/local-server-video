@@ -13,4 +13,3 @@ Absolutely. You can add **fully automatic subtitle generation** that runs locall
 * Styling stays in your current dark theme.
 
 [content truncated]
-

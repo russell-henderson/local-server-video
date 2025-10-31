@@ -14,33 +14,13 @@ This guide combines verification steps with functional QA testing for a streamli
 
 ```bash
 # PowerShell (Windows)
+
 Select-String -Pattern "keydown|Ctrl\+D|switchTheme\('default'\)|switchTheme\('glassmorphic'\)|switchTheme\('neomorphic'\)|switchTheme\('hybrid'\)" -Path "static/theme-manager.js" -AllMatches
 
 # Linux/macOS
+
 grep -nE "keydown|Ctrl\+D|switchTheme\\('default'\\)|switchTheme\\('glassmorphic'\\)|switchTheme\\('neomorphic'\\)|switchTheme\\('hybrid'\\)" static/theme-manager.js
-```
 
-**Expected Results:**
-
-- ✅ Single `document.addEventListener('keydown', …)` handler
-- ✅ `Ctrl+1..4` → `switchTheme('default'|'glassmorphic'|'neomorphic'|'hybrid')`
-- ✅ `Ctrl+D` → `toggleDarkMode()`
-
-**If Missing:**
-
-```javascript
-// static/theme-manager.js (near init)
-document.addEventListener('keydown', (e) => {
-  if (!e.ctrlKey) return;
-  const k = e.key.toLowerCase();
-  if (['1','2','3','4','d'].includes(k)) e.preventDefault();
-  if (k === '1') window.themeManager?.switchTheme('default');
-  if (k === '2') window.themeManager?.switchTheme('glassmorphic');
-  if (k === '3') window.themeManager?.switchTheme('neomorphic');
-  if (k === '4') window.themeManager?.switchTheme('hybrid');
-  if (k === 'd') window.themeManager?.toggleDarkMode();
-});
-```
 
 ### **2) Mobile tap‑to‑preview**
 
@@ -48,31 +28,13 @@ document.addEventListener('keydown', (e) => {
 
 ```bash
 # PowerShell (Windows)
+
 Select-String -Pattern "Mobile Tap-to-Preview|touchstart|onTap" -Path "static/video-preview-enhanced.js" -AllMatches
 
 # Linux/macOS
+
 grep -nE "Mobile Tap-to-Preview|touchstart|onTap" static/video-preview-enhanced.js
-```
 
-**Expected Results:**
-
-- ✅ "Mobile Tap-to-Preview System" comment found
-- ✅ Touch event handling implemented
-- ✅ `data-role="video-card"` attributes in HTML
-
-**If Missing:**
-
-```javascript
-// static/video-preview-enhanced.js
-const isTouch = matchMedia('(hover: none)').matches || 'ontouchstart' in window;
-if (isTouch) {
-  document.addEventListener('pointerdown', (e) => {
-    const card = e.target.closest('[data-role="video-card"]');
-    if (!card) return;
-    // start a lightweight preview video overlay for ~5s, then cleanup
-  }, { passive: true });
-}
-```
 
 ### **3) Touch targets ≥44px**
 
@@ -80,32 +42,15 @@ if (isTouch) {
 
 ```bash
 # PowerShell (Windows)
+
 Select-String -Pattern "min-height: 44px" -Path "static/*.css" -AllMatches
 Select-String -Pattern "min-width: 44px" -Path "static/*.css" -AllMatches
 
 # Linux/macOS
+
 grep -n "min-height: 44px" static/*.css
 grep -n "min-width: 44px" static/*.css
-```
 
-**Expected Results:**
-
-- ✅ Rule present in all theme CSS files (glassmorphic, neomorphic, hybrid)
-- ✅ Applied to buttons, icons, rating stars, card actions
-
-**If Missing:**
-
-```css
-/* static/hybrid-theme.css (and/or others) */
-.touch-target { 
-  min-width: 44px; 
-  min-height: 44px; 
-  padding: 8px; 
-  display: inline-flex; 
-  align-items: center; 
-  justify-content: center; 
-}
-```
 
 ### **4) High‑contrast mode**
 
@@ -113,30 +58,14 @@ grep -n "min-width: 44px" static/*.css
 
 ```bash
 # PowerShell (Windows)
+
 Select-String -Pattern "high-contrast|prefers-contrast" -Path "static/*.css" -AllMatches
 Select-String -Pattern "toggleHighContrast" -Path "static/*.js" -AllMatches
 
 # Linux/macOS
+
 grep -nE "high-contrast|prefers-contrast" static/*.css static/*.js
-```
 
-**Expected Results:**
-
-- ✅ `@media (prefers-contrast: high)` in all theme CSS files
-- ✅ `toggleHighContrast()` method in theme-manager.js
-
-**If Missing:**
-
-```javascript
-// static/theme-manager.js
-const HC_KEY = 'lvs_high_contrast';
-function applyHC(on){ 
-  document.documentElement.classList.toggle('high-contrast', !!on); 
-  localStorage.setItem(HC_KEY, on?'1':'0'); 
-}
-window.themeManager.toggleHighContrast = () => applyHC(!document.documentElement.classList.contains('high-contrast'));
-applyHC(localStorage.getItem(HC_KEY) === '1');
-```
 
 ### **5) Metrics collection (`metrics.js`)**
 
@@ -144,46 +73,17 @@ applyHC(localStorage.getItem(HC_KEY) === '1');
 
 ```bash
 # PowerShell (Windows)
+
 Test-Path "static/metrics.js"
 Select-String -Pattern "__LVS_METRICS|performance|memory|paint" -Path "static/metrics.js" -AllMatches
 Select-String -Pattern "metrics.js" -Path "templates/*.html" -AllMatches
 
 # Linux/macOS
+
 ls static/metrics.js
 grep -nE "__LVS_METRICS|performance|memory|paint" static/metrics.js
 grep -n "metrics.js" templates/*.html
-```
 
-**Expected Results:**
-
-- ✅ File exists at `static/metrics.js`
-- ✅ Contains `__LVS_METRICS()`, performance monitoring, memory tracking
-- ✅ Included in both `templates/index.html` and `templates/watch.html`
-
-**If Missing:**
-
-```javascript
-// static/metrics.js
-(() => {
-  const state = { fps: [], events: [] };
-  let last = performance.now(), frames = 0;
-  function tick(t){ 
-    frames++; 
-    if (t - last >= 1000){ 
-      state.fps.push(frames); 
-      frames=0; 
-      last=t; 
-    } 
-    requestAnimationFrame(tick); 
-  }
-  requestAnimationFrame(tick);
-  function log(evt, data={}){ 
-    state.events.push({ t: Date.now(), evt, ...data }); 
-  }
-  window.__LVS_METRICS = () => ({ fps: state.fps.slice(-60), events: state.events.slice(-100) });
-  window.__LVS_LOG = log;
-})();
-```
 
 ### **6) ARIA & focus states**
 
@@ -191,28 +91,15 @@ grep -n "metrics.js" templates/*.html
 
 ```bash
 # PowerShell (Windows)
+
 Select-String -Pattern "aria-label|role=|aria-pressed|tabindex|aria-controls" -Path "templates/*.html" -AllMatches
 Select-String -Pattern "outline|focus-visible" -Path "static/*.css" -AllMatches
 
 # Linux/macOS
+
 grep -nE "aria-label|role=|aria-pressed|tabindex|aria-controls" templates/*.html
 grep -n "outline|focus-visible" static/*.css
-```
 
-**Expected Results:**
-
-- ✅ Player controls, rating stars, favorite buttons: `role="button"`, `tabindex="0"`, `aria-label="..."`
-- ✅ CSS focus ring present: `:focus-visible { outline: 3px solid currentColor; outline-offset: 2px; }`
-
-**If Missing:**
-
-```css
-/* static/hybrid-theme.css (and/or others) */
-:focus-visible { 
-  outline: 3px solid currentColor; 
-  outline-offset: 2px; 
-}
-```
 
 ---
 
@@ -414,3 +301,5 @@ grep -n "outline|focus-visible" static/*.css
 5. **Production Deployment**: Deploy to production environment
 
 **The Local Video Server is ready for comprehensive testing and production deployment!** 🚀
+
+

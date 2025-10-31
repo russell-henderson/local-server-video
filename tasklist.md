@@ -359,6 +359,7 @@ No changes needed in `player.js` if you are using native `<video controls>`. If 
 Copy and paste:
 
 Implement automatic subtitles:
+
 * [ ] 1) Add Files:
 
 * config_subtitles.py (as provided)

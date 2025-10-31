@@ -90,50 +90,50 @@ A modern, feature-rich local video server with a unified video player, clean dar
 
 1. **Clone the repository**
 
-	```bash
-	git clone <repository-url>
-	cd local-video-server
-	```
+  ```bash
+  git clone <repository-url>
+  cd local-video-server
+  ```
 
 2. **Install Python dependencies**
 
-	```bash
-	pip install flask pillow sqlite3
-	# Optional: For AI features
-	pip install openai
-	```
+  ```bash
+  pip install flask pillow sqlite3
+  # Optional: For AI features
+  pip install openai
+  ```
 
 3. **Set up environment variables**
 
-	```bash
-	cp .env.example .env
-	# Edit .env with your OpenAI API key (optional)
-	```
+  ```bash
+  cp .env.example .env
+  # Edit .env with your OpenAI API key (optional)
+  ```
 
 4. **Create required directories**
 
-	```bash
-	mkdir -p videos static/thumbnails
-	```
+  ```bash
+  mkdir -p videos static/thumbnails
+  ```
 
 5. **Add your videos**
 
-	```bash
-	# Copy your video files to the videos/ directory
-	cp /path/to/your/videos/* videos/
-	```
+  ```bash
+  # Copy your video files to the videos/ directory
+  cp /path/to/your/videos/* videos/
+  ```
 
 6. **Start the server**
 
-	```bash
-	python main.py
-	```
+  ```bash
+  python main.py
+  ```
 
 7. **Open your browser**
 
-	```bash
-	http://localhost:5000
-	```
+  ```bash
+  http://localhost:5000
+  ```
 
 ## 📁 Project Structure
 
@@ -167,23 +167,7 @@ local-video-server/
 ├── 📁 docs/                      # Documentation
 │   └── 📁 deferred/             # Removed features documentation
 └── 🗄️ *.json                   # Data files (ratings, favorites, tags, views)
-```
 
-├── 📁 videos/                    # Your video files
-├── 📁 docs/                      # Documentation
-│   ├── 📖 ADAPTIVE_STREAMING_SYSTEM.md
-│   ├── 🎨 GLASSMORPHIC_NEOMORPHIC_DESIGN.md
-│   ├── 🎬 VIDEO_PREVIEW_IMPROVEMENTS.md
-│   ├── 📊 PERFORMANCE_ANALYSIS_SUMMARY.md
-│   ├── 🔧 IMPLEMENTATION_GUIDE.md # Complete feature checklist & code
-│   └── 🧪 QA_TESTING_GUIDE.md    # Complete testing procedures
-├── 📄 favorites.json             # User favorites data
-├── 📄 ratings.json               # User ratings data
-├── 📄 tags.json                  # Video tags data
-├── 📄 views.json                 # View analytics data
-└── 📄 video_metadata.db          # SQLite database
-
-```
 
 ## 🎮 Usage Guide
 
@@ -199,4 +183,6 @@ local-video-server/
 
 - **Ctrl+1** - Switch to Default theme
 - **Ctrl+2** - Switch to Glassmorphic theme
+
+
 

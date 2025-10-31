@@ -60,19 +60,17 @@ When attempting to generate subtitles, the API returned:
 
 The issue was with CUDA device selection in the faster-whisper model initialization. The logic was incorrectly trying to force CUDA when compute_type was "auto", causing a CUDA driver version mismatch error:
 
-```
-CUDA failed with error CUDA driver version is insufficient for CUDA runtime version
-```
-
 ### Solution
 
 Fixed the device selection logic in `subtitles.py`:
 
 ```python
 # Before (problematic):
+
 device="cuda" if SUBTITLES.compute_type == "auto" else "auto"
 
 # After (fixed):
+
 device="auto"
 ```
 

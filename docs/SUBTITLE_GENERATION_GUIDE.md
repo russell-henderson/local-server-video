@@ -5,6 +5,7 @@ This document describes the automatic subtitle generation system using faster-wh
 ## Overview
 
 The subtitle generation system provides:
+
 - **Local AI transcription** using OpenAI's Whisper models via faster-whisper
 - **WebVTT and SRT format support** for broad compatibility
 - **Background processing** to avoid blocking the web interface
@@ -25,6 +26,7 @@ The subtitle generation system provides:
 ### Dependencies
 
 The system requires the `faster-whisper` package, which provides:
+
 - Local AI transcription (no internet required)
 - Multiple model sizes (tiny, base, small, medium, large)
 - GPU acceleration support (CUDA)
@@ -47,30 +49,7 @@ class SubtitleConfig:
     quiet_hours: tuple[int, int] = (1, 6)  # 1am–6am preferred window
     videos_root: str = "videos"        # adjust if different
     subs_ext: str = ".vtt"            # default track for player
-```
 
-### Model Sizes
-
-- **tiny**: ~39 MB, fastest, lowest accuracy
-- **base**: ~74 MB, good balance of speed and accuracy
-- **small**: ~244 MB, better accuracy
-- **medium**: ~769 MB, high accuracy (recommended)
-- **large-v3**: ~1550 MB, highest accuracy, slowest
-
-### Compute Types
-
-- **auto**: Automatically detect best available (CUDA > CPU)
-- **int8**: 8-bit quantization for faster inference
-- **float16**: Half precision (GPU only)
-- **float32**: Full precision
-
-## Command Line Usage
-
-### Check Subtitle Status
-
-```bash
-python manage_subs.py --root videos check
-```
 
 Shows how many videos have subtitles vs. missing subtitles.
 
@@ -78,29 +57,13 @@ Shows how many videos have subtitles vs. missing subtitles.
 
 ```bash
 python manage_subs.py --root videos generate
-```
 
-Generates subtitles for all videos that don't have them.
-
-### Generate for Specific File
-
-```bash
-python manage_subs.py --root videos generate --file "specific_video.mp4"
-```
 
 ### Batch Generation with Multiple Workers
 
 ```bash
 python manage_subs.py --root videos batch --workers 2
-```
 
-**Warning**: Multiple workers consume significant CPU/GPU resources.
-
-### Respect Quiet Hours
-
-```bash
-python manage_subs.py --root videos generate --quiet-check
-```
 
 Skips generation if current time is within configured quiet hours.
 
@@ -110,29 +73,13 @@ Skips generation if current time is within configured quiet hours.
 
 ```http
 GET /api/subtitles/<video_path>
-```
 
-Returns JSON with subtitle availability:
-```json
-{
-  "video": "example.mp4",
-  "has_subtitles": true
-}
-```
 
 ### Trigger Background Generation
 
 ```http
 POST /api/subtitles/<video_path>/generate
-```
 
-Starts subtitle generation in background thread:
-```json
-{
-  "status": "started",
-  "message": "Subtitle generation started in background"
-}
-```
 
 ## Template Integration
 
@@ -145,17 +92,7 @@ Starts subtitle generation in background thread:
 {% else %}
   <span class="subtitle-missing">❌ No Subtitles</span>
 {% endif %}
-```
 
-### Enhance Video Context
-
-```python
-from app_subs_integration import enhance_video_context
-
-video_info = {"path": "example.mp4", "title": "Example"}
-enhanced = enhance_video_context(video_info)
-# Now includes: enhanced["has_subtitles"] = True/False
-```
 
 ## File Formats
 
@@ -196,52 +133,12 @@ enhanced = enhance_video_context(video_info)
 **"Module 'faster_whisper' not found"**
 ```bash
 pip install faster-whisper
-```
 
-**GPU not detected**
-- Install CUDA toolkit
-- Verify GPU compatibility
-- Set `compute_type = "float32"` for CPU-only
-
-**Out of memory errors**
-- Reduce model size (medium → base → tiny)
-- Set `compute_type = "int8"` for quantization
-- Reduce `max_concurrent` to 1
-
-**Poor transcription quality**
-- Try larger model size
-- Set specific language instead of auto-detect
-- Enable `translate_to_english = True` for non-English content
-
-### Debugging
-
-Enable verbose logging:
-```bash
-python manage_subs.py --root videos check --verbose
-```
 
 Test specific video:
 ```bash
 python test_subtitles.py
-```
 
-## Integration Examples
-
-### Automatic Generation on Upload
-
-```python
-from subtitles import generate_for_file
-from config_subtitles import SUBTITLES
-
-def handle_video_upload(video_path):
-    if SUBTITLES.enabled:
-        # Generate subtitles in background
-        threading.Thread(
-            target=generate_for_file,
-            args=(video_path,),
-            daemon=True
-        ).start()
-```
 
 ### Batch Processing Script
 
@@ -255,19 +152,7 @@ def nightly_subtitle_generation():
     
     results = generate_missing(SUBTITLES.videos_root)
     print(f"Generated subtitles for {len(results)} videos")
-```
 
-### Player Integration
-
-```html
-<video controls>
-  <source src="/video/example.mp4" type="video/mp4">
-  {% if subtitle_status(video.path).has_subtitles %}
-    <track kind="subtitles" src="/video/example.vtt" 
-           srclang="en" label="English" default>
-  {% endif %}
-</video>
-```
 
 ## Security Considerations
 
@@ -284,3 +169,4 @@ def nightly_subtitle_generation():
 - Integration with translation services
 - Subtitle editing interface
 - Quality scoring and automatic re-processing
+

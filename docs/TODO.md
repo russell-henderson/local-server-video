@@ -11,4 +11,3 @@ MANDATES (from product owner):
 - Reduce duplication and delete dead assets/docs.
 
 [content truncated]
-

@@ -48,7 +48,35 @@ favorites = load_favorites()
 
 cache = VideoCache()
 ratings = cache.get_ratings()  # Cached in memory
+```
 
+**Benefits**:
+
+- ✅ Reduces disk I/O by 95%+
+- ✅ Sub-millisecond data access
+- ✅ Write-through persistence
+- ✅ Thread-safe operations
+- ✅ Configurable TTL (5 minutes default)
+
+### 2. **Optimized Main Application** (`main_optimized.py`)
+
+```python
+# Before: Multiple file operations per route
+
+def index():
+  videos = get_video_list()  # Scans directory
+  ratings = load_ratings()   # Loads JSON
+  views = load_views()       # Loads JSON
+  tags = load_tags()         # Loads JSON
+  # ... process each video individually
+
+# After: Bulk operations with cache
+
+def index():
+  video_data = cache.get_all_video_data(sort_param, reverse)
+  favorites_list = cache.get_favorites()
+  # Single bulk operation, pre-sorted
+```
 
 **Benefits**:
 
@@ -63,18 +91,41 @@ ratings = cache.get_ratings()  # Cached in memory
 # Before: JSON file operations
 
 def update_rating(filename, rating):
-    ratings = load_json(RATINGS_FILE)  # Load entire file
-    ratings[filename] = rating
-    save_json(RATINGS_FILE, ratings)   # Write entire file
+  ratings = load_json(RATINGS_FILE)  # Load entire file
+  ratings[filename] = rating
+  save_json(RATINGS_FILE, ratings)   # Write entire file
 
 # After: SQLite with indexing
 
 def update_rating(filename, rating):
-    conn.execute(
-        "INSERT OR REPLACE INTO ratings (filename, rating) VALUES (?, ?)",
-        (filename, rating)
-    )  # Single row operation with indexes
+  conn.execute(
+    "INSERT OR REPLACE INTO ratings (filename, rating) VALUES (?, ?)",
+    (filename, rating)
+  )  # Single row operation with indexes
+```
 
+**Benefits**:
+
+- ✅ Indexed queries (sub-millisecond lookups)
+- ✅ Atomic operations
+- ✅ ACID compliance
+- ✅ Efficient joins and aggregations
+- ✅ Automatic cleanup of orphaned data
+
+### 4. **Performance Monitoring** (`performance_monitor.py`)
+
+```python
+@performance_monitor("route_index")
+def index():
+  # ... route logic
+  # Automatically tracks timing, memory usage
+
+# Real-time monitoring
+
+monitor.get_cache_hit_rate()  # Cache efficiency
+monitor.get_route_stats()     # Route performance
+system_stats = get_system_stats()  # System resources
+```
 
 **Benefits**:
 
@@ -111,7 +162,7 @@ def update_rating(filename, rating):
    # Add monitoring endpoint
    @app.route('/admin/performance')
    def performance_stats():
-       return "<pre>" + performance_report() + "</pre>"
+     return "<pre>" + performance_report() + "</pre>"
    ```
 
 ### Phase 2: Database Migration (Medium Risk)
@@ -175,40 +226,85 @@ import time
 
 @lru_cache(maxsize=1)
 def get_cached_video_list():
-    return get_video_list()
+  return get_video_list()
 
 # Invalidate cache every 5 minutes
 
 last_cache_time = 0
 def get_video_list_cached():
-    global last_cache_time
-    if time.time() - last_cache_time > 300:  # 5 minutes
-        get_cached_video_list.cache_clear()
-        last_cache_time = time.time()
-    return get_cached_video_list()
+  global last_cache_time
+  if time.time() - last_cache_time > 300:  # 5 minutes
+    get_cached_video_list.cache_clear()
+    last_cache_time = time.time()
+  return get_cached_video_list()
+```
 
+### 2. Background Thumbnail Generation (10 minutes)
+
+```python
+from concurrent.futures import ThreadPoolExecutor
+import threading
+
+executor = ThreadPoolExecutor(max_workers=2)
+
+def generate_thumbnail_async(video):
+  def _generate():
+    generate_thumbnail(video)  # Existing function
+  executor.submit(_generate)
+
+# Replace synchronous calls with async
+
+for video in videos:
+  generate_thumbnail_async(video)  # Non-blocking
+```
 
 ### 3. Add Response Caching Headers (2 minutes)
 
 ```python
 @app.route('/video/<path:filename>')
 def stream_video(filename):
-    # ... existing code ...
-    rv.headers.add('Cache-Control', 'public, max-age=3600')  # 1 hour cache
-    return rv
+  # ... existing code ...
+  rv.headers.add('Cache-Control', 'public, max-age=3600')  # 1 hour cache
+  return rv
+```
 
+## Monitoring and Maintenance
+
+### 1. Performance Monitoring Endpoints
+
+```python
+@app.route('/admin/stats')
+def admin_stats():
+  return jsonify({
+    'cache_hit_rate': monitor.get_cache_hit_rate(),
+    'route_stats': monitor.get_route_stats(),
+    'system_stats': get_system_stats()
+  })
+```
 
 ### 2. Cache Health Checks
 
 ```python
 @app.route('/admin/cache/status')
 def cache_status():
-    return jsonify({
-        'cache_size': len(cache._video_metadata),
-        'last_refresh': cache._last_refresh,
-        'hit_rate': monitor.get_cache_hit_rate()
-    })
+  return jsonify({
+    'cache_size': len(cache._video_metadata),
+    'last_refresh': cache._last_refresh,
+    'hit_rate': monitor.get_cache_hit_rate()
+  })
+```
 
+### 3. Database Maintenance (if using SQLite)
+
+```bash
+# Weekly maintenance
+
+python -c "
+from database_migration import VideoDatabase
+db = VideoDatabase()
+db.cleanup_orphaned_data()
+"
+```
 
 ## Load Testing
 
@@ -225,7 +321,23 @@ python -c "
 from performance_monitor import load_test_simulation
 results = load_test_simulation('http://localhost:5000', 100)
 "
+```
 
+### Advanced Load Testing with Apache Bench
+
+```bash
+# Install Apache Bench
+
+# Windows: Download Apache HTTP Server
+
+# Linux: sudo apt-get install apache2-utils
+
+# Test different endpoints
+
+ab -n 1000 -c 10 http://localhost:5000/
+ab -n 500 -c 5 http://localhost:5000/favorites
+ab -n 300 -c 3 http://localhost:5000/tags
+```
 
 ## Troubleshooting
 

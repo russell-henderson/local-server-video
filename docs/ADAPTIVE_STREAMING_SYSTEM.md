@@ -51,19 +51,7 @@ class AdaptiveStreamingController {
   - User interface management
   - Quality switching logic
 }
-```
 
-#### **2. NetworkMonitor**
-
-```javascript
-class NetworkMonitor {
-  // Network condition monitoring
-  - Bandwidth measurement
-  - Connection quality assessment
-  - Trend analysis
-  - Performance statistics
-}
-```
 
 #### **3. AdaptiveStreamingManager**
 
@@ -75,33 +63,7 @@ class AdaptiveStreamingManager {
   - Debug mode management
   - Global coordination
 }
-```
 
-### **Quality Selection Algorithm**
-
-```javascript
-function calculateOptimalQuality(networkSpeed, bufferHealth, deviceCaps) {
-  // 1. Filter by device capabilities
-  let maxQuality = getDeviceMaxQuality(deviceCaps);
-  
-  // 2. Filter by network speed (80% safety margin)
-  let networkQualities = qualities.filter(q => 
-    q.bitrate <= networkSpeed * 0.8
-  );
-  
-  // 3. Adjust based on buffer health
-  if (bufferHealth < 5) {
-    // Conservative - choose lower quality
-    return networkQualities[Math.floor(length * 0.3)];
-  } else if (bufferHealth > 15) {
-    // Aggressive - choose higher quality
-    return networkQualities[length - 1];
-  } else {
-    // Balanced approach
-    return networkQualities[Math.floor(length * 0.6)];
-  }
-}
-```
 
 ### **Network Speed Measurement**
 
@@ -118,46 +80,7 @@ async function measureNetworkSpeed() {
   
   return speed;
 }
-```
 
-## 🎮 User Interface
-
-### **Quality Selector**
-
-- **Location**: Top-left corner of video player
-- **Auto-Hide**: Appears on hover, hides when not needed
-- **Accessibility**: Full keyboard navigation support
-- **Visual Feedback**: Shows current quality and available options
-
-### **Network Indicator**
-
-- **Real-Time Speed**: Shows current network speed
-- **Connection Quality**: Visual indicator of network health
-- **Buffer Status**: Color-coded buffer health bar
-
-### **Quality Menu**
-
-- **Quality Options**: All available quality levels
-- **Bitrate Display**: Shows required bandwidth for each quality
-- **Active Indicator**: Highlights currently selected quality
-- **Auto Mode**: Special option for automatic quality selection
-
-## 📊 Performance Monitoring
-
-### **Real-Time Statistics**
-
-```javascript
-{
-  currentSpeed: 8500000,        // Current network speed (bps)
-  averageSpeed: 7800000,        // Average speed over time window
-  trend: 'improving',           // Network trend: improving/degrading/stable
-  quality: 'good',              // Connection quality assessment
-  connectionType: '4g',         // Connection type from browser API
-  bufferHealth: 12.5,           // Current buffer health (seconds)
-  qualitySwitches: 3,           // Number of quality switches
-  currentQuality: '1080p'       // Currently selected quality
-}
-```
 
 ### **Debug Mode**
 
@@ -184,20 +107,7 @@ const qualityConfig = {
   measurementInterval: 10000,   // Network measurement frequency (ms)
   maxMeasurements: 10          // Keep last N measurements
 };
-```
 
-### **Device Capabilities**
-
-```javascript
-const deviceCaps = {
-  maxResolution: '1080p',       // Maximum supported resolution
-  screenWidth: 1920,            // Screen width in pixels
-  screenHeight: 1080,           // Screen height in pixels
-  devicePixelRatio: 2,          // Device pixel ratio
-  hardwareConcurrency: 8,       // CPU cores
-  memory: 8                     // RAM in GB
-};
-```
 
 ## 🎯 Integration Guide
 
@@ -211,15 +121,7 @@ const deviceCaps = {
 <script src="network-monitor.js"></script>
 <script src="adaptive-streaming.js"></script>
 <script src="adaptive-streaming-init.js"></script>
-```
 
-### **Video Enhancement**
-
-```javascript
-// Videos are automatically enhanced when detected
-// Manual enhancement:
-window.adaptiveStreamingManager.enhanceVideo(videoElement);
-```
 
 ### **Quality Control**
 
@@ -232,16 +134,7 @@ window.adaptiveStreamingManager.enableAutoMode();
 
 // Get current stats
 const stats = window.adaptiveStreamingManager.getStats();
-```
 
-### **Preset Configurations**
-
-```javascript
-// Apply preset configurations
-window.adaptiveStreamingManager.applyPreset('high-quality');
-window.adaptiveStreamingManager.applyPreset('data-saver');
-window.adaptiveStreamingManager.applyPreset('mobile-optimized');
-```
 
 ## 📱 Platform-Specific Optimizations
 
@@ -281,20 +174,7 @@ console.log(window.adaptiveStreamingManager.getStats());
 
 // Verify cooldown period
 console.log('Last switch:', Date.now() - controller.lastSwitchTime);
-```
 
-#### **Poor Quality Selection**
-
-```javascript
-// Check device capabilities
-console.log(controller.deviceCapabilities);
-
-// Check network speed accuracy
-console.log(controller.networkMonitor.getStats());
-
-// Review quality history
-console.log(controller.getQualityHistory());
-```
 
 #### **Buffer Issues**
 
@@ -305,23 +185,7 @@ console.log('Buffer health:', controller.getBufferHealth(video));
 
 // Check buffer thresholds
 console.log('Threshold:', controller.bufferHealthThreshold);
-```
 
-### **Debug Commands**
-
-```javascript
-// Enable debug mode
-window.adaptiveStreamingManager.enableDebugMode();
-
-// Get detailed stats
-console.table(window.adaptiveStreamingManager.getStats());
-
-// Force quality switch
-window.adaptiveStreamingManager.setQuality('720p');
-
-// Reset measurements
-window.adaptiveStreamingManager.getController().networkMonitor.measurements = [];
-```
 
 ## 🚀 Performance Impact
 
@@ -367,3 +231,4 @@ window.adaptiveStreamingManager.getController().networkMonitor.measurements = []
 - **Network Topology**: Consider network path characteristics
 
 This adaptive streaming system provides a robust, intelligent solution for delivering optimal video quality across all devices and network conditions, ensuring the best possible user experience for your video server.
+

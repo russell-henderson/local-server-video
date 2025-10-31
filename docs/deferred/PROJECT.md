@@ -60,6 +60,63 @@ This project is a local video server designed to manage, serve, and organize a c
 ├── videos/
 │   └── *.mp4
 
+```
+
+.
+├── cache_manager.py
+├── database_migration.py
+├── favorites.json
+├── main.py
+├── performance_monitor.py
+├── project_structure.txt
+├── ratings.json
+├── regenerate_thumbnails.py
+├── sanitize_video_filenames.py
+├── Sort-DesktopFiles.ps1
+├── tags.json
+├── terminal.log
+├── test_db.py
+├── video_metadata.db
+├── views.json
+├── __pycache__/
+├── docs/
+│   ├── code_descriptions.txt
+│   ├── OPENAI_COST_ANALYSIS.md
+│   ├── PERFORMANCE_ANALYSIS_SUMMARY.md
+│   ├── PERFORMANCE_OPTIMIZATION_GUIDE.md
+│   ├── project_structure.txt
+│   ├── README.md
+│   ├── VIDEO_PREVIEW_FEATURE.md
+├── images/
+│   └── gallery/
+├── scratchoff/
+│   └── index.html
+├── scripts/
+│   ├── analyze_thumbnails.py
+│   ├── export-code-descriptions-openai.ps1
+│   ├── export-code-descriptions.ps1
+│   ├── export-project-structure-no-media.ps1
+│   ├── export-project-structure.ps1
+├── static/
+│   ├── chat.js
+│   ├── dark.js
+│   ├── favorites.js
+│   ├── style.css
+│   ├── styles.css
+│   ├── theme.css
+│   └── thumbnails/
+├── templates/
+│   ├── favorites.html
+│   ├── image_gallery.html
+│   ├── index.html
+│   ├── navbar.html
+│   ├── tag_videos.html
+│   ├── tags.html
+│   └── watch.html
+├── videos/
+│   └── *.mp4
+
+
 ## Key Components
 
 ### Python Scripts
@@ -164,3 +221,5 @@ Specify your license here (e.g., MIT, GPL, etc.).
 
 ---
 For more details, see the documentation in the `docs/` folder.
+
+
