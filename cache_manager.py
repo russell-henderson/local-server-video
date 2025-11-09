@@ -68,7 +68,15 @@ class VideoCache:
         self.video_dir = "videos"
         
         # Initialize cache
-        self.refresh_all()
+        # Allow tests to opt-out of the automatic refresh on construction by setting
+        # LVS_SKIP_INIT_REFRESH=1 in the environment. This helps test isolation so
+        # tests can set `cache.video_dir` before triggering a refresh.
+        if os.getenv('LVS_SKIP_INIT_REFRESH'):
+            # Do not refresh now; tests may set paths and trigger refresh later
+            self._last_refresh = {key: 0 for key in self._last_refresh}
+            self._video_metadata.clear()
+        else:
+            self.refresh_all()
 
     def _filter_existing(self, items: List[Dict]) -> List[Dict]:
         """Return only rows whose filename exists on disk."""
