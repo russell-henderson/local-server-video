@@ -1,20 +1,21 @@
-"""manage_subs.py — subtitle management CLI (REMOVED)
+"""Minimal compatibility stub for manage_subs (archived).
 
-The automatic subtitle generation system has been removed from the
-application. This script previously provided CLI helpers to check and
-generate subtitles. It now only prints a notice to avoid ImportError
-or confusion.
+The original CLI helper was archived to `archive/python_legacy/manage_subs.py`.
+This compact stub prevents ImportError for scripts that import
+`manage_subs` but no longer require the full CLI.
 """
 
 import sys
+import warnings
+
+warnings.warn(
+    "manage_subs module archived to archive/python_legacy/manage_subs.py",
+    DeprecationWarning,
+)
 
 
 def main():
-    print("Subtitle system: REMOVED. The subtitle CLI is unavailable.")
-    print(
-        "To re-enable subtitle generation, restore the original implementation"
-    )
-    print("or see docs/deferred/ for archived documentation.")
+    print("Subtitle CLI is archived and unavailable.")
     return 0
 
 

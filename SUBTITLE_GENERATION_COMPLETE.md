@@ -1,4 +1,5 @@
 # Subtitle Generation System - Implementation Complete ✅
+
 # Subtitle Generation System — REMOVED
 
 The automatic subtitle generation system has been removed from this
@@ -10,4 +11,5 @@ look in `docs/deferred/` for archived notes and guides.
 For safety and compatibility the application now contains small
 compatibility stubs so that any remaining imports do not raise
 ImportError; but the feature is not functional.
+
 - **Model Management**: Automatic model downloading and caching

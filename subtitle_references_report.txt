@@ -1,0 +1,37 @@
+Subtitle references scan
+========================
+
+Date: 2025-11-09
+Total matches found (grep): 200+ (see list below)
+
+Summary: the repository still contains references to "subtitle" across docs, templates, and a small set of compatibility shim files. Most remaining references are in archived docs under `docs/deferred/`, `docs/`, and in tasklists. Active code references left intentionally are:
+
+- `subtitles.py` (compatibility shim)
+- `manage_subs.py` (CLI stub)
+- `static/subtitle-controls.js` (no-op stub)
+- `static/css/subtitle-controls.css` (neutralized)
+- `templates/_player.html` and `templates/watch.html` (player markup updated; comments remain)
+- `main.py` (comment noting subtitle system removed)
+
+Docs containing subtitle references (non-exhaustive):
+- `docs/SUBTITLE_GENERATION_GUIDE.md`
+- `docs/SUBTITLE_SYSTEM_TROUBLESHOOTING.md`
+- `docs/SUBTITLE_GENERATION_COMPLETE.md`
+- `docs/deferred/SUBTITLE_GENERATION_GUIDE.md`
+- `docs/deferred/SUBTITLE_SYSTEM_TROUBLESHOOTING.md`
+- `docs/deferred/SUBTITLE_GENERATION_COMPLETE.md`
+- `tasklist.md`
+- `docs/tasklist.md`
+
+Other files with subtitle mentions:
+- `copilot_todo.md`
+- `test_subtitles.py` (notice stub)
+- `templates/best_of.html` (css class named "subtitle" used for layout)
+- `static/css/app.css` (subtitle-overlay styles hidden)
+
+Next recommended steps:
+1. Decide if you want to fully purge the compatibility shims (`subtitles.py`, `manage_subs.py`, `static/subtitle-controls.js`) or keep them as safe no-ops until after the player-control feature lands and smoke tests pass.
+2. If purging, remove the shims and update imports in files that reference `subtitles` or `config_subtitles.py` (search results show `tasklist.md` and some templates may reference the helper functions).
+3. After purge, run the smoke-test (start Flask) and run `grep -Ri "subtitle" ./` to confirm only archived docs remain.
+
+Full machine-readable results are available via the interactive grep run; ask me to export the exact match list if you want the complete per-line listing.

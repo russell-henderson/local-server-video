@@ -152,6 +152,15 @@ Comprehensive, consolidated documentation is available in the `docs/` folder. Fo
 
 More specialized or historical documents have been archived under `docs/deferred/` for reference.
 
+## Deprecated Systems
+
+The repository has undergone a cleanup to archive legacy and deprecated subsystems. Notably:
+
+- The automatic subtitle generation system (AI transcription, CLI tools, and API routes) has been removed and its documentation archived to `docs/deferred/legacy/`.
+- See `docs/ARCHIVE_INDEX.md` for an index of archived files and short summaries.
+
+This cleanup is part of the v1.02 maintenance cycle to keep active documentation focused on maintained features.
+
 ## 🛣️ Roadmap
 
 ### **Completed Features** ✅

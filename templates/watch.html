@@ -125,6 +125,7 @@
 {% block extra_scripts %}
   <!-- Watch page specific scripts -->
   <script src="{{ url_for('static', filename='js/ui.js') }}"></script>
+  <script src="{{ url_for('static', filename='video-player-controls.js') }}" defer></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       /* View counter (once per load) */
