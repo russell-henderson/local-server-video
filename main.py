@@ -19,6 +19,7 @@ from thumbnail_manager import (
     generate_async as generate_thumbnail_async,
     sync as sync_thumbnails,
 )
+import json
 
 app = Flask(__name__)
 
@@ -804,13 +805,7 @@ def api_reindex_search():
         }), 500
 
 
-# Import subtitle integration to register routes
-try:
-    import app_subs_integration
-    app_subs_integration.register_subtitle_routes(app)
-    print("✅ Subtitle system loaded")
-except ImportError as e:
-    print(f"⚠️  Subtitle system not available: {e}")
+# Subtitle system removed — no subtitle routes registered
 
 
 if __name__ == '__main__':

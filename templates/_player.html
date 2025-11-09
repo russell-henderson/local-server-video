@@ -7,9 +7,6 @@
     data-filename="{{ filename }}"
   ></video>
   
-  <!-- Subtitle overlay -->
-  <div class="subtitle-overlay" id="subtitle-overlay"></div>
-  
   <div class="player-controls" data-controls>
     <!-- Skip back 10 seconds -->
     <button data-action="back10" aria-label="Back 10 seconds" title="Back 10s (J)">
@@ -59,18 +56,7 @@
       title="Volume (↑/↓)"
     />
     
-    <!-- Subtitle controls -->
-    <div class="subtitle-controls">
-      <button data-action="subtitle-toggle" aria-label="Toggle Subtitles" title="Toggle Subtitles" class="subtitle-toggle-btn">
-        <span class="cc-text">CC</span>
-      </button>
-      <button data-action="subtitle-generate" aria-label="Generate Subtitles" title="Generate Subtitles" class="subtitle-generate-btn">
-        <span class="generate-text">Generate</span>
-        <span class="loading-text">
-          <i class="fas fa-spinner fa-spin"></i> Generating...
-        </span>
-      </button>
-    </div>
+    <!-- Player controls (no subtitle system) -->
 
     <!-- Fullscreen button -->
     <!-- Favorite toggle (also included here so it remains visible when the video element is moved into an immersive/VR container) -->

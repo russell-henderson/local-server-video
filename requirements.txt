@@ -1,3 +1,5 @@
 Flask==3.1.2
 # Pin other known runtime deps if needed
 # Jinja2, Werkzeug and others are installed as dependencies of Flask
+psutil==5.9.5
+requests==2.31.0

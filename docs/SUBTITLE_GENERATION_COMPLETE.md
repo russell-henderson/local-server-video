@@ -1,19 +1,13 @@
- (content copied from original SUBTITLE_GENERATION_COMPLETE.md)
+<!-- This doc was moved/neutralized -->
 
-# Subtitle Generation System - Implementation Complete ✅
+# Subtitle Generation System — REMOVED
 
-## 🎯 Overview
+The automatic subtitle generation system has been removed from this
+repository. The implementation (AI transcription, CLI tools, API
+endpoints, and frontend controls) was intentionally taken out. If you
+need historical documentation or wish to restore the feature, please
+look in `docs/deferred/` for archived notes and guides.
 
-Successfully implemented a comprehensive automatic subtitle generation system using AI-powered transcription with faster-whisper. The system provides both web interface controls and command-line management tools.
-
-## 🚀 Features Implemented
-
-### ✅ Core AI Transcription Engine (`subtitles.py`)
-
-- **faster-whisper Integration**: Local AI transcription using OpenAI Whisper models
-- **Multiple Output Formats**: WebVTT (.vtt) and SubRip (.srt) subtitle formats
-- **Model Management**: Automatic model downloading and caching
-- **Configurable Settings**: Model size, compute type, language detection
-- **Progress Tracking**: Real-time transcription progress updates
-
-[content truncated]
+For safety and compatibility the application now contains small
+compatibility stubs so that any remaining imports do not raise
+ImportError; but the feature is not functional.

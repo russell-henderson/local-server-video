@@ -311,6 +311,8 @@ body {
 
 /* Subtitle text overlay */
 .subtitle-overlay {
+  /* subtitle overlay removed — keep hidden if referenced */
+  display: none !important;
   position: absolute;
   bottom: 80px; /* Above controls */
   left: 50%;
@@ -331,7 +333,8 @@ body {
 }
 
 .subtitle-overlay.visible {
-  opacity: 1;
+  /* still keep hidden */
+  display: none !important;
 }
 
 /* ––––– Chat Widget ––––– */

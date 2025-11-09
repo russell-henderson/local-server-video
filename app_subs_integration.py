@@ -1,73 +1,43 @@
-# app_subs_integration.py
-from flask import jsonify
+"""app_subs_integration.py — subtitle integration removed (compat shim)
 
-from subtitles import has_any_subs, generate_for_file
+This module used to register Flask routes and template helpers for the
+automatic subtitle generation system. That feature has been removed.
+To avoid ImportError and to keep template/context calls safe, this file
+provides small, safe no-op helpers. No Flask routes are registered.
+"""
 
+import logging
+from typing import Dict
 
-def register_subtitle_routes(app):
-    """Register subtitle routes with the Flask app."""
-    
-    @app.route("/api/subtitles/<path:video_path>", methods=["GET"])
-    def subtitle_status_api(video_path):
-        """API endpoint to get subtitle status."""
-        if not video_path:
-            return jsonify({"error": "No video path provided"}), 400
-
-        full_path = f"videos/{video_path}"
-        has_subs = has_any_subs(full_path)
-        return jsonify({
-            "video": video_path,
-            "has_subtitles": has_subs
-        })
-
-    @app.route("/api/subtitles/<path:video_path>", methods=["POST"])
-    def generate_subtitle_sync_api(video_path):
-        """API endpoint to trigger synchronous subtitle generation."""
-        if not video_path:
-            return jsonify({"error": "No video path provided"}), 400
-
-        full_path = f"videos/{video_path}"
-
-        try:
-            result = generate_for_file(full_path)
-            return jsonify({
-                "status": "generated",
-                "result": result
-            })
-        except FileNotFoundError as e:
-            return jsonify({
-                "status": "error",
-                "error": str(e)
-            }), 404
-        except Exception as e:
-            return jsonify({
-                "status": "error",
-                "error": str(e)
-            }), 500
-
-    # Template helper function
-    @app.template_global()
-    def subtitle_status_global(video_path: str) -> dict:
-        """Template function to check subtitle status."""
-        return lazy_subtitle_check(video_path)
+logger = logging.getLogger(__name__)
 
 
-def lazy_subtitle_check(video_path: str) -> dict:
+def register_subtitle_routes(app) -> None:
+    """No-op: subtitle routes removed.
+
+    Keep the function present so code that calls
+    `app_subs_integration.register_subtitle_routes(app)` won't fail,
+    but don't register any endpoints.
     """
-    Check if subtitles exist, return status info.
-    Used by templates to show subtitle availability.
+    logger.debug(
+        "Subtitle routes removed: register_subtitle_routes is a no-op."
+    )
+
+
+def lazy_subtitle_check(video_path: str) -> Dict[str, object]:
+    """Return a safe subtitle status dict (always no subtitles).
+
+    This lets templates call the helper without importing the heavy
+    subtitle backend.
     """
-    has_subs = has_any_subs(video_path)
-    return {
-        "has_subtitles": has_subs,
-        "video_path": video_path
-    }
+    return {"has_subtitles": False, "video_path": video_path}
 
 
-# Add subtitle info to video context
 def enhance_video_context(video_info: dict) -> dict:
-    """Add subtitle information to video context."""
-    video_path = video_info.get("path", "")
-    subtitle_info = lazy_subtitle_check(video_path)
-    video_info.update(subtitle_info)
-    return video_info
+    """Add safe subtitle info to the provided video context dict.
+
+    Returns a new dict with `has_subtitles` set to False.
+    """
+    ctx = dict(video_info or {})
+    ctx.update(lazy_subtitle_check(ctx.get("path", "")))
+    return ctx
