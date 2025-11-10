@@ -55,31 +55,7 @@
   <script>
     /* Rating widget + live view count updates */
     document.addEventListener('DOMContentLoaded', () => {
-      // Rating functionality
-      document.querySelectorAll('.rating i').forEach(star => {
-        star.addEventListener('click', () => {
-          const rating = star.dataset.value;
-          const container = star.parentElement;
-          const filename = container.dataset.filename;
-
-          fetch('/rate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ filename, rating })
-          })
-          .then(r => r.json())
-          .then(data => {
-            if (data.success) {
-              container.querySelectorAll('i').forEach((s, idx) => {
-                s.className = (idx + 1) <= rating ? 'fas fa-star' : 'far fa-star';
-              });
-            }
-          })
-          .catch(console.error);
-        });
-      });
-
-      // Live view counts
+      // Live view counts; rating interactions are handled centrally by static/js/ratings.js
       fetch('/get_views')
         .then(r => r.json())
         .then(data => {

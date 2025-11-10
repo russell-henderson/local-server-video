@@ -29,6 +29,20 @@
   pointer-events: none;
 }
 
+/* Compact rating inside player controls */
+.player .rating {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.player .rating i {
+  color: #ffd055; /* warm gold for stars */
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+}
+
 /* Reveal controls when hovering the player */
 .player:hover .player-controls,
 .player.controls-visible .player-controls {

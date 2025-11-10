@@ -42,7 +42,7 @@
 
   <!-- Tags -->
   <div class="tags-container flex-grow-1">
-    <div id="existing-tags" class="mb-2">
+    <div id="existing-tags" class="mb-2" data-filename="{{ filename }}" data-tags='{{ tags|tojson|safe }}'>
       {% for tag in tags %}
         <span class="badge tag-badge" data-tag="{{ tag }}">
           {{ tag }} <span class="delete-tag">&times;</span>
@@ -150,79 +150,9 @@
         });
       }
 
-      /* Rating widget */
-      document.querySelectorAll('.rating i').forEach(star => {
-        star.addEventListener('click', () => {
-          const rating = parseInt(star.dataset.value);
-          const fileName = star.parentElement.dataset.filename;
-          fetch('/rate', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ filename: fileName, rating })
-          })
-          .then(r => r.json())
-          .then(d => {
-            if (d.success) {
-              star.parentElement.querySelectorAll('i').forEach((s, i) => {
-                s.className = (i + 1) <= rating ? 'fas fa-star' : 'far fa-star';
-              });
-            }
-          }).catch(console.error);
-        });
-      });
+          /* Ratings are handled by shared static/js/ratings.js (delegated) */
 
-      /* Tag management */
-      const newTagInput = document.getElementById('new-tag');
-
-      newTagInput.addEventListener('keypress', e => {
-        if (e.key !== 'Enter') return;
-        const tag = newTagInput.value.trim();
-        if (!tag) return;
-
-        fetch('/tag', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({ filename: '{{ filename }}', tag })
-        })
-        .then(r => r.json())
-        .then(d => {
-          if (d.success) {
-            renderTags(d.tags);
-            newTagInput.value = '';
-          }
-        }).catch(console.error);
-      });
-
-      function renderTags(tags) {
-        const wrap = document.getElementById('existing-tags');
-        wrap.innerHTML = '';
-        tags.forEach(t => {
-          const span = document.createElement('span');
-          span.className = 'badge tag-badge';
-          span.dataset.tag = t;
-          span.innerHTML = `${t} <span class="delete-tag">&times;</span>`;
-          wrap.appendChild(span);
-        });
-        
-        // Attach delete listeners
-        wrap.querySelectorAll('.delete-tag').forEach(x => {
-          x.onclick = e => {
-            e.stopPropagation();
-            const t = x.parentElement.dataset.tag;
-            fetch('/delete_tag', {
-              method: 'POST',
-              headers: {'Content-Type': 'application/json'},
-              body: JSON.stringify({ filename: '{{ filename }}', tag: t })
-            })
-            .then(r => r.json())
-            .then(d => { if(d.success) renderTags(d.tags); })
-            .catch(console.error);
-          };
-        });
-      }
-
-      /* Initial tag render */
-      renderTags(JSON.parse('{{ tags|tojson|safe }}'));
+      /* Tag management: handled by shared static/js/tags.js (delegated) */
     });
   </script>
 {% endblock %}
