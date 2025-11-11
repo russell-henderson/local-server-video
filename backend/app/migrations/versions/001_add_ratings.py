@@ -20,24 +20,21 @@ def upgrade() -> None:
     """Create ratings table for storing user ratings."""
     op.create_table(
         'ratings',
-        sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('media_hash', sa.String(64), nullable=False),
-        sa.Column('user_id', sa.String(50), nullable=False,
-                  server_default='local'),
-        sa.Column('value', sa.Integer(), nullable=False),
-        sa.Column('created_at', sa.DateTime(), nullable=False,
-                  server_default=sa.func.current_timestamp()),
+        sa.Column('filename', sa.String(255), nullable=False,
+                  primary_key=True),
+        sa.Column('rating', sa.Integer(), nullable=False),
         sa.Column('updated_at', sa.DateTime(), nullable=False,
                   server_default=sa.func.current_timestamp()),
-        sa.PrimaryKeyConstraint('id'),
-        sa.UniqueConstraint('media_hash', 'user_id',
-                            name='uq_ratings_media_user')
+        sa.ForeignKeyConstraint(['filename'], ['videos.filename'],
+                                ondelete='CASCADE')
     )
-    op.create_index('ix_ratings_media_hash', 'ratings',
-                    ['media_hash'])
+    # Add CHECK constraint for rating range (1-5)
+    op.execute(
+        'ALTER TABLE ratings ADD CONSTRAINT check_rating_range '
+        'CHECK (rating >= 1 AND rating <= 5)'
+    )
 
 
 def downgrade() -> None:
     """Drop ratings table."""
-    op.drop_index('ix_ratings_media_hash', table_name='ratings')
     op.drop_table('ratings')
