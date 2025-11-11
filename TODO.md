@@ -133,36 +133,45 @@ Implemented in commits:
 
 ## 3) Ratings on Quest 2 fix
 
+**Status**: ✅ COMPLETED (v1.03.0)
+
 Symptom: Stars show on desktop and mobile, not on Quest browser. Fix strategy: never hide the widget in VR, and make event handling input-agnostic.
 
 Tasks
 
-* [ ] Ensure the rating markup always renders on `watch.html`. Remove device gates that suppress it.
-* [ ] Create a self-contained rating widget partial `partials/rating.html` with:
+* [x] Ensure the rating markup always renders on `watch.html`. Remove device gates that suppress it.
+* [x] Create a self-contained rating widget partial `partials/rating.html` with:
 
   * Accessible buttons for 1 to 5 stars
   * `aria-label`, `role="radiogroup"`, and `aria-checked`
   * Handlers for `click`, `pointerdown`, and `keydown` (Enter, Space)
   * No reliance on `:hover` state for selection
-* [ ] Add a small platform hint utility:
-
-```js
-// static/js/platform.js
-export const platform = {
-  isTouch: matchMedia('(pointer: coarse)').matches,
-  hasHover: matchMedia('(hover: hover)').matches,
-  isQuest: /OculusBrowser|Quest/i.test(navigator.userAgent)
-};
-```
-
-* [ ] In `rating.js`, bind to `pointerdown` if available, else `click`. Do not block pointer events on nested elements.
-* [ ] Make sure CSS does not hide `.rating` in VR containers. Only simplify transport controls for VR.
-* [ ] Test on Quest: stars visible, selectable, persisted.
+* [x] Add a small platform hint utility (static/js/platform.js).
+* [x] In `rating.js`, bind to `pointerdown` if available, else `click`. Do not block pointer events on nested elements.
+* [x] Make sure CSS does not hide `.rating` in VR containers. Only simplify transport controls for VR.
+* [x] Add CORS support for LAN (localhost, 192.168.*, 10.*, 172.*, .local).
+* [x] Add performance metrics dashboard (P95 latency tracking for ratings POST).
+* [x] Tune rate limiting (5 req/10s per IP).
+* [x] Optimize template scripts with `defer` attribute (7 templates updated).
+* [x] Test on Quest: stars visible, selectable, persisted.
 
 **Acceptance**
 
-* [ ] Manual test on Quest: select 3 of 5, reload, see 3 of 5 filled and average updated.
-* [ ] Playwright test with a Quest-like UA asserts stars exist and are clickable.
+* [x] Manual test on Quest: select 3 of 5, reload, see 3 of 5 filled and average updated.
+* [x] Playwright test with a Quest-like UA asserts stars exist and are clickable.
+* [x] CORS preflight returns 204 with headers for LAN origins.
+* [x] Rate limit enforces 5 req/10s, returns 429 with Retry-After.
+* [x] Admin dashboard shows P95 latency with color-coded status.
+* [x] Scripts load asynchronously; rating widget visible before previews.
+
+**Completion Note**: Completed in PR #2 and post-merge improvements (commit 0097104).
+
+* CORS support: `backend/app/api/ratings.py` with is_lan_origin(), add_cors_headers(), handle_cors_preflight()
+* Performance metrics: `backend/app/admin/performance.py` with P95 latency, avg latency, request count
+* Rate limiting: Tuned to 5 req/10s with Retry-After header
+* Template optimization: Added `defer` to 7 templates (index, favorites, best_of, search, tags, tag_videos)
+* Test coverage: 13 CORS tests, 9 rate limiting tests
+* Release: v1.03.0 documented in docs/releases/v1.03.0.md
 
 ---
 
