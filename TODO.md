@@ -96,6 +96,8 @@ CREATE TABLE IF NOT EXISTS ratings (
 );
 ```
 
+### Service and API
+
 * [x] Service: `services/ratings_service.py` with `get_average_rating(media_hash)`, `set_rating(media_hash, user_id, value)`.
 * [x] API:
 
@@ -109,14 +111,16 @@ CREATE TABLE IF NOT EXISTS ratings (
 * [x] Alembic migrations support (backend/app/migrations/ with env.py and 001_add_ratings.py)
 * [x] Extended test suite (test_rating_write_and_read.py with 20+ test cases)
 
-**Completion Note**: Implemented in commits:
+### Completion Note
+
+Implemented in commits:
 - 8c9ad6b: Service, API blueprint, integration tests (foundation)
 - 95891c6: Frontend wiring (media_hash computation, rating.html binding, rating.js enhancement)
 - f2afda5: Database session management (db.py) and write-through cache coordination (cache.py)
 - fc87991: Pydantic validation schemas, IP rate limiter, Alembic migrations, updated ratings.py
 - 185ef05: Extended test suite (DB persistence, cache behavior, rate limiting, Pydantic validation)
 
-**Acceptance**
+### Acceptance
 
 * [x] Changing a rating triggers DB write and updates cache. Page reload shows new average.
 * [x] New integration test `test_rating_write_and_read.py` passes with 20+ test cases.

@@ -12,7 +12,10 @@ def performance_dashboard():
     return render_template(
         "admin/performance.html",
         cache_hit_rate=metrics.get_cache_hit_rate(),
-        uptime_seconds=metrics.get_uptime_seconds()
+        uptime_seconds=metrics.get_uptime_seconds(),
+        ratings_post_p95=metrics.get_ratings_post_p95_latency(),
+        ratings_post_avg=metrics.get_ratings_post_avg_latency(),
+        ratings_post_count=metrics.get_ratings_post_count()
     )
 
 
@@ -38,6 +41,11 @@ def performance_json():
             "avg_per_request": avg_per_request,
             "max_per_request": max_per_request,
             "count": db_queries_count
+        },
+        "ratings_post": {
+            "p95_latency_ms": metrics.get_ratings_post_p95_latency(),
+            "avg_latency_ms": metrics.get_ratings_post_avg_latency(),
+            "request_count": metrics.get_ratings_post_count()
         },
         "endpoints": {}
     })

@@ -252,7 +252,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{{ url_for('static', filename='advanced-search.js') }}"></script>
+<script src="{{ url_for('static', filename='advanced-search.js') }}" defer></script>
 <script>
 // Global helper functions
 function clearAllFilters() {

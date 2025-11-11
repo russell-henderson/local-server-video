@@ -49,8 +49,8 @@
 {% endblock %}
 
 {% block extra_scripts %}
-  <script src="{{ url_for('static', filename='optimized-utils.js') }}"></script>
-  <script src="{{ url_for('static', filename='dark.js') }}"></script>
+  <script src="{{ url_for('static', filename='optimized-utils.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='dark.js') }}" defer></script>
 
   <script>
     /* Rating widget + live view count updates */

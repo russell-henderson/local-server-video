@@ -86,12 +86,12 @@
 {% endblock %}
 
 {% block extra_scripts %}
-  <!-- Additional scripts -->
-  <script src="{{ url_for('static', filename='video-preview-enhanced.js') }}"></script>
-  <script src="{{ url_for('static', filename='video-preview-debug.js') }}"></script>
-  <script src="{{ url_for('static', filename='optimized-utils.js') }}"></script>
-  <script src="{{ url_for('static', filename='recently-played.js') }}"></script>
-  <script src="{{ url_for('static', filename='dark.js') }}"></script>
+  <!-- Additional scripts (deferred for non-blocking load) -->
+  <script src="{{ url_for('static', filename='video-preview-enhanced.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='video-preview-debug.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='optimized-utils.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='recently-played.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='dark.js') }}" defer></script>
 
   <script>
     /* Rating widget + live view count updates */

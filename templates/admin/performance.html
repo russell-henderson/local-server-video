@@ -33,19 +33,19 @@
             <div class="status status-warning">Loading...</div>
         </div>
         <div class="metric-card">
-            <h3>Ratings API p95</h3>
+            <h3>Ratings POST p95</h3>
             <div class="metric-value">--</div>
             <div class="status status-warning">Loading...</div>
         </div>
         <div class="metric-card">
-            <h3>Avg DB Queries</h3>
+            <h3>Ratings POST Avg</h3>
             <div class="metric-value">--</div>
             <div class="status status-warning">Loading...</div>
         </div>
         <div class="metric-card">
-            <h3>Uptime</h3>
+            <h3>Ratings Requests</h3>
             <div class="metric-value">--</div>
-            <div class="status status-good">Running</div>
+            <div class="status status-good">Tracked</div>
         </div>
     </div>
 
@@ -112,18 +112,45 @@
                 data.cache_hit_rate.toFixed(1) + '%</div>' +
                 '<div class="status ' + getStatus(data.cache_hit_rate) + '"></div>';
             
+            // Update Ratings POST p95
+            document.querySelectorAll('.metric-card')[1].innerHTML =
+                '<h3>Ratings POST p95</h3><div class="metric-value">' +
+                data.ratings_post.p95_latency_ms.toFixed(1) + 'ms</div>' +
+                '<div class="status ' + getLatencyStatus(
+                    data.ratings_post.p95_latency_ms) + '"></div>';
+            
+            // Update Ratings POST Avg
+            document.querySelectorAll('.metric-card')[2].innerHTML =
+                '<h3>Ratings POST Avg</h3><div class="metric-value">' +
+                data.ratings_post.avg_latency_ms.toFixed(1) + 'ms</div>' +
+                '<div class="status ' + getLatencyStatus(
+                    data.ratings_post.avg_latency_ms) + '"></div>';
+            
+            // Update Ratings Request Count
+            document.querySelectorAll('.metric-card')[3].innerHTML =
+                '<h3>Ratings Requests</h3><div class="metric-value">' +
+                data.ratings_post.request_count + '</div>' +
+                '<div class="status status-good">Tracked</div>';
+            
             // Update DB stats
-            document.getElementById('total-queries').textContent = data.database.total_queries;
-            document.getElementById('avg-per-request').textContent = data.database.avg_per_request.toFixed(2);
-            document.getElementById('max-per-request').textContent = data.database.max_per_request;
-            document.getElementById('request-count').textContent = data.database.count;
+            document.getElementById('total-queries').textContent =
+                data.database.total_queries;
+            document.getElementById('avg-per-request').textContent =
+                data.database.avg_per_request.toFixed(2);
+            document.getElementById('max-per-request').textContent =
+                data.database.max_per_request;
+            document.getElementById('request-count').textContent =
+                data.database.count;
             
             // Update endpoint table
             const tbody = document.getElementById('endpoints-body');
             if (Object.keys(data.endpoints).length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #999;">No data yet</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" ' +
+                    'style="text-align: center; color: #999;">' +
+                    'No data yet</td></tr>';
             } else {
-                tbody.innerHTML = Object.entries(data.endpoints).map(([endpoint, stats]) =>
+                tbody.innerHTML = Object.entries(data.endpoints)
+                    .map(([endpoint, stats]) =>
                     '<tr><td><code>' + endpoint + '</code></td>' +
                     '<td>' + stats.min.toFixed(1) + '</td>' +
                     '<td>' + stats.max.toFixed(1) + '</td>' +
@@ -137,6 +164,12 @@
         function getStatus(hitRate) {
             if (hitRate >= 80) return 'status-good';
             if (hitRate >= 50) return 'status-warning';
+            return 'status-poor';
+        }
+
+        function getLatencyStatus(latencyMs) {
+            if (latencyMs < 50) return 'status-good';
+            if (latencyMs < 200) return 'status-warning';
             return 'status-poor';
         }
 
