@@ -143,6 +143,14 @@ def watch_video(filename: str):
     if not file_path.exists():
         abort(404)
 
+    # Compute media_hash (use RatingsService utility if available)
+    try:
+        from backend.services.ratings_service import RatingsService
+        media_hash = RatingsService.get_media_hash(filename)
+    except (ImportError, Exception):
+        # Fallback: use filename as hash
+        media_hash = filename
+
     # Pull all cached metadata in bulk
     ratings = cache.get_ratings()
     views = cache.get_views()
@@ -165,6 +173,7 @@ def watch_video(filename: str):
     return render_template(
         "watch.html",
         filename=filename,
+        media_hash=media_hash,
         ratings=ratings,
         views=views,
         tags=current_tags,

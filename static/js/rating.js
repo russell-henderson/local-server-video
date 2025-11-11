@@ -34,21 +34,34 @@ function initRating() {
   // Helper: Send rating to server
   const sendRating = async (value) => {
     try {
-      const response = await fetch(`/api/ratings/${encodeURIComponent(mediaHash)}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ value }),
-      });
+      const response = await fetch(
+        `/api/ratings/${encodeURIComponent(mediaHash)}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ value }),
+        }
+      );
 
       if (!response.ok) {
-        console.error(`Failed to save rating: ${response.status}`);
+        const error = await response.json();
+        console.error(
+          `Failed to save rating: ${response.status}`,
+          error
+        );
         return;
       }
 
       const data = await response.json();
-      // Update UI with server response (in case of correction)
+      // Update UI with server response
       if (data.user?.value !== undefined) {
         setChecked(data.user.value);
+      }
+      // Log average for debugging
+      if (data.average !== undefined) {
+        console.debug(
+          `Rating saved. Average: ${data.average}, Count: ${data.count}`
+        );
       }
     } catch (error) {
       console.error('Error saving rating:', error);

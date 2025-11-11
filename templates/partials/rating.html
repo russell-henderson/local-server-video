@@ -8,7 +8,7 @@
      - Always rendered (never hidden in VR containers)
      - Uses media_hash when available, falls back to filename for backward compatibility
 -->
-<div class="rating" role="radiogroup" aria-label="Rate this video" data-media-hash="{{ media_hash or filename }}">
+<div class="rating" role="radiogroup" aria-label="Rate this video" data-media-hash="{{ media_hash }}">
   <button data-value="1" aria-checked="false" role="radio" class="star" aria-label="1 star">★</button>
   <button data-value="2" aria-checked="false" role="radio" class="star" aria-label="2 stars">★</button>
   <button data-value="3" aria-checked="false" role="radio" class="star" aria-label="3 stars">★</button>
