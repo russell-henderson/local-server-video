@@ -72,6 +72,13 @@ class VideoDatabase:
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
                 
+                -- Media hash mapping (bidirectional lookup)
+                CREATE TABLE IF NOT EXISTS media_hash_map (
+                    media_hash TEXT PRIMARY KEY,
+                    filename TEXT UNIQUE NOT NULL REFERENCES videos(filename) ON DELETE CASCADE,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+                
                 -- Create indexes for performance
                 CREATE INDEX IF NOT EXISTS idx_videos_added_date ON videos(added_date);
                 CREATE INDEX IF NOT EXISTS idx_ratings_rating ON ratings(rating);
@@ -506,6 +513,57 @@ class VideoDatabase:
                 print("Cleanup completed")
             else:
                 print("No orphaned data found")
+    
+    def register_media_hash(self, media_hash: str, filename: str) -> None:
+        """
+        Register or update a media_hash -> filename mapping.
+        
+        Args:
+            media_hash: SHA256 hash (16-char prefix) of filename
+            filename: Actual video filename
+        """
+        with self.get_connection() as conn:
+            conn.execute("""
+                INSERT OR REPLACE INTO media_hash_map (media_hash, filename)
+                VALUES (?, ?)
+            """, (media_hash, filename))
+            conn.commit()
+    
+    def get_filename_by_hash(self, media_hash: str) -> Optional[str]:
+        """
+        Look up filename from media_hash.
+        
+        Args:
+            media_hash: SHA256 hash (16-char prefix)
+            
+        Returns:
+            Filename if found, else None
+        """
+        with self.get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT filename FROM media_hash_map WHERE media_hash = ?",
+                (media_hash,)
+            )
+            row = cursor.fetchone()
+            return row['filename'] if row else None
+    
+    def get_media_hash_by_filename(self, filename: str) -> Optional[str]:
+        """
+        Look up media_hash from filename.
+        
+        Args:
+            filename: Video filename
+            
+        Returns:
+            Media hash if found, else None
+        """
+        with self.get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT media_hash FROM media_hash_map WHERE filename = ?",
+                (filename,)
+            )
+            row = cursor.fetchone()
+            return row['media_hash'] if row else None
 
 def migration_script():
     """Run the migration from JSON to SQLite"""
