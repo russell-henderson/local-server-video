@@ -79,7 +79,7 @@ Actions
 
 Goal: SQLite is the authority. Sidecar JSON is backup only. Every write goes to DB, then cache is updated.
 
-**Status**: 🔄 IN PROGRESS (Foundation complete, integration pending)
+**Status**: ✅ COMPLETED
 
 - [x] Create `backend/app/core/db.py` with a single SQLAlchemy session factory and migrations via Alembic.
 - [x] Create `backend/app/core/cache.py` with a tiny in-process cache interface. Add `Cache.get`, `Cache.set`, `Cache.invalidate`.
@@ -102,15 +102,28 @@ CREATE TABLE IF NOT EXISTS ratings (
   * `GET /api/ratings/{media_hash}` → `{ average, count, user }`
   * `POST /api/ratings/{media_hash}` body `{ value }` → `{ average, count, user }`
 * [x] All code paths that read ratings use the service. No direct JSON reads.
-* [ ] Wire API responses to watch page (hook up frontend to new endpoints)
-* [ ] Update watch.html to pass media_hash to rating widget
+* [x] Wire API responses to watch page (hook up frontend to new endpoints)
+* [x] Update watch.html to pass media_hash to rating widget
+* [x] Add Pydantic validation (RatingInput schema, 1-5 range enforcement)
+* [x] Add IP-based rate limiting (10 req/60s, returns 429 on limit)
+* [x] Alembic migrations support (backend/app/migrations/ with env.py and 001_add_ratings.py)
+* [x] Extended test suite (test_rating_write_and_read.py with 20+ test cases)
 
-**Completion Note**: Created `backend/services/ratings_service.py` with RatingsService class providing get_rating(), get_rating_summary(), set_rating() methods. Created `backend/app/api/ratings.py` with Flask blueprint implementing GET/POST /api/ratings/{media_hash}. Registered blueprint in main.py. Integration tests created in `tests/test_rating_write_and_read.py`. Commit 8c9ad6b.
+**Completion Note**: Implemented in commits:
+- 8c9ad6b: Service, API blueprint, integration tests (foundation)
+- 95891c6: Frontend wiring (media_hash computation, rating.html binding, rating.js enhancement)
+- f2afda5: Database session management (db.py) and write-through cache coordination (cache.py)
+- fc87991: Pydantic validation schemas, IP rate limiter, Alembic migrations, updated ratings.py
+- 185ef05: Extended test suite (DB persistence, cache behavior, rate limiting, Pydantic validation)
 
 **Acceptance**
 
-* [ ] Changing a rating triggers DB write and updates cache. Page reload shows new average.
-* [ ] New integration test `test_rating_write_and_read.py` passes.
+* [x] Changing a rating triggers DB write and updates cache. Page reload shows new average.
+* [x] New integration test `test_rating_write_and_read.py` passes with 20+ test cases.
+* [x] Rate limiting enforced (10 successful POST requests, 11th returns 429 with Retry-After).
+* [x] Pydantic validation enforces 1-5 range, returns 400 on invalid input.
+* [x] Database schema created via Alembic migration (001_add_ratings.py).
+* [x] Branch `chore/move-docs-to-doc` pushed to GitHub with all commits.
 
 ---
 
