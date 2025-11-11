@@ -38,7 +38,7 @@ class VideoCache:
         if self.use_database:
             try:
                 self.db = VideoDatabase()
-                print("✅ Database backend initialized")
+                print("[OK] Database backend initialized")
             except (ImportError, OSError) as e:
                 print(f"⚠️  Database initialization failed, falling back to JSON: {e}")
                 self.use_database = False
@@ -235,17 +235,28 @@ class VideoCache:
                     
                     # Check if we have new videos
                     if set(current_videos) != set(self._video_list):
-                        print(f"🔄 Video list changed: {len(current_videos)} videos found (was {len(self._video_list)})")
+                        videos_found = len(current_videos)
+                        was_videos = len(self._video_list)
+                        print(f"[REFRESH] Video list changed: {videos_found} "
+                              f"videos found (was {was_videos})")
                         
                         # Clear video metadata cache for new videos
-                        new_videos = set(current_videos) - set(self._video_list)
-                        removed_videos = set(self._video_list) - set(current_videos)
+                        new_videos = set(current_videos) - set(
+                            self._video_list)
+                        removed_videos = set(self._video_list) - set(
+                            current_videos)
                         
                         if new_videos:
-                            print(f"➕ New videos detected: {', '.join(list(new_videos)[:5])}{'...' if len(new_videos) > 5 else ''}")
+                            sample = list(new_videos)[:5]
+                            more = '...' if len(new_videos) > 5 else ''
+                            print(f"[NEW] New videos detected: "
+                                  f"{', '.join(sample)}{more}")
                         
                         if removed_videos:
-                            print(f"➖ Videos removed: {', '.join(list(removed_videos)[:5])}{'...' if len(removed_videos) > 5 else ''}")
+                            sample = list(removed_videos)[:5]
+                            more = '...' if len(removed_videos) > 5 else ''
+                            print(f"[REMOVED] Videos removed: "
+                                  f"{', '.join(sample)}{more}")
                             # Clean up metadata for removed videos
                             for video in removed_videos:
                                 self._video_metadata.pop(video, None)
@@ -483,7 +494,7 @@ class VideoCache:
         new_videos = set(video_list) - existing_videos
         
         if new_videos:
-            print(f"🔄 Adding {len(new_videos)} new videos to database...")
+            print(f"[SYNC] Adding {len(new_videos)} new videos to database...")
             
             # Add new videos to database
             try:
@@ -505,10 +516,10 @@ class VideoCache:
                             """, (video_filename, added_date, file_size))
                             conn.commit()
                         
-                        print(f"✅ Added {video_filename} to database")
+                        print(f"[OK] Added {video_filename} to database")
                 
             except Exception as e:
-                print(f"❌ Error adding videos to database: {e}")
+                print(f"[ERROR] Error adding videos to database: {e}")
 
     def get_all_video_data(self, sort_by: str = 'date', reverse: bool = True) -> List[Dict]:
         """Get all video data with efficient bulk operation"""
