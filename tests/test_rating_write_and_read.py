@@ -44,6 +44,27 @@ def test_video(tmp_path):
     return test_video_name
 
 
+@pytest.fixture(autouse=True)
+def reset_rate_limiter():
+    """Reset the rate limiter before each test to avoid state pollution."""
+    try:
+        from backend.app.core.rate_limiter import _rate_limiter
+        # Clear the rate limiter state before test
+        if hasattr(_rate_limiter, '_storage'):
+            _rate_limiter._storage.clear()
+    except (ImportError, AttributeError):
+        # If rate limiter doesn't exist or has different structure, skip
+        pass
+    yield
+    # Clean up after test too
+    try:
+        from backend.app.core.rate_limiter import _rate_limiter
+        if hasattr(_rate_limiter, '_storage'):
+            _rate_limiter._storage.clear()
+    except (ImportError, AttributeError):
+        pass
+
+
 class TestRatingWriteAndRead:
     """Test suite for rating write/read operations."""
     
@@ -190,8 +211,8 @@ class TestRatingCacheBehavior:
         
         media_hash = test_video
         
-        # Clear cache
-        cache.invalidate_ratings()
+        # Refresh cache to clear it
+        cache.refresh_all()
         
         # Set rating
         response = client.post(
@@ -239,7 +260,7 @@ class TestRatingDatabasePersistence:
         cursor = conn.cursor()
         
         cursor.execute(
-            'SELECT value FROM ratings WHERE filename = ?',
+            'SELECT rating FROM ratings WHERE filename = ?',
             (media_hash,)
         )
         result = cursor.fetchone()
@@ -265,14 +286,14 @@ class TestRatingDatabasePersistence:
             content_type='application/json'
         )
         
-        # Clear cache
-        cache.invalidate_ratings()
+        # Refresh cache to clear it
+        cache.refresh_all()
         
         # Query database directly
         conn = sqlite3.connect(str(db.db_path))
         cursor = conn.cursor()
         cursor.execute(
-            'SELECT value FROM ratings WHERE filename = ?',
+            'SELECT rating FROM ratings WHERE filename = ?',
             (media_hash,)
         )
         result = cursor.fetchone()

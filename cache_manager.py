@@ -426,6 +426,42 @@ class VideoCache:
             self.get_favorites()
             self.get_video_list()
     
+    def invalidate_ratings(self):
+        """Invalidate ratings cache entry"""
+        with self._lock:
+            self._last_refresh['ratings'] = 0
+            self._ratings.clear()
+    
+    def invalidate_views(self):
+        """Invalidate views cache entry"""
+        with self._lock:
+            self._last_refresh['views'] = 0
+            self._views.clear()
+    
+    def invalidate_tags(self):
+        """Invalidate tags cache entry"""
+        with self._lock:
+            self._last_refresh['tags'] = 0
+            self._tags.clear()
+    
+    def invalidate_favorites(self):
+        """Invalidate favorites cache entry"""
+        with self._lock:
+            self._last_refresh['favorites'] = 0
+            self._favorites.clear()
+    
+    def invalidate_video_list(self):
+        """Invalidate video list cache entry"""
+        with self._lock:
+            self._last_refresh['video_list'] = 0
+            self._video_list.clear()
+    
+    def invalidate_metadata(self):
+        """Invalidate metadata cache entry"""
+        with self._lock:
+            self._last_refresh['metadata'] = 0
+            self._video_metadata.clear()
+    
     def _ensure_videos_in_database(self):
         """Ensure all videos from file system are in database"""
         if not (self.use_database and self.db):
