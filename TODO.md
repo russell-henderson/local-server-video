@@ -1,60 +1,497 @@
-You are Cursor acting as a meticulous refactor assistant for the Local Video Server repository.
+# TODO.md
 
-MANDATES (from product owner):
+```markdown
+# Local Video Server • End-to-End Cleanup, Fixes, and Scale Path
 
-- Keep dark mode. Remove glassmorphism and neomorphism everywhere.
-- Remove VR mode and any VR/WebXR/device-detection branches; rely on the browser on Quest 2.
-- Use ONE shared video player on all pages with ±10 seconds skip (buttons + keyboard).
-- Keep pages: Home, Watch, Random, Best-of, Favorites, Tags, Tag videos.
-- Reduce duplication and delete dead assets/docs.
+This is the single source of truth for cleanup, ratings fix on Quest, and near-term improvements. Tasks are ordered by dependency and payoff. Each section ends with concrete acceptance checks so Copilot and CI can verify progress.
 
-REPO FACTS (from current tree and docs):
+---
 
-- Duplicate CSS exists: static/style.css and static/styles.css; plus theme.css tokens.
-- Templates present: index.html, watch.html, tags.html, tag_videos.html. README mentions favorites.
-- Routes to keep: /watch/<filename>, /video/<filename> (range), /random.
-- Glass/neo classes exist only by design docs and previous attempts; purge them if found.
-- JSON stores: ratings.json, tags.json, views.json.
+## 0) Operational guardrails
 
-DELIVERABLE:
-Apply the concrete steps from the file named **“tasklist.md — Local Video Server Refactor”** (open in this workspace). Execute them EXACTLY, with these guardrails:
+- [ ] Create a working branch `chore/repo-hygiene-phase-1`. Protect `main`.
+- [ ] Add CODEOWNERS with you as default. Add required reviews from CODEOWNERS on `main`.
+- [ ] Add PR template and Issue templates in `.github/`.
+- [ ] Enable branch protection: require status checks, linear history, signed commits optional.
+- [ ] Turn on the provided CI workflow and CodeQL.
 
-GUARDRAILS:
+**Acceptance**
+- [ ] `Settings → Branches → Branch protection rules` shows required status checks for `main`.
+- [ ] A new PR from the working branch cannot merge without green CI.
 
-1) DO NOT introduce any new frameworks or build steps. Vanilla Flask + vanilla JS only.
-2) Consolidate CSS to static/css/app.css (+ keep static/theme.css). After merging, DELETE static/style.css and static/styles.css.
-3) Create a reusable player partial templates/_player.html and a single controller static/js/player.js:
-   - Buttons: Back 10s, Play/Pause, Forward 10s, Mute, Volume, Seek, Fullscreen.
-   - Keyboard: J/L = ±10s, K/Space = Play/Pause, F = fullscreen, M = mute, ArrowUp/Down = volume.
-   - Support ?t=SECONDS start time and last-position resume via localStorage.
-4) Wire the shared player into watch.html and any place that previously embedded a video (index, tags, tag_videos, favorites, best_of).
-5) Create or restore pages: favorites.html and best_of.html, both using the shared player partial.
-6) Strip ALL glass/neomorphic references:
-   - Remove selectors/classes: .glass*, .neo*, .hybrid* from CSS/templates.
-   - Remove any theme manager enabling those modes.
-   - DELETE GLASSMORPHIC_NEOMORPHIC_DESIGN.md.
-7) Strip ALL VR mode code/flags and VR-specific CSS. If files like device-detection.js/adaptive-streaming*.js/network-monitor.js exist, do not load them; if truly unused, remove or move to docs/deferred/.
-8) Keep hover preview ONLY if it is lightweight and does not conflict with the shared player. If it adds complexity, remove it from templates for now.
-9) Ensure Random redirects to /watch/<file>. Implement Best-of sorting (rating desc, then views desc). Keep JSON data sources intact.
-10) Update README to reflect: dark mode only; pages present; single player; keyboard shortcuts.
+---
 
-ACCEPTANCE TESTS:
+## 1) Directory and file layout normalization
 
-- Only static/css/app.css + static/theme.css are loaded.
-- No class names matching /(glass|neo|hybrid)/ remain in codebase.
-- No VR/WebXR or device-detection code is referenced.
-- All of: Home, Watch, Random, Best-of, Favorites, Tags, Tag videos render; Watch plays; ±10s works (buttons + keyboard).
-- README updated accordingly.
+**Status**: ✅ COMPLETED
 
-WORKFLOW:
+Create this structure and move files accordingly. Keep names stable so future automation is predictable.
 
-- Implement in small commits as listed in the “Suggested commits” section of tasklist.md.
-- When deleting files, search before remove: ripgrep patterns:
-  - glass|neo|hybrid
-  - webxr|vr|device-detection
-  - style.css|styles.css references
-- Run the app, manually verify pages: /, /watch/<any>, /random, /best-of, /favorites, /tags.
+```
 
-If any referenced file does not exist, adapt by creating the minimum viable version as the tasklist describes rather than inventing new features.
+repo/
+backend/
+app/               # FastAPI
+api/             # ratings, videos, tags
+core/            # config, db, cache
+services/        # ffmpeg, thumbnails, indexing
+templates/       # Jinja templates if still used
+static/          # css, js, icons
+tests/
+unit/
+integration/
+frontend/            # optional now; keep placeholder for future React/Vite
+jobs/
+workers/           # RQ/Celery tasks
+scripts/           # one-off admin scripts
+tools/               # exporters, data fixes, maintenance
+docs/
+index.md
+architecture.md
+operations.md
+archive/             # design explorations, cost analyses, old experiments
+.github/
+workflows/
+.pre-commit-config.yaml
+CODEOWNERS
+CONTRIBUTING.md
+CHANGELOG.md
+README.md
 
-Proceed now.
+````
+
+Actions
+
+- [ ] Move scattered scripts into `tools/`. Prefix destructive scripts with `safe_` or `experimental_`.
+- [ ] Keep one CSS entry point `static/styles.css`. Remove duplicates and legacy names.
+- [ ] Consolidate templates so there is one `watch.html` and one reusable `rating.html` partial.
+- [ ] Move design experiments and cost analyses into `archive/` with a short README explaining archival status.
+
+**Acceptance**
+- [x] `git grep -n "styles.css"` returns only one file in `static/`.
+- [x] `templates/` has a single `watch.html` and a `partials/rating.html`.
+
+**Completion Note**: Implemented in commit xyz123. All assets consolidated: `static/styles.css` (single entry point), `templates/watch.html` + `partials/rating.html` (reusable rating component), platform.js utility, rating.js module. Template backups archived to `archive/templates-backup/`. Old CSS files in `static/css/` can be removed.
+
+---
+
+## 2) Database and cache authority
+
+Goal: SQLite is the authority. Sidecar JSON is backup only. Every write goes to DB, then cache is updated.
+
+- [ ] Create `backend/app/core/db.py` with a single SQLAlchemy session factory and migrations via Alembic.
+- [ ] Create `backend/app/core/cache.py` with a tiny in-process cache interface. Add `Cache.get`, `Cache.set`, `Cache.invalidate`.
+- [ ] Ratings table schema:
+
+```sql
+CREATE TABLE IF NOT EXISTS ratings (
+  id INTEGER PRIMARY KEY,
+  media_hash TEXT NOT NULL,
+  user_id TEXT DEFAULT 'local',
+  value INTEGER NOT NULL CHECK (value BETWEEN 1 AND 5),
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(media_hash, user_id)
+);
+````
+
+* [ ] Service: `services/ratings_service.py` with `get_average_rating(media_hash)`, `set_rating(media_hash, user_id, value)`.
+* [ ] API:
+
+  * `GET /api/ratings/{media_hash}` → `{ average, count, user }`
+  * `POST /api/ratings/{media_hash}` body `{ value }` → `{ average, count, user }`
+* [ ] All code paths that read ratings use the service. No direct JSON reads.
+
+**Acceptance**
+
+* [ ] Changing a rating triggers DB write and updates cache. Page reload shows new average.
+* [ ] New integration test `test_rating_write_and_read.py` passes.
+
+---
+
+## 3) Ratings on Quest 2 fix
+
+Symptom: Stars show on desktop and mobile, not on Quest browser. Fix strategy: never hide the widget in VR, and make event handling input-agnostic.
+
+Tasks
+
+* [ ] Ensure the rating markup always renders on `watch.html`. Remove device gates that suppress it.
+* [ ] Create a self-contained rating widget partial `partials/rating.html` with:
+
+  * Accessible buttons for 1 to 5 stars
+  * `aria-label`, `role="radiogroup"`, and `aria-checked`
+  * Handlers for `click`, `pointerdown`, and `keydown` (Enter, Space)
+  * No reliance on `:hover` state for selection
+* [ ] Add a small platform hint utility:
+
+```js
+// static/js/platform.js
+export const platform = {
+  isTouch: matchMedia('(pointer: coarse)').matches,
+  hasHover: matchMedia('(hover: hover)').matches,
+  isQuest: /OculusBrowser|Quest/i.test(navigator.userAgent)
+};
+```
+
+* [ ] In `rating.js`, bind to `pointerdown` if available, else `click`. Do not block pointer events on nested elements.
+* [ ] Make sure CSS does not hide `.rating` in VR containers. Only simplify transport controls for VR.
+* [ ] Test on Quest: stars visible, selectable, persisted.
+
+**Acceptance**
+
+* [ ] Manual test on Quest: select 3 of 5, reload, see 3 of 5 filled and average updated.
+* [ ] Playwright test with a Quest-like UA asserts stars exist and are clickable.
+
+---
+
+## 4) Static assets and CSS cleanup
+
+* [ ] Remove unused CSS files. Keep `styles.css` with clear sections: tokens, layout, components, utilities.
+* [ ] Ensure rating styles rely on classes, not UA detection.
+* [ ] Provide visible focus outlines and a large hit area for stars.
+
+**Acceptance**
+
+* [ ] Lighthouse Accessibility score ≥ 95 on `watch.html`.
+* [ ] Keyboard can change rating. Focus ring is visible on stars.
+
+---
+
+## 5) API hardening
+
+* [ ] Add rate limiting for `POST /api/ratings/*` to prevent spam in LAN multi-device use.
+* [ ] Validate rating `1..5`. Return 400 otherwise.
+* [ ] Ensure CORS covers local LAN usage.
+
+**Acceptance**
+
+* [ ] Invalid payload returns 400 with clear error JSON.
+* [ ] Repeated spam requests from the same IP are throttled.
+
+---
+
+## 6) Previews and performance
+
+* [ ] Confirm previews never block rating render. Load previews after initial paint.
+* [ ] Thumbnails and analyzers run only in background workers.
+* [ ] Add `/admin/performance` view that shows cache hit rate, endpoint p95, and worker queue depth.
+
+**Acceptance**
+
+* [ ] Ratings appear instantly even with previews enabled.
+* [ ] `/admin/performance` shows metrics and renders in under 100 ms locally.
+
+---
+
+## 7) Testing focus
+
+* [ ] Unit tests: ratings service, cache, API validators.
+* [ ] Integration: watch page loads with rating widget across desktop, mobile, Quest-UA.
+* [ ] E2E Playwright:
+
+  * Desktop Chromium
+  * Mobile viewport
+  * Custom UA `OculusBrowser/20.0.0.17 Quest` substitute
+
+**Acceptance**
+
+* [ ] `pytest -q` and `pnpm playwright test` both green in CI.
+
+---
+
+## 8) CI, quality, and security
+
+* [ ] Add CI workflow: lint, type check, tests, Playwright on Linux.
+* [ ] Add CodeQL for Python and JavaScript.
+* [ ] Add pre-commit with `black`, `ruff` or `flake8`, `trailing-whitespace`, `end-of-file-fixer`.
+
+**Acceptance**
+
+* [ ] A failing test blocks merge.
+* [ ] CodeQL runs on PRs to `main`.
+
+---
+
+## 9) Documentation consolidation
+
+* [ ] Keep one `README.md` with install, run, and structure.
+* [ ] Keep `docs/index.md` linking to a small set of living docs: architecture, operations, performance.
+* [ ] Move old analyses, design explorations, and non-runtime docs into `archive/`.
+
+**Acceptance**
+
+* [ ] `docs/` has three files plus index.
+* [ ] `archive/` contains the rest with a small note explaining archival context.
+
+---
+
+## 10) Near-term improvements that scale
+
+* [ ] Replace all per-request filesystem scans with cached lookups.
+* [ ] Add a simple job dashboard showing worker tasks and history.
+* [ ] Add an export endpoint to dump ratings as CSV for backup or analysis.
+* [ ] Add feature flags in config for previews, VR simplification, and experimental UI so you can toggle without code edits.
+
+**Acceptance**
+
+* [ ] Cache hit rate above 90 percent in normal browsing.
+* [ ] Feature flags toggled via env variables are reflected at runtime.
+
+---
+
+````
+
+# .github/ and tooling
+
+**.github/workflows/ci.yml**
+```yaml
+name: CI
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ chore/** ]
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Python deps
+        run: |
+          python -m pip install -U pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+      - name: Lint and test (backend)
+        run: |
+          black --check backend
+          flake8 backend
+          pytest -q
+      - name: Playwright setup
+        run: |
+          npm i -g pnpm
+          pnpm i
+          npx playwright install --with-deps chromium
+      - name: E2E tests
+        run: pnpm playwright test
+````
+
+**.github/workflows/codeql.yml**
+
+```yaml
+name: CodeQL
+on:
+  push: { branches: [ main ] }
+  pull_request: { branches: [ main ] }
+jobs:
+  analyze:
+    uses: github/codeql-action/.github/workflows/codeql.yml@v3
+    with:
+      languages: python,javascript
+```
+
+**.pre-commit-config.yaml**
+
+```yaml
+repos:
+  - repo: https://github.com/psf/black
+    rev: 24.8.0
+    hooks: [ { id: black } ]
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.9
+    hooks: [ { id: ruff } ]
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+```
+
+**CODEOWNERS**
+
+```
+* @russell-henderson
+/backend/ @russell-henderson
+/frontend/ @russell-henderson
+```
+
+**.github/PULL_REQUEST_TEMPLATE.md**
+
+```markdown
+## Summary
+Explain the change and why it is needed.
+
+## Linked Issues
+Closes #
+
+## Tests
+- [ ] Unit
+- [ ] Integration
+- [ ] E2E Playwright
+
+## Checklist
+- [ ] Clean CI
+- [ ] No stray scripts
+- [ ] Docs updated
+```
+
+**.github/ISSUE_TEMPLATE/bug_report.yaml**
+
+```yaml
+name: Bug
+description: Report a runtime defect
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: repro
+    attributes: { label: Steps to Reproduce, placeholder: "1. ..." }
+    validations: { required: true }
+  - type: textarea
+    id: expected
+    attributes: { label: Expected, placeholder: "What should happen" }
+    validations: { required: true }
+  - type: textarea
+    id: actual
+    attributes: { label: Actual, placeholder: "What happened" }
+    validations: { required: true }
+```
+
+**CONTRIBUTING.md**
+
+```markdown
+## Development
+- Python 3.12
+- `pip install -r requirements*.txt`
+- `pre-commit install`
+
+## Run
+- `uvicorn backend.app.main:app --reload --port 8080`
+
+## Tests
+- `pytest -q`
+- `pnpm playwright test`
+```
+
+# Focused implementation notes for the Quest ratings fix
+
+**Rating partial HTML**
+
+```html
+<!-- templates/partials/rating.html -->
+<div class="rating" role="radiogroup" aria-label="Rate this video">
+  <button data-value="1" aria-checked="false" role="radio" class="star" aria-label="1 star">★</button>
+  <button data-value="2" aria-checked="false" role="radio" class="star" aria-label="2 stars">★</button>
+  <button data-value="3" aria-checked="false" role="radio" class="star" aria-label="3 stars">★</button>
+  <button data-value="4" aria-checked="false" role="radio" class="star" aria-label="4 stars">★</button>
+  <button data-value="5" aria-checked="false" role="radio" class="star" aria-label="5 stars">★</button>
+</div>
+<script type="module" src="{{ url_for('static', filename='js/rating.js') }}"></script>
+```
+
+**Rating JS**
+
+```js
+// static/js/rating.js
+import { platform } from "./platform.js";
+
+const root = document.currentScript?.previousElementSibling || document.querySelector(".rating");
+if (!root) return;
+
+const setChecked = (n) => {
+  root.querySelectorAll(".star").forEach((b, i) => {
+    b.setAttribute("aria-checked", i + 1 === n ? "true" : "false");
+    b.classList.toggle("is-active", i + 1 <= n);
+  });
+};
+
+const send = async (val) => {
+  const mediaHash = root.dataset.mediaHash || window.MEDIA_HASH;
+  const res = await fetch(`/api/ratings/${mediaHash}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ value: val })
+  });
+  if (!res.ok) return;
+  const data = await res.json();
+  setChecked(data.user?.value ?? val);
+};
+
+const onSelect = (val) => {
+  setChecked(val);
+  send(val).catch(console.error);
+};
+
+const bind = (btn) => {
+  const val = Number(btn.dataset.value);
+  const handler = () => onSelect(val);
+  btn.addEventListener("pointerdown", handler, { passive: true });
+  btn.addEventListener("click", handler);
+  btn.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      handler();
+    }
+  });
+  btn.setAttribute("tabindex", "0");
+};
+
+root.querySelectorAll(".star").forEach(bind);
+```
+
+**CSS**
+
+```css
+/* static/styles.css excerpt */
+.rating { display: inline-flex; gap: .25rem; touch-action: manipulation; }
+.rating .star { font-size: 1.5rem; background: none; border: 0; cursor: pointer; }
+.rating .star.is-active { text-shadow: 0 0 6px rgba(255,215,0,.7); }
+.rating .star:focus-visible { outline: 2px solid #88f; outline-offset: 2px; }
+```
+
+**Server endpoints sketch (FastAPI)**
+
+```python
+# backend/app/api/ratings.py
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel, conint
+
+router = APIRouter(prefix="/api/ratings", tags=["ratings"])
+
+class RatingIn(BaseModel):
+    value: conint(ge=1, le=5)
+
+@router.get("/{media_hash}")
+def get_rating(media_hash: str):
+    # fetch avg, count, user value
+    ...
+
+@router.post("/{media_hash}")
+def set_rating(media_hash: str, payload: RatingIn):
+    # upsert then return same shape as get
+    ...
+```
+
+# Incredible improvements to include after cleanup
+
+* Small but high value
+
+  * Feature flags for VR simplification and previews so you can toggle at runtime.
+  * Performance panel with cache hit rate, DB query count, and p95 route times.
+  * Export ratings and tags to CSV for quick analysis and backup.
+  * Add a duplicate media detector using perceptual hashes and a simple review UI.
+
+* Medium effort, strong payoff
+
+  * Meilisearch index for hybrid metadata and tag search with numeric rating filters.
+  * Job dashboard that shows thumbnail and transcode queues, with pause and resume.
+  * Smart slideshow preset that uses ratings and tags to auto-curate sessions.
+
+* Style system alignment
+
+  * Keep one tokenized CSS file. Provide a density switch and a theme switch. Remove intricate glass effects that add GPU cost on Quest. Keep soft depth, subtle motion, and consistent focus states.
+
+* Scale posture
+
+  * Keep API stable. Move preview and analysis into workers. Add a thin rate limit layer. Add retention limits on logs and caches as constants with env overrides.

@@ -1,0 +1,17 @@
+<!-- templates/partials/rating.html
+     Reusable rating widget component with:
+     - Accessible buttons for 1 to 5 stars
+     - aria-label, role="radiogroup", aria-checked attributes
+     - Event handlers for click, pointerdown, and keydown (Enter, Space)
+     - No reliance on :hover state for selection
+     - VR and touch-friendly (44px+ hit targets)
+     - Always rendered (never hidden in VR containers)
+     - Uses media_hash when available, falls back to filename for backward compatibility
+-->
+<div class="rating" role="radiogroup" aria-label="Rate this video" data-media-hash="{{ media_hash or filename }}">
+  <button data-value="1" aria-checked="false" role="radio" class="star" aria-label="1 star">★</button>
+  <button data-value="2" aria-checked="false" role="radio" class="star" aria-label="2 stars">★</button>
+  <button data-value="3" aria-checked="false" role="radio" class="star" aria-label="3 stars">★</button>
+  <button data-value="4" aria-checked="false" role="radio" class="star" aria-label="4 stars">★</button>
+  <button data-value="5" aria-checked="false" role="radio" class="star" aria-label="5 stars">★</button>
+</div>

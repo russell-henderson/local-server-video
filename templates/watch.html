@@ -5,9 +5,6 @@
 {% block extra_head %}
   <!-- Performance metrics -->
   <script src="{{ url_for('static', filename='metrics.js') }}" defer></script>
-  
-  <!-- Player controls styling -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/player-controls.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -24,16 +21,7 @@
   </button>
 
   <!-- Rating -->
-  <div class="rating me-3 mb-2 mb-sm-0" data-filename="{{ filename }}" role="group" aria-label="Rate this video">
-    {% set current_rating = ratings.get(filename, 0) %}
-    {% for i in range(1,6) %}
-      <i class="{{ 'fas' if i<=current_rating else 'far' }} fa-star"
-         data-value="{{ i }}"
-         role="button"
-         tabindex="0"
-         aria-label="Rate {{ i }} star{% if i != 1 %}s{% endif %}"></i>
-    {% endfor %}
-  </div>
+  {% include 'partials/rating.html' %}
 
   <!-- View count -->
   <div id="video-view-count" class="view-count me-3 mb-2 mb-sm-0">
@@ -125,6 +113,7 @@
 {% block extra_scripts %}
   <!-- Watch page specific scripts -->
   <script src="{{ url_for('static', filename='js/ui.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/rating.js') }}" type="module"></script>
   <script src="{{ url_for('static', filename='video-player-controls.js') }}" defer></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -150,7 +139,7 @@
         });
       }
 
-          /* Ratings are handled by shared static/js/ratings.js (delegated) */
+          /* Ratings are handled by shared static/js/rating.js (ES6 module) */
 
       /* Tag management: handled by shared static/js/tags.js (delegated) */
     });
