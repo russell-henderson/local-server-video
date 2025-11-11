@@ -58,7 +58,7 @@ CONTRIBUTING.md
 CHANGELOG.md
 README.md
 
-````
+```
 
 Actions
 
@@ -257,8 +257,6 @@ export const platform = {
 
 ---
 
-````
-
 # .github/ and tooling
 
 **.github/workflows/ci.yml**
@@ -294,9 +292,9 @@ jobs:
           npx playwright install --with-deps chromium
       - name: E2E tests
         run: pnpm playwright test
-````
+```
 
-**.github/workflows/codeql.yml**
+## .github/workflows/codeql.yml
 
 ```yaml
 name: CodeQL
@@ -324,7 +322,19 @@ repos:
     rev: v4.6.0
     hooks:
       - id: trailing-whitespace
-      - id: end-of-file-fixer
+            - id: end-of-file-fixer
+```
+
+## CODEOWNERS
+
+```
+* @russell-henderson
+/backend/ @russell-henderson
+/frontend/ @russell-henderson
+```
+
+## .github/PULL_REQUEST_TEMPLATE.md
+
 ```
 
 **CODEOWNERS**
