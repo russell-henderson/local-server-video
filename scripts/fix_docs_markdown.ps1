@@ -1,4 +1,4 @@
-$root = 'z:\local-video-server\docs'
+$root = './docs'
 $files = Get-ChildItem -Path $root -Recurse -Filter *.md
 foreach ($f in $files) {
     $path = $f.FullName
