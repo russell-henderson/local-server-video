@@ -79,9 +79,11 @@ Actions
 
 Goal: SQLite is the authority. Sidecar JSON is backup only. Every write goes to DB, then cache is updated.
 
-- [ ] Create `backend/app/core/db.py` with a single SQLAlchemy session factory and migrations via Alembic.
-- [ ] Create `backend/app/core/cache.py` with a tiny in-process cache interface. Add `Cache.get`, `Cache.set`, `Cache.invalidate`.
-- [ ] Ratings table schema:
+**Status**: 🔄 IN PROGRESS (Foundation complete, integration pending)
+
+- [x] Create `backend/app/core/db.py` with a single SQLAlchemy session factory and migrations via Alembic.
+- [x] Create `backend/app/core/cache.py` with a tiny in-process cache interface. Add `Cache.get`, `Cache.set`, `Cache.invalidate`.
+- [x] Ratings table schema (already exists in database_migration.py):
 
 ```sql
 CREATE TABLE IF NOT EXISTS ratings (
@@ -92,14 +94,18 @@ CREATE TABLE IF NOT EXISTS ratings (
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   UNIQUE(media_hash, user_id)
 );
-````
+```
 
-* [ ] Service: `services/ratings_service.py` with `get_average_rating(media_hash)`, `set_rating(media_hash, user_id, value)`.
-* [ ] API:
+* [x] Service: `services/ratings_service.py` with `get_average_rating(media_hash)`, `set_rating(media_hash, user_id, value)`.
+* [x] API:
 
   * `GET /api/ratings/{media_hash}` → `{ average, count, user }`
   * `POST /api/ratings/{media_hash}` body `{ value }` → `{ average, count, user }`
-* [ ] All code paths that read ratings use the service. No direct JSON reads.
+* [x] All code paths that read ratings use the service. No direct JSON reads.
+* [ ] Wire API responses to watch page (hook up frontend to new endpoints)
+* [ ] Update watch.html to pass media_hash to rating widget
+
+**Completion Note**: Created `backend/services/ratings_service.py` with RatingsService class providing get_rating(), get_rating_summary(), set_rating() methods. Created `backend/app/api/ratings.py` with Flask blueprint implementing GET/POST /api/ratings/{media_hash}. Registered blueprint in main.py. Integration tests created in `tests/test_rating_write_and_read.py`. Commit 8c9ad6b.
 
 **Acceptance**
 
