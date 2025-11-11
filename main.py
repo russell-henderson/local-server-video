@@ -19,6 +19,7 @@ from thumbnail_manager import (
     generate_async as generate_thumbnail_async,
     sync as sync_thumbnails,
 )
+from config import get_config
 import json
 
 # Register API blueprints
@@ -28,11 +29,21 @@ try:
 except ImportError:
     _ratings_api_available = False
 
+try:
+    from backend.app.admin.routes import register_admin_routes
+    _admin_routes_available = True
+except ImportError:
+    _admin_routes_available = False
+
 app = Flask(__name__)
 
 # Register ratings API if available
 if _ratings_api_available:
     register_ratings_api(app)
+
+# Register admin routes if available
+if _admin_routes_available:
+    register_admin_routes(app)
 
 
 # ────────────────────────────────────────────────────────────────────────────
@@ -126,12 +137,17 @@ def index():
     # Background thumbnail jobs
     ensure_thumbnails_exist([v["filename"] for v in video_data])
 
+    # Load config for feature flags
+    config = get_config()
+
     return render_template(
         "index.html",
         videos=video_data,
         current_sort=sort_param,
         current_order=order,
         favorites_list=favorites_list,
+        feature_vr_simplify=config.feature_vr_simplify,
+        feature_previews=config.feature_previews,
     )
 
 
@@ -170,6 +186,9 @@ def watch_video(filename: str):
     # Thumbnails for related videos
     ensure_thumbnails_exist([v["filename"] for v in paginated])
 
+    # Load config for feature flags
+    config = get_config()
+
     return render_template(
         "watch.html",
         filename=filename,
@@ -181,6 +200,8 @@ def watch_video(filename: str):
         page=page,
         total_pages=total,
         favorites_list=favorites_list,
+        feature_vr_simplify=config.feature_vr_simplify,
+        feature_previews=config.feature_previews,
     )
 
 

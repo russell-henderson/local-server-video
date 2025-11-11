@@ -47,6 +47,10 @@ class ServerConfig:
     enable_cors: bool = False
     allowed_origins: list = field(default_factory=list)
     
+    # Feature flags
+    feature_vr_simplify: bool = True
+    feature_previews: bool = True
+    
     def __post_init__(self):
         """Validate configuration after initialization"""
         self._validate_config()
@@ -203,7 +207,9 @@ class ConfigManager:
                 'log_level': config.log_level,
                 'max_log_size': config.max_log_size,
                 'enable_cors': config.enable_cors,
-                'allowed_origins': config.allowed_origins
+                'allowed_origins': config.allowed_origins,
+                'feature_vr_simplify': config.feature_vr_simplify,
+                'feature_previews': config.feature_previews
             }
             
             with open(self.config_file, 'w') as f:
