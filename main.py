@@ -84,9 +84,9 @@ executor = ThreadPoolExecutor(max_workers=2)
 try:
     from performance_monitor import flask_route_monitor, performance_monitor  # type: ignore
     app = flask_route_monitor(app)
-    print("✅ Performance monitoring enabled")
+    print("[OK] Performance monitoring enabled")
 except ImportError:
-    print("⚠️  Performance monitoring not available")
+    print("[WARN] Performance monitoring not available")
 
     def performance_monitor(arg=None):
         # Support both @performance_monitor and @performance_monitor("name")
