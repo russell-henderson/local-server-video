@@ -21,7 +21,18 @@ from thumbnail_manager import (
 )
 import json
 
+# Register API blueprints
+try:
+    from backend.app.api.ratings import register_ratings_api
+    _ratings_api_available = True
+except ImportError:
+    _ratings_api_available = False
+
 app = Flask(__name__)
+
+# Register ratings API if available
+if _ratings_api_available:
+    register_ratings_api(app)
 
 
 # ────────────────────────────────────────────────────────────────────────────
