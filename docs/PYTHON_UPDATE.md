@@ -7,11 +7,11 @@
 
 ## Executive Summary
 
-**Total Python Files:** 14 (before cleanup)  
-**Currently Active:** 6 (essential, actively used)  
-**Deprecated Stubs:** 5 (safe to remove, already archived)  
-**Empty/Placeholder:** 1 (can remove)  
-**Already Removed:** 1 (`subtitles.py` - removed)
+**Total Python Files:** 10 (after Phase 1 cleanup - Nov 15, 2025)  
+**Currently Active:** 8 (essential, actively used)  
+**Deprecated Stubs:** 0 (removed in Phase 1 cleanup ✅)  
+**Empty/Placeholder:** 0 (removed in Phase 1 cleanup ✅)  
+**Already Removed:** 1 (`subtitles.py` - removed earlier)
 
 ---
 
@@ -20,6 +20,7 @@
 ### 🟢 ACTIVE & REQUIRED
 
 #### 1. **cache_manager.py** (621 lines)
+
 - **Purpose:** Centralized cache manager for video metadata and file listings
 - **Function:** Implements in-memory caching with periodic refresh and write-through caching
 - **Features:**
@@ -34,6 +35,7 @@
 ---
 
 #### 2. **config.py** (247 lines)
+
 - **Purpose:** Configuration system with cascade support
 - **Function:** Loads config from environment variables → `.env` → `config.json` → defaults
 - **Features:**
@@ -47,6 +49,7 @@
 ---
 
 #### 3. **database_migration.py** (811 lines)
+
 - **Purpose:** SQLite database manager and schema initialization
 - **Function:** Single source of truth for video metadata persistence
 - **Features:**
@@ -61,6 +64,7 @@
 ---
 
 #### 4. **file_watcher.py** (402 lines)
+
 - **Purpose:** Intelligent file system monitoring for video directory
 - **Function:** Detects new/modified/deleted video files with debouncing
 - **Features:**
@@ -76,6 +80,7 @@
 ---
 
 #### 5. **performance_monitor.py** (303 lines)
+
 - **Purpose:** Performance monitoring and latency tracking for routes
 - **Function:** Records and reports route execution times and cache stats
 - **Features:**
@@ -90,6 +95,7 @@
 ---
 
 #### 6. **thumbnail_manager.py** (272 lines)
+
 - **Purpose:** Centralized thumbnail generation and maintenance
 - **Function:** Maps videos → thumbnails, generates on-demand, syncs/cleans orphans
 - **Features:**
@@ -109,6 +115,7 @@
 These are **lightweight compatibility stubs** that prevent ImportError but provide no functionality. The original implementations are archived in `archive/python_legacy/`. These can be **safely removed** once imports are cleaned up.
 
 #### 7. **app_subs_integration.py** (No-op stub)
+
 - **Purpose:** Compatibility stub for removed subtitle system
 - **Function:** Provides no-op functions to maintain backward compatibility
 - **Contains:**
@@ -122,6 +129,7 @@ These are **lightweight compatibility stubs** that prevent ImportError but provi
 ---
 
 #### 8. **config_subtitles.py** (No-op stub)
+
 - **Purpose:** Compatibility stub for removed subtitle configuration
 - **Function:** Provides empty `SubtitleConfig` dataclass
 - **Contains:**
@@ -134,6 +142,7 @@ These are **lightweight compatibility stubs** that prevent ImportError but provi
 ---
 
 #### 9. **manage_subs.py** (No-op stub)
+
 - **Purpose:** Compatibility stub for removed subtitle CLI
 - **Function:** Prints deprecation message
 - **Contains:**
@@ -145,6 +154,7 @@ These are **lightweight compatibility stubs** that prevent ImportError but provi
 ---
 
 #### 10. **test_subtitles.py** (Stub test file)
+
 - **Purpose:** Placeholder test file for removed subtitle system
 - **Function:** `main()` → prints deprecation message
 - **Original Archive:** Original tests in `archive/python_legacy/`
@@ -154,6 +164,7 @@ These are **lightweight compatibility stubs** that prevent ImportError but provi
 ---
 
 #### 11. **maintenance.py** (Deprecation notice)
+
 - **Purpose:** Redirect to new maintenance script location
 - **Function:** Prints error message directing users to `tools/safe_maintenance.py`
 - **Status:** ⚠️ **REMOVE** - Users should use `tools/safe_maintenance.py`
@@ -164,6 +175,7 @@ These are **lightweight compatibility stubs** that prevent ImportError but provi
 ### 🔴 EMPTY/UNUSED
 
 #### 12. **purge_orphans.py** (Empty file)
+
 - **Purpose:** Unknown, file is completely empty
 - **Status:** 🗑️ **REMOVE** - No purpose, no content
 - **Action:** `git rm purge_orphans.py`
@@ -173,6 +185,7 @@ These are **lightweight compatibility stubs** that prevent ImportError but provi
 ### 📊 QUESTIONABLE (Requires Review)
 
 #### 13. **healthcheck.py** (886 lines)
+
 - **Purpose:** Comprehensive system health check utility
 - **Function:** Verifies app port, SQLite, cache, videos, ffmpeg, backups, SSL, quiet hours
 - **Features:**
@@ -190,6 +203,7 @@ These are **lightweight compatibility stubs** that prevent ImportError but provi
 ---
 
 #### 14. **search_engine.py** (531 lines)
+
 - **Purpose:** Advanced search with FTS5 (Full-Text Search 5), fuzzy matching
 - **Function:** Provides search database and advanced filtering
 - **Features:**
@@ -206,33 +220,42 @@ These are **lightweight compatibility stubs** that prevent ImportError but provi
 
 ## Cleanup Action Plan
 
-### Phase 1: Remove Deprecated Stubs (Safe, No Dependencies)
+### ✅ Phase 1: Remove Deprecated Stubs (COMPLETED)
+
+**Date Completed:** November 15, 2025  
+**Verification:** No remaining imports found in any Python files
+
 ```powershell
-git rm app_subs_integration.py
-git rm config_subtitles.py
-git rm manage_subs.py
-git rm test_subtitles.py
-git rm maintenance.py
-git rm purge_orphans.py
-git commit -m "chore: remove deprecated subtitle and maintenance stubs"
+git rm app_subs_integration.py       # ✅ REMOVED
+git rm config_subtitles.py           # ✅ REMOVED
+git rm manage_subs.py                # ✅ REMOVED
+git rm test_subtitles.py             # ⚠️  ALREADY MOVED TO DOCS
+git rm maintenance.py                # ✅ REMOVED
+git rm purge_orphans.py              # ✅ REMOVED
+git commit -m "chore: remove deprecated subtitle and maintenance stub files"
 ```
 
-**Files to Remove:** 6  
-**Reclaimed Lines:** ~100 (minimal)  
-**Risk Level:** ✅ Low - These are no-ops, removing is safe
+**Files Removed:** 5  
+**Reclaimed Lines:** ~108  
+**Risk Level:** ✅ Low - These were no-ops with no active imports  
+**Result:** Successfully cleaned up root directory
 
 ---
 
 ### Phase 2: Conditional Review (Requires Decision)
 
-**healthcheck.py:**
+**healthcheck.py (886 lines):**
+
 - Question: Is this actively monitoring the system?
 - If Yes → KEEP
-- If No → Consider moving to `docs/` or `tools/archive/`
+- If No → Consider moving to `tools/` or `docs/archive/`
+- Current Status: Not imported by main.py, likely utility script
 
-**search_engine.py:**
+**search_engine.py (531 lines):**
+
 - Status: Appears active (API endpoints in main.py)
-- Action: KEEP (verify API endpoints work)
+- Current Action: KEEP (verify API endpoints work)
+- Current Status: Not imported by main.py, but `/api/search` routes exist
 
 ---
 
@@ -245,38 +268,45 @@ git commit -m "chore: remove deprecated subtitle and maintenance stubs"
 | database_migration.py | 811 | 🟢 Active | **KEEP** | Database authority |
 | file_watcher.py | 402 | 🟢 Active | **KEEP** | File monitoring |
 | performance_monitor.py | 303 | 🟢 Active | **KEEP** | Performance tracking |
+| search_engine.py | 531 | 🟢 Active | **KEEP** | Search functionality |
 | thumbnail_manager.py | 272 | 🟢 Active | **KEEP** | Thumbnail generation |
-| app_subs_integration.py | ~20 | ⚠️ Stub | **REMOVE** | No-op, archived |
-| config_subtitles.py | ~30 | ⚠️ Stub | **REMOVE** | No-op, archived |
-| manage_subs.py | ~20 | ⚠️ Stub | **REMOVE** | No-op, archived |
-| test_subtitles.py | ~10 | ⚠️ Stub | **REMOVE** | No-op stub |
-| maintenance.py | ~10 | ⚠️ Stub | **REMOVE** | Redirects to tools/ |
-| purge_orphans.py | 0 | 🔴 Empty | **REMOVE** | Empty file |
-| healthcheck.py | 886 | ❓ Unknown | **REVIEW** | May be unused |
-| search_engine.py | 531 | ❓ Active? | **REVIEW** | API exists, verify usage |
+| healthcheck.py | 886 | ❓ Utility | **REVIEW** | May be unused or should move to `tools/` |
+| **app_subs_integration.py** | ~20 | ✅ Removed | **DONE** | No-op stub, no imports found |
+| **config_subtitles.py** | ~30 | ✅ Removed | **DONE** | No-op stub, no imports found |
+| **manage_subs.py** | ~20 | ✅ Removed | **DONE** | No-op stub, no imports found |
+| **maintenance.py** | ~10 | ✅ Removed | **DONE** | Redirects to tools/, no imports found |
+| **purge_orphans.py** | 0 | ✅ Removed | **DONE** | Empty file |
 
 ---
 
 ## Recommendations
 
-### Immediate Actions (Next PR)
-1. ✅ Remove deprecated subtitle stubs (6 files)
-2. ✅ Remove empty `purge_orphans.py`
-3. ⚠️ Verify `healthcheck.py` usage in monitoring/admin workflows
-4. ⚠️ Verify `search_engine.py` is called by `/api/search` endpoints
+### ✅ Completed Actions (Phase 1)
+
+1. ✅ Removed 5 deprecated subtitle stubs (verified no imports)
+2. ✅ Removed empty `purge_orphans.py`
+3. ✅ Verified `subtitles.py` was previously removed
+4. ✅ Preserved 8 active Python files in root:
+   - Core: `config.py`, `cache_manager.py`, `database_migration.py`
+   - Performance: `performance_monitor.py`, `thumbnail_manager.py`
+   - Monitoring: `file_watcher.py`, `search_engine.py`
+   - Utilities: `healthcheck.py` (pending review)
 
 ### Future Considerations
-- Move `healthcheck.py` to `tools/` if it's a utility script (not imported by main.py)
-- Consider consolidating small utility functions into a `utils/` module
-- Document which files are required vs. optional dependencies
+
+- Review `healthcheck.py` usage: Is it actively used for monitoring or should it move to `tools/`?
+- Consider whether search_engine.py should be imported by main.py or managed as external utility
+- Monitor root directory for new files and keep documentation up-to-date
 
 ---
 
 ## Notes
 
 - **subtitles.py** was already removed in commit `405acf5`
+- **app_subs_integration.py**, **config_subtitles.py**, **manage_subs.py**, **maintenance.py**, **purge_orphans.py** removed in commit `638d6d8` (verified no imports)
 - All deprecated files have archived copies in `archive/python_legacy/`
-- Main.py should not import deprecated stubs; verify before removing
-- Database and cache systems are tightly coupled; keep both
-- Thumbnail and file watcher are critical for video discovery
+- Main.py verified to have no imports of removed stub files
+- Database and cache systems are tightly coupled; keep both together
+- Thumbnail and file watcher are critical for video discovery and performance
+- Root directory now contains only 10 essential Python files (down from 15 originally)
 
