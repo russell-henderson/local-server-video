@@ -227,11 +227,11 @@ Thumbs.db
 *.swo
 *~
 
-# Backup files
-*.bak
-*.backup
-*.old
-*.zip
+# Generated data files (private user data)
+views.json
+tags.json
+ratings.json
+favorites.json
 
 # Test files
 test_*.py
