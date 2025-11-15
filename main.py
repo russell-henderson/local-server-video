@@ -1070,10 +1070,11 @@ def api_reindex_search():
 
 
 if __name__ == '__main__':
-    print("🎬 Starting Video Server with Performance Optimizations...")
-    print(f"📁 Video directory: {VIDEO_DIR}")
-    print(f"🖼️  Thumbnail directory: {THUMBNAIL_DIR}")
-    print(f"💾 Backend: {'Database' if cache.use_database else 'JSON files'}")
+    print("[STARTUP] Starting Video Server with Performance Optimizations...")
+    print(f"[STARTUP] Video directory: {VIDEO_DIR}")
+    print(f"[STARTUP] Thumbnail directory: {THUMBNAIL_DIR}")
+    backend = 'Database' if cache.use_database else 'JSON files'
+    print(f"[STARTUP] Backend: {backend}")
 
     # Run startup tasks with app context
     with app.app_context():
