@@ -1,0 +1,192 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    color: #fff;
+    background: radial-gradient(circle at center, #213d42, #0d0d0d);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  /* Container grid styles */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+    max-width: 1200px;
+    width: 100%;
+    padding: 40px 24px;
+  }
+  
+  .column {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: rgba(34, 54, 56, 0.15);
+    border-radius: 24px;
+    box-shadow:
+      8px 8px 20px #192c31cc,
+      -6px -6px 10px #2c474b44,
+      0 1.5px 0.5px #191b1b33 inset;
+    padding: 22px 20px;
+    min-width: 0;
+  }
+  .column h2 {
+    font-size: 1.12rem;
+    letter-spacing: 0.04em;
+    margin-bottom: 12px;
+    color: #67e2ff;
+  }
+  hr {
+    border: 0;
+    height: 1.5px;
+    background: linear-gradient(90deg, #6ed1ff12 0%, #00ccff66 100%);
+    margin: 18px 0 10px 0;
+    border-radius: 3px;
+    box-shadow: 0 1px 4px #213d4266;
+  }
+  
+  /* Link 'card' style */
+  a {
+    display: block;
+    padding: 10px 14px;
+    border-radius: 14px;
+    background: linear-gradient(90deg, #2c484d31, #25394642 75%);
+    color: #6ed1ff;
+    font-size: 1rem;
+    font-weight: 500;
+    letter-spacing: 0.014em;
+    transition: color 0.4s, background 0.4s, transform 0.1s;
+    box-shadow:
+      0.5px 1px 4px #06181d24 inset,
+      1px 1.5px 8px #34374b12;
+    outline: none;
+    border: none;
+    cursor: pointer;
+    position: relative;
+    text-decoration: none;
+  }
+  a:hover,
+  a:focus {
+    color: #ff5773;
+    background: linear-gradient(90deg, #3d2b3c42 0%, #233d46aa 100%);
+    transform: translateY(-2px) scale(1.018);
+    box-shadow:
+      0px 3px 32px -6px #ff577344,
+      1px 1.5px 8px #17424e44;
+  }
+  a:active {
+    filter: brightness(0.951);
+  }
+  
+  a.new, a.featured {
+    background: linear-gradient(90deg, #69e0ff70, #ff5d7722 70%);
+    color: #fff;
+    border-left: 4px solid #ff5773;
+  }
+  
+  a[aria-current="page"], .active {
+    color: #ffd057;
+    background: linear-gradient(90deg, #6762dd44 0%, #3538b052 100%);
+  }
+  
+  /* Responsive grid: collapse to 2 then 1 columns */
+  @media (max-width: 900px) {
+    .grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      padding: 24px 12px;
+    }
+  }
+  @media (max-width: 650px) {
+    .grid {
+      grid-template-columns: 1fr;
+      gap: 14px;
+      padding: 12px 4px;
+    }
+    .column {
+      padding: 14px 7px;
+    }
+  }
+  
+  /* Visible focus for keyboard navigation */
+  a:focus-visible {
+    outline: 2px solid #77f2ff;
+    outline-offset: 3px;
+  }
+  
+  /* Optional: headings or chips for new/featured */
+  .column h2, .chip {
+    font-size: 1.07rem;
+    color: #65e5ff;
+    margin: 0 0 6px 0;
+    font-weight: 700;
+  }
+  .chip {
+    display: inline-block;
+    background: #363139cc;
+    color: #ffd057;
+    border-radius: 10px;
+    padding: 2px 8px;
+    font-size: 0.81em;
+    margin-left: 7px;
+    vertical-align: middle;
+  }
+  .tooltip {
+    position: relative;
+    cursor: pointer;
+  }
+  
+  /* Tooltip bubble */
+  .tooltip::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: 50%;
+    bottom: 125%;              /* place above the link */
+    transform: translateX(-50%) translateY(4px);
+    padding: 0.35rem 0.6rem;
+    max-width: 220px;
+    font-size: 0.85rem;
+    line-height: 1.3;
+    text-align: center;
+    color: #fff;
+    background: #111;
+    border-radius: 4px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    pointer-events: none;
+    white-space: normal;
+    z-index: 10;
+    transition:
+      opacity 0.15s ease,
+      transform 0.15s ease;
+  }
+  
+  /* Small arrow */
+  .tooltip::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: 115%;
+    transform: translateX(-50%);
+    border-width: 6px;
+    border-style: solid;
+    border-color: #111 transparent transparent transparent;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+  
+  /* Show on hover or keyboard focus */
+  .tooltip:hover::after,
+  .tooltip:focus-visible::after,
+  .tooltip:hover::before,
+  .tooltip:focus-visible::before {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  
+  
+  ::-webkit-scrollbar { width:10px; background:#1b232c; }
+  ::-webkit-scrollbar-thumb { background:#17272e; border-radius:20px; }
+  

@@ -450,6 +450,226 @@ def best_of():
     
     return render_template('best_of.html', videos=video_data, favorites_list=favorites_list)
 
+
+@app.route('/links')
+def links():
+    """Links page"""
+    return render_template('links.html')
+
+
+@app.route('/gallery')
+def gallery():
+    """Gallery page for images"""
+    from database_migration import VideoDatabase
+    
+    gallery_dir = Path('images/gallery')
+    images = []
+    if gallery_dir.exists():
+        # Get all image files
+        image_extensions = {'.jpg', '.jpeg', '.png', '.gif', '.webp'}
+        images = [
+            img.name for img in gallery_dir.iterdir()
+            if img.is_file() and img.suffix.lower() in image_extensions
+        ]
+    
+    print(f"\n=== GALLERY DEBUG ===")
+    print(f"All files in gallery: {images}")
+    
+    # Exclude images that are already in groups
+    try:
+        db = VideoDatabase()
+        grouped_images = set()
+        all_groups = db.get_gallery_groups()
+        print(f"Total groups: {len(all_groups)}")
+        for group in all_groups:
+            group_items = db.get_group_images(group['id'])
+            print(f"Group '{group['name']}' (ID {group['id']}) items: {group_items}")
+            grouped_images.update(group_items)
+        
+        print(f"All grouped images: {grouped_images}")
+        print(f"Gallery before filter: {len(images)} images")
+        images = [img for img in images if img not in grouped_images]
+        print(f"Gallery after filter: {len(images)} images")
+        print(f"Filtered images: {images}")
+    except Exception as e:
+        print(f"ERROR: {e}")
+        import traceback
+        traceback.print_exc()
+    
+    images.sort(reverse=True)  # Newest first
+    print(f"=== END DEBUG ===\n")
+    return render_template('gallery.html', images=images)
+
+
+@app.route('/gallery/image/<path:filename>')
+def serve_gallery_image(filename: str):
+    """Serve gallery images"""
+    # Prevent directory traversal
+    if '..' in filename or filename.startswith('/'):
+        abort(403)
+    
+    file_path = Path('images/gallery') / filename
+    if not file_path.exists() or not file_path.is_file():
+        abort(404)
+    
+    mime_type, _ = mimetypes.guess_type(str(file_path))
+    mime_type = mime_type or "application/octet-stream"
+    return send_file(str(file_path), mimetype=mime_type)
+
+
+@app.route('/gallery/groups/<slug>')
+def gallery_group(slug: str):
+    """Display a specific gallery group"""
+    from database_migration import VideoDatabase
+    db = VideoDatabase()
+    
+    # Get group info
+    group_data = db.get_gallery_group_by_slug(slug)
+    if not group_data:
+        abort(404)
+    
+    # Type narrowing: group_data is dict[str, Any] after the None check
+    assert isinstance(group_data, dict), "group_data must be a dict"
+    group_id: int = group_data.get('id', 0)
+    images = db.get_group_images_with_ids(group_id)
+    
+    return render_template(
+        'gallery_group.html',
+        group=group_data,
+        images=images
+    )
+
+
+# ─── Gallery API Endpoints ──────────────────────────────────────────
+
+@app.route('/api/gallery', methods=['GET'])
+def api_gallery_images():
+    """Get list of all gallery images"""
+    gallery_dir = Path('images/gallery')
+    if not gallery_dir.exists():
+        return jsonify({'images': []})
+    
+    images = []
+    try:
+        for item in gallery_dir.iterdir():
+            if item.is_file() and item.suffix.lower() in [
+                '.jpg', '.jpeg', '.png', '.gif', '.webp'
+            ]:
+                images.append(item.name)
+    except Exception:
+        pass
+    
+    return jsonify({'images': sorted(images)})
+
+
+@app.route('/api/gallery/groups', methods=['GET', 'POST'])
+def api_gallery_groups():
+    """Get all gallery groups or create a new one"""
+    from database_migration import VideoDatabase
+    db = VideoDatabase()
+    
+    if request.method == 'GET':
+        groups = db.get_gallery_groups()
+        return jsonify(groups)
+    
+    # POST: Create new group
+    data = request.get_json()
+    name = data.get('name', '').strip()
+    images = data.get('images', [])
+    cover_image = data.get('cover_image')
+    
+    if not name or not images:
+        return jsonify({'error': 'Name and images required'}), 400
+    
+    try:
+        group_id = db.create_gallery_group(name, cover_image)
+        db.add_images_to_group(group_id, images)
+        
+        # Get the created group
+        group = db.get_gallery_group_by_slug(
+            name.lower().replace(' ', '-')
+        )
+        return jsonify(group), 201
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/gallery/groups/<int:group_id>/images',
+           methods=['POST'])
+def api_add_images_to_group(group_id: int):
+    """Add images to an existing group"""
+    from database_migration import VideoDatabase
+    db = VideoDatabase()
+    
+    data = request.get_json()
+    images = data.get('images', [])
+    
+    if not images:
+        return jsonify({'error': 'Images required'}), 400
+    
+    try:
+        db.add_images_to_group(group_id, images)
+        return jsonify({'success': True}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/gallery/groups/<int:group_id>/images/<path:image_path>',
+           methods=['DELETE'])
+def api_remove_image_from_group(group_id: int, image_path: str):
+    """Remove an image from a group"""
+    from database_migration import VideoDatabase
+    db = VideoDatabase()
+    
+    try:
+        db.remove_image_from_group(group_id, image_path)
+        return jsonify({'success': True}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/gallery/groups/<int:group_id>/items/<int:item_id>',
+           methods=['DELETE'])
+def api_remove_image_item(group_id: int, item_id: int):
+    """Remove a specific image item from a group by ID"""
+    from database_migration import VideoDatabase
+    db = VideoDatabase()
+    
+    try:
+        db.remove_image_item_by_id(item_id)
+        return jsonify({'success': True}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/gallery/groups/<int:group_id>', methods=['PUT', 'DELETE'])
+def api_modify_group(group_id: int):
+    """Update or delete a gallery group"""
+    from database_migration import VideoDatabase
+    db = VideoDatabase()
+    
+    if request.method == 'PUT':
+        # Update group name or cover image
+        data = request.get_json()
+        name = data.get('name', '').strip()
+        cover_image = data.get('cover_image', '').strip()
+        
+        try:
+            if name:
+                db.update_group_name(group_id, name)
+            if cover_image:
+                db.update_group_cover_image(group_id, cover_image)
+            return jsonify({'success': True}), 200
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+    
+    elif request.method == 'DELETE':
+        try:
+            db.delete_gallery_group(group_id)
+            return jsonify({'success': True}), 200
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
 # ─── BACKGROUND TASKS & STARTUP ─────────────────────────────────────
 
 
