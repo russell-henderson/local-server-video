@@ -1,0 +1,441 @@
+{% extends "_base.html" %}
+
+{% block title %}{{ group.name }} - Gallery - Local Video Server{% endblock %}
+
+{% block extra_head %}
+<style>
+  /* Group View Styles */
+  .group-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  
+  .group-header h1 {
+    margin: 0;
+    color: var(--text-color);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  .back-link {
+    color: var(--accent-color);
+    text-decoration: none;
+    font-size: 1rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: opacity var(--transition-fast);
+  }
+  
+  .back-link:hover {
+    opacity: 0.8;
+  }
+  
+  .group-actions {
+    display: flex;
+    gap: 12px;
+  }
+  
+  .action-btn {
+    padding: 8px 16px;
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all var(--transition-fast);
+  }
+  
+  .action-btn:hover {
+    opacity: 0.9;
+  }
+  
+  .action-btn.danger {
+    background: #dc3545;
+  }
+  
+  /* Group Image Grid */
+  .group-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+    padding: 16px 0;
+  }
+  
+  /* Image Item */
+  .group-image-item {
+    position: relative;
+    background: var(--card-background);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+  
+  .group-image-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+  
+  .group-image-item img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    display: block;
+  }
+  
+  .image-remove-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(220, 53, 69, 0.9);
+    color: white;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: all var(--transition-fast);
+    z-index: 2;
+  }
+  
+  .group-image-item:hover .image-remove-btn {
+    opacity: 1;
+  }
+  
+  .image-remove-btn:hover {
+    background: #dc3545;
+    transform: scale(1.1);
+  }
+  
+  .image-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+    padding: 12px;
+    transform: translateY(100%);
+    transition: transform var(--transition-normal);
+  }
+  
+  .group-image-item:hover .image-overlay {
+    transform: translateY(0);
+  }
+  
+  .image-title {
+    color: white;
+    font-size: 0.85rem;
+    margin: 0;
+    word-break: break-word;
+  }
+  
+  /* Lightbox */
+  .lightbox {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.95);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  
+  .lightbox.active {
+    display: flex;
+  }
+  
+  .lightbox-content {
+    max-width: 90vw;
+    max-height: 90vh;
+    position: relative;
+  }
+  
+  .lightbox-content img {
+    max-width: 100%;
+    max-height: 90vh;
+    object-fit: contain;
+  }
+  
+  .lightbox-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    font-size: 2rem;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast);
+  }
+  
+  .lightbox-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+  
+  /* Empty State */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: rgba(255, 255, 255, 0.5);
+  }
+  
+  .empty-state i {
+    font-size: 4rem;
+    margin-bottom: 16px;
+    opacity: 0.3;
+  }
+  
+  .empty-state p {
+    font-size: 1.1rem;
+    margin: 0;
+  }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+    .group-header {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    
+    .group-grid {
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 12px;
+    }
+    
+    .group-image-item img {
+      height: 150px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .group-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="group-container">
+  <!-- Header -->
+  <div class="group-header">
+    <h1>
+      <a href="/gallery" class="back-link">
+        <i class="fas fa-arrow-left"></i> Gallery
+      </a>
+      / {{ group.name }}
+    </h1>
+    
+    <div class="group-actions">
+      <button class="action-btn" id="editGroupBtn">
+        <i class="fas fa-edit"></i> Edit Name
+      </button>
+      <button class="action-btn danger" id="deleteGroupBtn">
+        <i class="fas fa-trash"></i> Delete Group
+      </button>
+    </div>
+  </div>
+  
+  <!-- Group Images Grid -->
+  <div class="group-grid" id="groupGrid">
+    <!-- Images will be inserted here by JavaScript -->
+  </div>
+  
+  <!-- Lightbox -->
+  <div class="lightbox" id="lightbox">
+    <button class="lightbox-close" id="lightboxClose">&times;</button>
+    <div class="lightbox-content">
+      <img id="lightboxImage" src="" alt="">
+    </div>
+  </div>
+</div>
+
+<script>
+// Group data
+const groupId = {{ group.id }};
+const groupName = {{ group.name|tojson }};
+const groupSlug = {{ group.slug|tojson }};
+let groupImages = {{ images|tojson }};
+
+// DOM Elements
+const groupGrid = document.getElementById('groupGrid');
+const editGroupBtn = document.getElementById('editGroupBtn');
+const deleteGroupBtn = document.getElementById('deleteGroupBtn');
+const lightbox = document.getElementById('lightbox');
+const lightboxImage = document.getElementById('lightboxImage');
+const lightboxClose = document.getElementById('lightboxClose');
+
+// Initialize
+function init() {
+  renderImages();
+  setupEventListeners();
+}
+
+// Render group images
+function renderImages() {
+  if (groupImages.length === 0) {
+    groupGrid.innerHTML = '<div class="empty-state"><i class="fas fa-images"></i><p>No images in this group yet.</p></div>';
+    return;
+  }
+  
+  groupGrid.innerHTML = '';
+  groupImages.forEach(item => {
+    const imageDiv = document.createElement('div');
+    imageDiv.className = 'group-image-item';
+    imageDiv.dataset.itemId = item.id;
+    imageDiv.dataset.imagePath = item.image_path;
+    
+    const img = document.createElement('img');
+    img.src = `/gallery/image/${item.image_path}`;
+    img.alt = item.image_path;
+    img.loading = 'lazy';
+    
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'image-remove-btn';
+    removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+    removeBtn.onclick = (e) => {
+      e.stopPropagation();
+      removeImage(item.id, item.image_path);
+    };
+    
+    const overlay = document.createElement('div');
+    overlay.className = 'image-overlay';
+    
+    const title = document.createElement('p');
+    title.className = 'image-title';
+    title.textContent = item.image_path;
+    overlay.appendChild(title);
+    
+    imageDiv.appendChild(img);
+    imageDiv.appendChild(removeBtn);
+    imageDiv.appendChild(overlay);
+    
+    imageDiv.onclick = () => openLightbox(item.image_path);
+    
+    groupGrid.appendChild(imageDiv);
+  });
+}
+
+// Remove image from group
+async function removeImage(itemId, imagePath) {
+  if (!confirm(`Remove "${imagePath}" from this group?`)) return;
+  
+  try {
+    const response = await fetch(`/api/gallery/groups/${groupId}/items/${itemId}`, {
+      method: 'DELETE'
+    });
+    
+    if (response.ok) {
+      groupImages = groupImages.filter(img => img.id !== itemId);
+      renderImages();
+    } else {
+      const error = await response.json();
+      alert(`Failed to remove image: ${error.error}`);
+    }
+  } catch (error) {
+    console.error('Error removing image:', error);
+    alert('Failed to remove image. Please try again.');
+  }
+}
+
+// Edit group name
+async function editGroupName() {
+  const newName = prompt('Enter new group name:', groupName);
+  if (!newName || newName.trim() === '' || newName === groupName) return;
+  
+  try {
+    const response = await fetch(`/api/gallery/groups/${groupId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: newName.trim() })
+    });
+    
+    if (response.ok) {
+      window.location.reload();
+    } else {
+      const error = await response.json();
+      alert(`Failed to update group name: ${error.error}`);
+    }
+  } catch (error) {
+    console.error('Error updating group name:', error);
+    alert('Failed to update group name. Please try again.');
+  }
+}
+
+// Delete group
+async function deleteGroup() {
+  if (!confirm(`Delete the group "${groupName}"? Images will not be deleted, only the group.`)) return;
+  
+  try {
+    const response = await fetch(`/api/gallery/groups/${groupId}`, {
+      method: 'DELETE'
+    });
+    
+    if (response.ok) {
+      window.location.href = '/gallery';
+    } else {
+      const error = await response.json();
+      alert(`Failed to delete group: ${error.error}`);
+    }
+  } catch (error) {
+    console.error('Error deleting group:', error);
+    alert('Failed to delete group. Please try again.');
+  }
+}
+
+// Open lightbox
+function openLightbox(imagePath) {
+  lightboxImage.src = `/gallery/image/${imagePath}`;
+  lightbox.classList.add('active');
+}
+
+// Close lightbox
+function closeLightbox() {
+  lightbox.classList.remove('active');
+  lightboxImage.src = '';
+}
+
+// Setup event listeners
+function setupEventListeners() {
+  editGroupBtn.onclick = editGroupName;
+  deleteGroupBtn.onclick = deleteGroup;
+  lightboxClose.onclick = closeLightbox;
+  
+  lightbox.onclick = (e) => {
+    if (e.target === lightbox) closeLightbox();
+  };
+  
+  // Keyboard shortcuts
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && lightbox.classList.contains('active')) {
+      closeLightbox();
+    }
+  });
+}
+
+// Initialize on page load
+init();
+</script>
+{% endblock %}
