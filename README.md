@@ -1,207 +1,349 @@
-- **Ctrl+4** - Switch to Hybrid theme
-- **Ctrl+D** - Toggle Dark/Light mode
-- **Tab** - Navigate through all interactive elements
+# 🎬 Local Video Server
 
-### **Advanced Features**
+A modern, professional-grade local video streaming application with intelligent caching, responsive design, and cross-platform support. Built with Flask (Python backend) and vanilla JavaScript for maximum performance and simplicity.
 
-#### **Adaptive Streaming**
+![Python](https://img.shields.io/badge/Python-3.13+-green?style=for-the-badge&logo=python)
+![Flask](https://img.shields.io/badge/Flask-Web%20Framework-red?style=for-the-badge&logo=flask)
+![JavaScript](https://img.shields.io/badge/JavaScript-Vanilla-yellow?style=for-the-badge&logo=javascript)
+![SQLite](https://img.shields.io/badge/SQLite-Database-blue?style=for-the-badge&logo=sqlite)
+![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 
-The server automatically adjusts video quality based on:
+## ✨ Features
 
-- Network speed and stability
-- Device capabilities
-- Buffer health
-- User preferences
+### 📺 Video Streaming
+- **Unified Video Player** - Consistent player across all pages
+- **Range-Based Streaming** - Efficient HTTP range requests for large files
+- **Resume Playback** - Automatic position saving and resume prompts
+- **Keyboard Controls** - J/L (±10s), K/Space (play/pause), F (fullscreen), M (mute), ↑/↓ (volume)
+- **URL Time Parameters** - Start at specific time with `?t=SECONDS`
+- **Multiple Format Support** - MP4, MKV, WebM, MOV, AVI and more
 
-#### **Video Previews**
+### 🎨 User Interface
+- **Responsive Design** - Desktop, mobile, tablet, and VR support
+- **Dark/Light Themes** - Modern glassmorphic and neomorphic designs
+- **Touch-Friendly Controls** - 44px+ minimum touch targets for accessibility
+- **Theme Customization** - Switch between multiple visual themes
+- **High Contrast Mode** - Enhanced accessibility for vision impaired users
 
-- **Desktop** - Hover over thumbnails for instant scene previews
-- **Mobile/VR** - Tap thumbnails to start preview (tap again to stop)
-- **Scrub** through videos without opening the player
-- **VR Mode** - Touch-friendly controls for VR devices
+### 🎥 Video Management
+- **5-Star Rating System** - Rate and track video quality
+- **Favorites** - Quick-save your favorite videos
+- **Custom Tags** - Organize videos with flexible tagging system
+- **View Analytics** - Track watch counts and engagement
+- **Smart Search** - Find videos by name, tags, and metadata
+- **Related Videos** - Intelligent content discovery recommendations
 
-#### **Theme Customization**
+### 📊 Performance & Data
+- **Intelligent Caching** - Dual-backend cache (SQLite + JSON fallback)
+- **Automatic Thumbnail Generation** - Background FFmpeg thumbnail extraction
+- **File Monitoring** - Real-time detection of new videos with debouncing
+- **Database Authority** - Single source of truth for all metadata
+- **Performance Monitoring** - Real-time route profiling and metrics
+- **Concurrent Processing** - ThreadPoolExecutor for background tasks
 
-- **Glassmorphic** - Modern frosted glass aesthetic
-- **Neomorphic** - Soft, tactile button design
-- **Hybrid** - Combined glass and shadow effects
-- **Dark Mode** - Available for all themes
-- **High Contrast** - Enhanced accessibility mode
+### 🖼️ Gallery System (New!)
+- **Image Gallery** - Organize images into virtual groups
+- **Group Management** - Create, edit, and delete image groups
+- **Cover Images** - Set custom thumbnails for groups
+- **Non-Destructive** - Groups are virtual; deleting groups doesn't delete files
+- **Image Grid** - Responsive image layout with lazy loading
 
-#### **Performance Monitoring**
+### 🔒 Privacy & Security
+- **Local-Only Storage** - All data stored locally, no cloud required
+- **User Metadata Protected** - Personal ratings and favorites kept private
+- **No Tracking** - Zero external analytics or telemetry
+- **CORS Support** - Optional cross-origin resource sharing
+- **SQLite Encryption Ready** - Database security for sensitive deployments
 
-- **Real-time Metrics** - FPS, memory usage, and UX events
-- **Console Access** - Run `__LVS_METRICS()` to view current metrics
-- **Cache Status** - Monitor cache hit rates and performance
-- **System Health** - Track server response times and errors
+## 🚀 Quick Start
+
+### Prerequisites
+- Python 3.11+ (recommend 3.13)
+- FFmpeg (for thumbnail generation)
+- Windows, macOS, or Linux
+
+### Installation
+
+1. **Clone the repository:**
+```bash
+git clone https://github.com/russell-henderson/local-server-video.git
+cd local-video-server
+```
+
+2. **Install dependencies:**
+```bash
+pip install -r requirements.txt
+```
+
+3. **Run the server:**
+```bash
+# Development mode (auto-reload)
+.\dev.ps1 dev
+
+# Production mode
+.\dev.ps1 prod
+
+# Or directly
+python main.py
+```
+
+4. **Open in browser:**
+```
+http://localhost:5000
+```
+
+5. **Add your videos:**
+   - Place video files in the `videos/` folder
+   - Server auto-discovers and indexes them
+   - Thumbnails generate automatically on demand
 
 ## ⚙️ Configuration
 
-### **Environment Variables**
+### Environment Variables
 
+Configuration is loaded from (highest to lowest priority):
+1. Environment variables (`LVS_*` prefix)
+2. `.env` file
+3. `config.json` file
+4. Built-in defaults
+
+**Example `.env` file:**
 ```bash
-# OpenAI API (optional - for AI features)
-OPENAI_API_KEY=your_api_key_here
-OPENAI_MODEL=gpt-4o-mini
+# Server
+LVS_HOST=0.0.0.0
+LVS_PORT=5000
+LVS_DEBUG=false
 
-# Chat Settings (optional)
-CHAT_MAX_TOKENS=300
-CHAT_TEMPERATURE=0.7
+# Directories
+LVS_VIDEO_DIRECTORY=videos
+LVS_THUMBNAIL_DIRECTORY=static/thumbnails
 
-# Cache Settings
-CACHE_TTL=300                        # Cache refresh interval (seconds)
+# Cache
+LVS_CACHE_TIMEOUT=3600
+LVS_CACHE_ENABLED=true
+
+# Features
+LVS_SEARCH_ENABLED=true
+LVS_ANALYTICS_ENABLED=true
 ```
 
-### **Server Settings**
+### Configuration File (`config.py`)
 
-Edit `main.py` to customize:
+Edit `config.py` to customize:
+- Server host and port
+- Video and thumbnail directories
+- Database paths
+- Cache TTL and size limits
+- Feature flags (search, analytics, VR mode)
+- CORS settings
 
-- **Port** - Default: 5000
-- **Video Directory** - Default: `videos/`
-- **Thumbnail Directory** - Default: `static/thumbnails/`
-- **Cache Settings** - Memory and disk cache limits
+## 📁 Project Structure
 
-## 🔧 Advanced Setup
-
-### **FFmpeg Installation**
-
-For thumbnail generation and video processing:
-
-**Windows:**
-
-```bash
-# Using Chocolatey
-choco install ffmpeg
-
-# Or download from https://ffmpeg.org/download.html
+```
+local-video-server/
+├── main.py                    # Flask app with all routes
+├── config.py                  # Configuration management
+├── cache_manager.py           # Metadata caching (SQLite + JSON)
+├── database_migration.py      # SQLite schema and queries
+├── file_watcher.py            # Directory monitoring for new files
+├── thumbnail_manager.py       # Thumbnail generation and sync
+├── performance_monitor.py     # Route latency tracking
+├── search_engine.py           # Advanced search with FTS5
+├── healthcheck.py             # System health check utility
+├── static/                    # Frontend assets
+│   ├── styles.css            # Main stylesheet
+│   ├── js/                   # JavaScript modules
+│   │   ├── player.js         # Video player class
+│   │   ├── ratings.js        # Rating interactions
+│   │   ├── tags.js           # Tag management
+│   │   └── favorites.js      # Favorite toggling
+│   └── thumbnails/           # Generated thumbnails
+├── templates/                 # Jinja2 templates
+│   ├── index.html            # Video list
+│   ├── watch.html            # Video player
+│   ├── gallery.html          # Image gallery
+│   ├── tags.html             # Tag browsing
+│   ├── best_of.html          # High-rated videos
+│   └── favorites.html        # Favorited videos
+├── docs/                     # Comprehensive documentation
+│   ├── IMPLEMENTATION.md     # Architecture & patterns
+│   ├── PERFORMANCE.md        # Optimization notes
+│   ├── UI.md                 # UI design & player behavior
+│   ├── PYTHON_UPDATE.md      # Python files audit
+│   └── ARCHIVE_INDEX.md      # Archived systems index
+├── archive/                  # Legacy and deprecated code
+├── videos/                   # Your video collection
+├── images/                   # Gallery images
+├── .env.example              # Environment variables template
+├── requirements.txt          # Python dependencies
+└── dev.ps1                   # Windows development helper
 ```
 
-**macOS:**
+## 🔧 Development
+
+### Getting Started
+
+1. **Read the architecture guide:**
+   ```
+   docs/IMPLEMENTATION.md - Essential reading for developers
+   ```
+
+2. **Understand key components:**
+   - **cache_manager.py** - Metadata caching system
+   - **database_migration.py** - SQLite database schema
+   - **main.py** - Flask route handlers and API endpoints
+   - **thumbnail_manager.py** - Thumbnail orchestration
+
+3. **Code patterns:**
+   - Use `@performance_monitor("route_name")` decorator on routes
+   - Bulk-load metadata from cache (don't call cache.get_* multiple times)
+   - Always validate file existence before serving
+   - Use database as single source of truth
+
+### Running Quality Checks
 
 ```bash
-# Using Homebrew
-brew install ffmpeg
+# Windows PowerShell:
+.\dev.ps1 lint          # Check syntax and style
+.\dev.ps1 test          # Run test suite
+.\dev.ps1 health        # System health check
+.\dev.ps1 clean         # Clean cache/logs
+
+# Database maintenance:
+.\dev.ps1 reindex       # Force video reindexing
+.\dev.ps1 backup        # Backup databases
 ```
 
-**Linux:**
+### Testing
 
 ```bash
-# Ubuntu/Debian
-sudo apt update && sudo apt install ffmpeg
-
-# CentOS/RHEL
-sudo yum install ffmpeg
-```
-
-### **Performance Optimization**
-
-- **SSD Storage** - Store videos on SSD for faster access
-- **RAM** - 8GB+ recommended for large video collections
-- **Network** - Gigabit ethernet for 4K streaming
-- **CPU** - Multi-core processor for thumbnail generation
-
-## 🚀 Development
-
-### **Adding New Features**
-
-1. Create feature branch: `git checkout -b feature/new-feature`
-2. Add your code in appropriate directories
-3. Update documentation in `docs/`
-4. Test thoroughly across devices and themes
-5. Submit pull request
-
-### **Code Style**
-
-- **Python** - Follow PEP 8 standards
-- **JavaScript** - Use ES6+ features
-- **CSS** - BEM methodology for class naming
-- **HTML** - Semantic markup with accessibility
-
-### **Testing**
-
-```bash
-# Run video preview tests
-python test_video_preview.py
-
-# Test database functionality
+# Test specific components
 python -c "from cache_manager import cache; print('Cache OK')"
+python -c "from database_migration import VideoDatabase; db = VideoDatabase(); print('DB OK')"
 
-# Check theme integration
-# Open browser and test all three themes
+# Run linting
+python -m pylint main.py
+flake8 *.py
 
-# Verify accessibility
-# Run Lighthouse audit (target ≥90 accessibility score)
+# Check database
+sqlite3 video_metadata.db ".tables"
 ```
 
-### **QA Testing**
+### Adding Features
 
-Use the comprehensive testing template in `docs/QA_TESTING_TEMPLATE.md`:
+1. **Create feature branch:**
+   ```bash
+   git checkout -b feature/my-feature
+   ```
 
-- **Phase 1** - Fast verification of implemented features
-- **Phase 2** - Functional QA testing (10 minutes)
-- **Phase 3** - Lighthouse & WCAG compliance testing
+2. **Make your changes:**
+   - Follow existing code patterns
+   - Add docstrings and type hints
+   - Update `docs/` if changing architecture
+
+3. **Test thoroughly:**
+   - Test on desktop and mobile
+   - Verify performance impact
+   - Check database consistency
+
+4. **Submit pull request:**
+   - Reference related issues
+   - Include test evidence
+   - Update documentation
 
 ## 📚 Documentation
 
-Comprehensive, consolidated documentation is available in the `docs/` folder. For most developer and maintenance tasks, start with these top-level documents:
+Start here for different tasks:
 
-- **[Implementation & Architecture](docs/IMPLEMENTATION.md)** — code structure, key components, and developer guidance
-- **[Performance & Optimization](docs/PERFORMANCE.md)** — profiling results, optimization notes, and action items
-- **[UI & Player Guide](docs/UI.md)** — UI patterns, player behavior, and theme details
-- **[Project Todos & Roadmap](docs/TODOS.md)** — high-level tasks and remaining work
+- **[IMPLEMENTATION.md](docs/IMPLEMENTATION.md)** - Architecture, design patterns, development workflow
+- **[PERFORMANCE.md](docs/PERFORMANCE.md)** - Optimization strategies, profiling results
+- **[UI.md](docs/UI.md)** - UI patterns, player behavior, theme system
+- **[PYTHON_UPDATE.md](docs/PYTHON_UPDATE.md)** - Python files inventory and audit
 
-More specialized or historical documents have been archived under `docs/deferred/` for reference.
-
-## Deprecated Systems
-
-The repository has undergone a cleanup to archive legacy and deprecated subsystems. Notably:
-
-- The automatic subtitle generation system (AI transcription, CLI tools, and API routes) has been removed and its documentation archived to `docs/deferred/legacy/`.
-- See `docs/ARCHIVE_INDEX.md` for an index of archived files and short summaries.
-
-This cleanup is part of the v1.02 maintenance cycle to keep active documentation focused on maintained features.
+**Maintenance & Utilities:**
+- **[ARCHIVE_INDEX.md](docs/ARCHIVE_INDEX.md)** - Index of archived/deprecated systems
+- **[copilot-instructions.md](.github/copilot-instructions.md)** - Copilot guidelines for this project
 
 ## 🛣️ Roadmap
 
-### **Completed Features** ✅
+### ✅ Completed
 
-- [x] **Advanced Video Streaming** - ABR with 7 quality levels
-- [x] **Modern UI Themes** - Glassmorphic, Neomorphic, Hybrid
-- [x] **Cross-Platform Support** - Desktop, mobile, tablet, VR
-- [x] **Accessibility Compliance** - WCAG AA with high contrast mode
-- [x] **Performance Metrics** - Real-time monitoring and analytics
-- [x] **Touch-Friendly Interface** - 44px minimum targets
-- [x] **Keyboard Shortcuts** - Theme switching and dark mode
-- [x] **Mobile Preview System** - Tap-to-preview functionality
+- [x] Unified video player with resume playback
+- [x] Rating and tagging system
+- [x] Favorite collection
+- [x] 5-star rating system
+- [x] SQLite backend with JSON fallback
+- [x] Thumbnail auto-generation
+- [x] File monitoring with debouncing
+- [x] Performance monitoring and metrics
+- [x] Responsive mobile/tablet support
+- [x] Gallery system with image grouping
+- [x] Search with FTS5
+- [x] Multi-theme support
+- [x] Accessibility compliance
 
-### **Upcoming Features**
+### 🚧 In Progress / Planned
 
-- [ ] **Advanced Search** - Metadata, duration, and content-based search
-- [ ] **Playlist Management** - User-curated and smart playlists
-- [ ] **Subtitle Support** - Multi-language subtitle management
-- [ ] **AI-Powered Features** - Content analysis and recommendations
-- [ ] **Mini Player** - Picture-in-picture functionality
-- [ ] **Performance Dashboard** - Real-time analytics and metrics
+- [ ] Advanced search filters
+- [ ] Playlist management
+- [ ] Mini-player (PiP)
+- [ ] User authentication (multi-user support)
+- [ ] Cloud backup integration
+- [ ] Mobile app (iOS/Android)
+- [ ] Live streaming support
 
-### **Long-term Goals**
+## 🐛 Troubleshooting
 
-- [ ] **Mobile Apps** - Native iOS and Android applications
-- [ ] **Multi-user Support** - User accounts and permissions
-- [ ] **Cloud Integration** - Backup and sync capabilities
-- [ ] **Live Streaming** - Real-time video broadcasting
-- [ ] **Content Management** - Advanced admin tools
+### Server won't start
+```bash
+# Check if port is in use
+lsof -i :5000              # macOS/Linux
+netstat -ano | findstr :5000  # Windows
+
+# Check Python version
+python --version            # Should be 3.11+
+```
+
+### Missing thumbnails
+```bash
+# Regenerate all thumbnails
+.\dev.ps1 health            # Check thumbnail status
+.\dev.ps1 reindex           # Force regeneration
+```
+
+### Database issues
+```bash
+# Check database integrity
+sqlite3 video_metadata.db ".tables"
+sqlite3 video_metadata.db "PRAGMA integrity_check;"
+
+# Backup before maintenance
+.\dev.ps1 backup
+```
+
+### Performance problems
+```bash
+# Check performance metrics
+# Visit: http://localhost:5000/admin/performance
+
+# Monitor cache status
+# Visit: http://localhost:5000/admin/cache/status
+
+# Check system health
+.\dev.ps1 health
+```
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our contributing guidelines:
+Contributions are welcome! Please:
 
-1. **Fork** the repository
-2. **Create** a feature branch
-3. **Make** your changes
-4. **Test** thoroughly using the QA testing template
-5. **Submit** a pull request
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-### **Areas for Contribution**
+### Areas for Contribution
 
 - 🐛 Bug fixes and improvements
 - ✨ New features and enhancements
@@ -217,38 +359,21 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🙏 Acknowledgments
 
 - **Flask** - Excellent Python web framework
+- **SQLite** - Reliable embedded database
+- **FFmpeg** - Powerful multimedia toolkit
 - **Bootstrap** - Responsive CSS framework
-- **Font Awesome** - Beautiful icons
-- **Material Design** - Google's design system
-- **OpenAI** - AI-powered features
-- **WCAG Guidelines** - Accessibility standards
+- **Font Awesome** - Beautiful icon library
+- **WCAG** - Web accessibility guidelines
 
-## 📞 Support
+## 📞 Support & Resources
 
-- **Issues** - Report bugs and request features on GitHub
+- **Issues** - Report bugs or request features on [GitHub](https://github.com/russell-henderson/local-server-video/issues)
 - **Documentation** - Check the `docs/` folder for detailed guides
-- **Community** - Join discussions and get help
-- **QA Testing** - Use the comprehensive testing template for validation
+- **Architecture** - See `docs/IMPLEMENTATION.md` for system design
+- **Maintenance** - See `docs/PERFORMANCE.md` for optimization tips
 
 ---
 
-## **Made with ❤️ for video enthusiasts and developers**
+**Made with ❤️ for video enthusiasts and developers**
 
-*Transform your local video collection into a professional streaming experience with enterprise-grade accessibility and performance!*
-
-## 🎯 **Current Status: 100% UI Complete**
-
-All planned UI features have been implemented and verified:
-
-- ✅ **Glassmorphic/Neomorphic Design System**
-- ✅ **Cross-Platform Compatibility**
-- ✅ **Accessibility Compliance (WCAG AA)**
-- ✅ **Performance Optimization**
-- ✅ **Mobile/VR Support**
-- ✅ **Theme Management**
-- ✅ **Video Preview System**
-- ✅ **Touch-Friendly Interface**
-- ✅ **Performance Metrics**
-- ✅ **Keyboard Shortcuts**
-
-Ready for production deployment and user testing!
+*Transform your local video collection into a professional streaming experience!*
