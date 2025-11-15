@@ -1,0 +1,803 @@
+{% extends "_base.html" %}
+
+{% block title %}Gallery - Local Video Server{% endblock %}
+
+{% block extra_head %}
+<style>
+  /* ────────────────────────────────────────────────────────────────────────
+     GALLERY LAYOUT & SIZING
+     ──────────────────────────────────────────────────────────────────────── */
+  
+  /* Gallery Header */
+  .gallery-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  
+  .gallery-header h1 {
+    margin: 0;
+    color: var(--text-color);
+  }
+  
+  .gallery-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  .selection-toggle-btn {
+    padding: 8px 16px;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all var(--transition-fast);
+  }
+  
+  .selection-toggle-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+  
+  .selection-toggle-btn.active {
+    background: var(--accent-color);
+  }
+  
+  .selection-info {
+    font-size: 0.9rem;
+    color: var(--text-color);
+    opacity: 0;
+    transition: opacity var(--transition-normal);
+  }
+  
+  .selection-info.active {
+    opacity: 1;
+  }
+  
+  /* Selection Actions Panel */
+  .selection-actions {
+    display: none;
+    background: var(--card-background);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    margin-bottom: 24px;
+    gap: 20px;
+  }
+  
+  .selection-actions.active {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  
+  .action-section {
+    flex: 1;
+    min-width: 200px;
+  }
+  
+  .action-section h3 {
+    font-size: 0.9rem;
+    margin: 0 0 12px 0;
+    color: var(--text-color);
+    opacity: 0.8;
+  }
+  
+  .action-inputs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  
+  .action-inputs input,
+  .action-inputs select {
+    flex: 1;
+    padding: 8px 12px;
+    background: var(--background-color);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-sm);
+    color: var(--text-color);
+    font-size: 0.9rem;
+  }
+  
+  .action-btn {
+    padding: 8px 16px;
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    transition: all var(--transition-fast);
+  }
+  
+  .action-btn:hover {
+    opacity: 0.9;
+  }
+  
+  .action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  .action-btn.clear {
+    background: #dc3545;
+  }
+  
+  /* Base Grid Helper */
+  .gallery-grid {
+    display: grid;
+    gap: 20px;
+    padding: 16px 0;
+  }
+  
+  /* My Groups Layout */
+  #groupsGrid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+    padding-bottom: 24px;
+  }
+  
+  /* All Images Layout */
+  #galleryGrid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 16px;
+    padding-bottom: 40px;
+  }
+  
+  /* Section Separation */
+  #groupsSection {
+    margin-bottom: 16px;
+  }
+  
+  #groupsSection h2,
+  .gallery-section h2 {
+    font-size: 1.5rem;
+    margin: 32px 0 16px 0;
+    color: var(--text-color);
+  }
+  
+  /* Group Cards */
+  .group-card {
+    background: var(--card-background);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+  
+  .group-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  }
+  
+  .group-card-image {
+    width: 100%;
+    height: 200px;
+    overflow: hidden;
+    border-radius: 12px 12px 0 0;
+    background: var(--background-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .group-card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .group-card-image.no-image {
+    color: rgba(255, 255, 255, 0.3);
+    font-size: 3rem;
+  }
+  
+  .group-card-info {
+    padding: 12px;
+    background: rgba(25, 25, 25, 0.8);
+  }
+  
+  .group-card-info h3 {
+    margin: 0 0 4px;
+    font-size: 1rem;
+    color: var(--text-color);
+  }
+  
+  .group-card-info small {
+    font-size: 0.85rem;
+    color: #aaa;
+  }
+  
+  /* Image Gallery Items */
+  .gallery-item {
+    position: relative;
+    background: var(--card-background);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+  
+  .gallery-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+  
+  .gallery-item img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    display: block;
+  }
+  
+  .gallery-item-checkbox {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    opacity: 0;
+    z-index: 2;
+    transition: opacity var(--transition-fast);
+  }
+  
+  .gallery-item-checkbox:checked {
+    opacity: 1;
+  }
+  
+  .gallery-item.selection-mode .gallery-item-checkbox {
+    opacity: 0.7;
+  }
+  
+  .gallery-item.selection-mode .gallery-item-checkbox:hover {
+    opacity: 1;
+  }
+  
+  .gallery-item.selected {
+    outline: 3px solid var(--accent-color);
+    outline-offset: -3px;
+  }
+  
+  .gallery-item-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+    padding: 12px;
+    transform: translateY(100%);
+    transition: transform var(--transition-normal);
+  }
+  
+  .gallery-item:hover .gallery-item-overlay {
+    transform: translateY(0);
+  }
+  
+  .gallery-item-title {
+    color: white;
+    font-size: 0.85rem;
+    margin: 0;
+    word-break: break-word;
+  }
+  
+  /* Lightbox */
+  .lightbox {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.95);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  
+  .lightbox.active {
+    display: flex;
+  }
+  
+  .lightbox-content {
+    max-width: 90vw;
+    max-height: 90vh;
+    position: relative;
+  }
+  
+  .lightbox-content img {
+    max-width: 100%;
+    max-height: 90vh;
+    object-fit: contain;
+  }
+  
+  .lightbox-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    font-size: 2rem;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast);
+  }
+  
+  .lightbox-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+  
+  /* Empty State */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: rgba(255, 255, 255, 0.5);
+  }
+  
+  .empty-state i {
+    font-size: 4rem;
+    margin-bottom: 16px;
+    opacity: 0.3;
+  }
+  
+  .empty-state p {
+    font-size: 1.1rem;
+    margin: 0;
+  }
+  
+  /* Responsive Adjustments */
+  @media (max-width: 768px) {
+    .gallery-header {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    
+    .selection-actions {
+      flex-direction: column;
+    }
+    
+    #groupsGrid {
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 12px;
+    }
+    
+    #galleryGrid {
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 12px;
+    }
+    
+    .group-card-image {
+      height: 150px;
+    }
+    
+    .gallery-item img {
+      height: 150px;
+    }
+    
+    .selection-toggle-btn {
+      font-size: 0.85rem;
+      padding: 6px 12px;
+    }
+    
+    .selection-info {
+      font-size: 0.85rem;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    #groupsGrid,
+    #galleryGrid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="gallery-container">
+  <!-- Header -->
+  <div class="gallery-header">
+    <h1 class="mb-0">Gallery</h1>
+    <div class="gallery-controls">
+      <button class="selection-toggle-btn" id="selectionToggle">
+        📋 Selection Mode
+      </button>
+      <span class="selection-info" id="selectionInfo">
+        Selected: <strong id="selectedCount">0</strong>
+      </span>
+    </div>
+  </div>
+  
+  <!-- Selection Actions Panel -->
+  <div class="selection-actions" id="selectionActions">
+    <div class="action-section">
+      <h3>Create Group</h3>
+      <div class="action-inputs">
+        <input type="text" id="newGroupName" placeholder="Group name...">
+        <button class="action-btn" id="createGroupBtn" disabled>Create</button>
+      </div>
+    </div>
+    
+    <div class="action-section">
+      <h3>Add to Group</h3>
+      <div class="action-inputs">
+        <select id="existingGroupSelect" disabled>
+          <option value="">Select a group...</option>
+        </select>
+        <button class="action-btn" id="addToGroupBtn" disabled>Add</button>
+      </div>
+    </div>
+    
+    <div class="action-section">
+      <h3>Selection</h3>
+      <button class="action-btn clear" id="clearSelectionBtn" disabled>Clear Selection</button>
+    </div>
+  </div>
+  
+  <!-- My Groups Section -->
+  <div id="groupsSection">
+    <h2 class="mt-4 mb-3">My Groups</h2>
+    <div class="gallery-grid" id="groupsGrid">
+      <!-- Group cards will be inserted here by JavaScript -->
+    </div>
+  </div>
+  
+  <!-- All Images Section -->
+  <div class="gallery-section">
+    <h2 class="mt-4 mb-3">All Images</h2>
+    <div class="gallery-grid" id="galleryGrid">
+      <!-- Image cards will be inserted here by JavaScript -->
+    </div>
+  </div>
+  
+  <!-- Lightbox -->
+  <div class="lightbox" id="lightbox">
+    <button class="lightbox-close" id="lightboxClose">&times;</button>
+    <div class="lightbox-content">
+      <img id="lightboxImage" src="" alt="">
+    </div>
+  </div>
+</div>
+
+<script>
+// Gallery State
+let selectionMode = false;
+let selectedImages = new Set();
+let allGroups = [];
+let allImages = {{ images|tojson }};
+
+// DOM Elements
+const selectionToggle = document.getElementById('selectionToggle');
+const selectionInfo = document.getElementById('selectionInfo');
+const selectionActions = document.getElementById('selectionActions');
+const selectedCount = document.getElementById('selectedCount');
+const galleryGrid = document.getElementById('galleryGrid');
+const groupsGrid = document.getElementById('groupsGrid');
+const newGroupName = document.getElementById('newGroupName');
+const createGroupBtn = document.getElementById('createGroupBtn');
+const existingGroupSelect = document.getElementById('existingGroupSelect');
+const addToGroupBtn = document.getElementById('addToGroupBtn');
+const clearSelectionBtn = document.getElementById('clearSelectionBtn');
+const lightbox = document.getElementById('lightbox');
+const lightboxImage = document.getElementById('lightboxImage');
+const lightboxClose = document.getElementById('lightboxClose');
+
+// Initialize
+async function init() {
+  await loadGroups();
+  renderGroups();
+  renderImages();
+  setupEventListeners();
+}
+
+// Load groups from API
+async function loadGroups() {
+  try {
+    const response = await fetch('/api/gallery/groups');
+    allGroups = await response.json();
+    updateGroupSelect();
+  } catch (error) {
+    console.error('Failed to load groups:', error);
+    allGroups = [];
+  }
+}
+
+// Update group select dropdown
+function updateGroupSelect() {
+  existingGroupSelect.innerHTML = '<option value="">Select a group...</option>';
+  allGroups.forEach(group => {
+    const option = document.createElement('option');
+    option.value = group.id;
+    option.textContent = `${group.name} (${group.image_count} images)`;
+    existingGroupSelect.appendChild(option);
+  });
+}
+
+// Render group cards
+function renderGroups() {
+  if (allGroups.length === 0) {
+    groupsGrid.innerHTML = '<div class="empty-state"><i class="fas fa-folder-open"></i><p>No groups yet. Create one by selecting images!</p></div>';
+    return;
+  }
+  
+  groupsGrid.innerHTML = '';
+  allGroups.forEach(group => {
+    const card = document.createElement('div');
+    card.className = 'group-card';
+    card.onclick = () => window.location.href = `/gallery/groups/${group.slug}`;
+    
+    const imageDiv = document.createElement('div');
+    imageDiv.className = 'group-card-image';
+    
+    if (group.cover_image) {
+      const img = document.createElement('img');
+      img.src = `/gallery/image/${group.cover_image}`;
+      img.alt = group.name;
+      imageDiv.appendChild(img);
+    } else {
+      imageDiv.classList.add('no-image');
+      imageDiv.innerHTML = '<i class="fas fa-images"></i>';
+    }
+    
+    const info = document.createElement('div');
+    info.className = 'group-card-info';
+    info.innerHTML = `
+      <h3>${escapeHtml(group.name)}</h3>
+      <small>${group.image_count} ${group.image_count === 1 ? 'image' : 'images'}</small>
+    `;
+    
+    card.appendChild(imageDiv);
+    card.appendChild(info);
+    groupsGrid.appendChild(card);
+  });
+}
+
+// Render image cards
+function renderImages() {
+  if (allImages.length === 0) {
+    galleryGrid.innerHTML = '<div class="empty-state"><i class="fas fa-image"></i><p>No images found in gallery.</p></div>';
+    return;
+  }
+  
+  galleryGrid.innerHTML = '';
+  allImages.forEach(image => {
+    const item = document.createElement('div');
+    item.className = 'gallery-item';
+    item.dataset.image = image;
+    
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.className = 'gallery-item-checkbox';
+    checkbox.onchange = (e) => {
+      e.stopPropagation();
+      toggleImageSelection(image, checkbox.checked);
+    };
+    
+    const img = document.createElement('img');
+    img.src = `/gallery/image/${image}`;
+    img.alt = image;
+    img.loading = 'lazy';
+    
+    const overlay = document.createElement('div');
+    overlay.className = 'gallery-item-overlay';
+    
+    const title = document.createElement('p');
+    title.className = 'gallery-item-title';
+    title.textContent = image;
+    overlay.appendChild(title);
+    
+    item.appendChild(checkbox);
+    item.appendChild(img);
+    item.appendChild(overlay);
+    
+    item.onclick = (e) => {
+      if (selectionMode) {
+        checkbox.checked = !checkbox.checked;
+        toggleImageSelection(image, checkbox.checked);
+      } else {
+        openLightbox(image);
+      }
+    };
+    
+    galleryGrid.appendChild(item);
+  });
+}
+
+// Toggle image selection
+function toggleImageSelection(image, selected) {
+  if (selected) {
+    selectedImages.add(image);
+  } else {
+    selectedImages.delete(image);
+  }
+  
+  updateSelectionUI();
+}
+
+// Update selection UI
+function updateSelectionUI() {
+  selectedCount.textContent = selectedImages.size;
+  
+  const hasSelection = selectedImages.size > 0;
+  createGroupBtn.disabled = !hasSelection || !newGroupName.value.trim();
+  addToGroupBtn.disabled = !hasSelection || !existingGroupSelect.value;
+  clearSelectionBtn.disabled = !hasSelection;
+  existingGroupSelect.disabled = !hasSelection;
+  
+  // Update visual state of gallery items
+  document.querySelectorAll('.gallery-item').forEach(item => {
+    if (selectionMode) {
+      item.classList.add('selection-mode');
+    } else {
+      item.classList.remove('selection-mode');
+    }
+    
+    if (selectedImages.has(item.dataset.image)) {
+      item.classList.add('selected');
+      item.querySelector('.gallery-item-checkbox').checked = true;
+    } else {
+      item.classList.remove('selected');
+      item.querySelector('.gallery-item-checkbox').checked = false;
+    }
+  });
+}
+
+// Toggle selection mode
+function toggleSelectionMode() {
+  selectionMode = !selectionMode;
+  
+  if (selectionMode) {
+    selectionToggle.classList.add('active');
+    selectionInfo.classList.add('active');
+    selectionActions.classList.add('active');
+  } else {
+    selectionToggle.classList.remove('active');
+    selectionInfo.classList.remove('active');
+    selectionActions.classList.remove('active');
+    clearSelection();
+  }
+  
+  updateSelectionUI();
+}
+
+// Clear selection
+function clearSelection() {
+  selectedImages.clear();
+  updateSelectionUI();
+}
+
+// Create new group
+async function createGroup() {
+  const name = newGroupName.value.trim();
+  if (!name || selectedImages.size === 0) return;
+  
+  const images = Array.from(selectedImages);
+  const coverImage = images[0];
+  
+  try {
+    const response = await fetch('/api/gallery/groups', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, images, cover_image: coverImage })
+    });
+    
+    if (response.ok) {
+      newGroupName.value = '';
+      clearSelection();
+      await loadGroups();
+      renderGroups();
+      
+      // Reload page to reflect ungrouped images
+      window.location.reload();
+    } else {
+      const error = await response.json();
+      alert(`Failed to create group: ${error.error}`);
+    }
+  } catch (error) {
+    console.error('Error creating group:', error);
+    alert('Failed to create group. Please try again.');
+  }
+}
+
+// Add images to existing group
+async function addToGroup() {
+  const groupId = parseInt(existingGroupSelect.value);
+  if (!groupId || selectedImages.size === 0) return;
+  
+  const images = Array.from(selectedImages);
+  
+  try {
+    const response = await fetch(`/api/gallery/groups/${groupId}/images`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ images })
+    });
+    
+    if (response.ok) {
+      clearSelection();
+      await loadGroups();
+      renderGroups();
+      
+      // Reload page to reflect ungrouped images
+      window.location.reload();
+    } else {
+      const error = await response.json();
+      alert(`Failed to add images: ${error.error}`);
+    }
+  } catch (error) {
+    console.error('Error adding images to group:', error);
+    alert('Failed to add images. Please try again.');
+  }
+}
+
+// Open lightbox
+function openLightbox(image) {
+  lightboxImage.src = `/gallery/image/${image}`;
+  lightbox.classList.add('active');
+}
+
+// Close lightbox
+function closeLightbox() {
+  lightbox.classList.remove('active');
+  lightboxImage.src = '';
+}
+
+// Setup event listeners
+function setupEventListeners() {
+  selectionToggle.onclick = toggleSelectionMode;
+  createGroupBtn.onclick = createGroup;
+  addToGroupBtn.onclick = addToGroup;
+  clearSelectionBtn.onclick = clearSelection;
+  lightboxClose.onclick = closeLightbox;
+  
+  lightbox.onclick = (e) => {
+    if (e.target === lightbox) closeLightbox();
+  };
+  
+  newGroupName.oninput = () => {
+    createGroupBtn.disabled = !newGroupName.value.trim() || selectedImages.size === 0;
+  };
+  
+  existingGroupSelect.onchange = () => {
+    addToGroupBtn.disabled = !existingGroupSelect.value || selectedImages.size === 0;
+  };
+  
+  // Keyboard shortcuts
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (lightbox.classList.contains('active')) {
+        closeLightbox();
+      } else if (selectionMode) {
+        toggleSelectionMode();
+      }
+    }
+  });
+}
+
+// Utility: Escape HTML
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// Initialize on page load
+init();
+</script>
+{% endblock %}
