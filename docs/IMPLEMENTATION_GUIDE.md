@@ -412,5 +412,5 @@ The Local Video Server is ready for production deployment and user testing!
 
 - **[QA Testing Guide](QA_TESTING_GUIDE.md)** - Complete testing procedures
 - **[Performance Analysis](PERFORMANCE_ANALYSIS_SUMMARY.md)** - Performance optimization details
-- **[UI Design System](GLASSMORPHIC_NEOMORPHIC_DESIGN.md)** - Theme architecture
 - **[Video Preview System](VIDEO_PREVIEW_IMPROVEMENTS.md)** - Preview implementation
+- **[Deferred Features](deferred/README.md)** - Documentation for removed features (including former glassmorphic/neomorphic themes)

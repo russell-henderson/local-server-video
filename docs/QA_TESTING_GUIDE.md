@@ -400,8 +400,8 @@ grep -n "outline|focus-visible" static/*.css
 
 - **[Implementation Guide](IMPLEMENTATION_GUIDE.md)** - Complete feature checklist and code
 - **[Performance Analysis](PERFORMANCE_ANALYSIS_SUMMARY.md)** - Performance optimization details
-- **[UI Design System](GLASSMORPHIC_NEOMORPHIC_DESIGN.md)** - Theme architecture
 - **[Video Preview System](VIDEO_PREVIEW_IMPROVEMENTS.md)** - Preview implementation
+- **[Deferred Features](deferred/README.md)** - Documentation for removed features (including former glassmorphic/neomorphic themes)
 
 ---
 

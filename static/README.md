@@ -487,8 +487,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📚 Additional Documentation
 
-- **[Performance Optimization Guide](PERFORMANCE_OPTIMIZATION_GUIDE.md)**: Detailed performance tuning
-- **[Video Preview Feature](VIDEO_PREVIEW_FEATURE.md)**: Hover preview documentation
+- **[Performance Optimization Guide](../docs/PERFORMANCE_OPTIMIZATION_GUIDE.md)**: Detailed performance tuning
+- **[Video Preview Feature](../docs/VIDEO_PREVIEW_IMPROVEMENTS.md)**: Hover preview documentation
 
 ## 🎯 Roadmap
 
