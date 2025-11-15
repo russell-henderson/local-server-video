@@ -5,10 +5,6 @@
 {% block extra_head %}
   <!-- Performance metrics -->
   <script src="{{ url_for('static', filename='metrics.js') }}" defer></script>
-  
-  <!-- Subtitle controls -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/subtitle-controls.css') }}">
-  <script src="{{ url_for('static', filename='subtitle-controls.js') }}" defer></script>
 {% endblock %}
 
 {% block content %}
@@ -25,16 +21,7 @@
   </button>
 
   <!-- Rating -->
-  <div class="rating me-3 mb-2 mb-sm-0" data-filename="{{ filename }}" role="group" aria-label="Rate this video">
-    {% set current_rating = ratings.get(filename, 0) %}
-    {% for i in range(1,6) %}
-      <i class="{{ 'fas' if i<=current_rating else 'far' }} fa-star"
-         data-value="{{ i }}"
-         role="button"
-         tabindex="0"
-         aria-label="Rate {{ i }} star{% if i != 1 %}s{% endif %}"></i>
-    {% endfor %}
-  </div>
+  {% include 'partials/rating.html' %}
 
   <!-- View count -->
   <div id="video-view-count" class="view-count me-3 mb-2 mb-sm-0">
@@ -43,7 +30,7 @@
 
   <!-- Tags -->
   <div class="tags-container flex-grow-1">
-    <div id="existing-tags" class="mb-2">
+    <div id="existing-tags" class="mb-2" data-filename="{{ filename }}" data-tags='{{ tags|tojson|safe }}'>
       {% for tag in tags %}
         <span class="badge tag-badge" data-tag="{{ tag }}">
           {{ tag }} <span class="delete-tag">&times;</span>
@@ -126,6 +113,8 @@
 {% block extra_scripts %}
   <!-- Watch page specific scripts -->
   <script src="{{ url_for('static', filename='js/ui.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/rating.js') }}" type="module"></script>
+  <script src="{{ url_for('static', filename='video-player-controls.js') }}" defer></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       /* View counter (once per load) */
@@ -150,79 +139,9 @@
         });
       }
 
-      /* Rating widget */
-      document.querySelectorAll('.rating i').forEach(star => {
-        star.addEventListener('click', () => {
-          const rating = parseInt(star.dataset.value);
-          const fileName = star.parentElement.dataset.filename;
-          fetch('/rate', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ filename: fileName, rating })
-          })
-          .then(r => r.json())
-          .then(d => {
-            if (d.success) {
-              star.parentElement.querySelectorAll('i').forEach((s, i) => {
-                s.className = (i + 1) <= rating ? 'fas fa-star' : 'far fa-star';
-              });
-            }
-          }).catch(console.error);
-        });
-      });
+          /* Ratings are handled by shared static/js/rating.js (ES6 module) */
 
-      /* Tag management */
-      const newTagInput = document.getElementById('new-tag');
-
-      newTagInput.addEventListener('keypress', e => {
-        if (e.key !== 'Enter') return;
-        const tag = newTagInput.value.trim();
-        if (!tag) return;
-
-        fetch('/tag', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({ filename: '{{ filename }}', tag })
-        })
-        .then(r => r.json())
-        .then(d => {
-          if (d.success) {
-            renderTags(d.tags);
-            newTagInput.value = '';
-          }
-        }).catch(console.error);
-      });
-
-      function renderTags(tags) {
-        const wrap = document.getElementById('existing-tags');
-        wrap.innerHTML = '';
-        tags.forEach(t => {
-          const span = document.createElement('span');
-          span.className = 'badge tag-badge';
-          span.dataset.tag = t;
-          span.innerHTML = `${t} <span class="delete-tag">&times;</span>`;
-          wrap.appendChild(span);
-        });
-        
-        // Attach delete listeners
-        wrap.querySelectorAll('.delete-tag').forEach(x => {
-          x.onclick = e => {
-            e.stopPropagation();
-            const t = x.parentElement.dataset.tag;
-            fetch('/delete_tag', {
-              method: 'POST',
-              headers: {'Content-Type': 'application/json'},
-              body: JSON.stringify({ filename: '{{ filename }}', tag: t })
-            })
-            .then(r => r.json())
-            .then(d => { if(d.success) renderTags(d.tags); })
-            .catch(console.error);
-          };
-        });
-      }
-
-      /* Initial tag render */
-      renderTags(JSON.parse('{{ tags|tojson|safe }}'));
+      /* Tag management: handled by shared static/js/tags.js (delegated) */
     });
   </script>
 {% endblock %}

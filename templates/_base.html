@@ -14,9 +14,8 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     
-    <!-- Theme and App CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+    <!-- Consolidated Application Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     
     {% block extra_head %}{% endblock %}
 </head>
@@ -34,6 +33,12 @@
     
     <!-- Video Player JS -->
     <script src="{{ url_for('static', filename='js/player.js') }}"></script>
+    <!-- Ratings (delegated) -->
+    <script src="{{ url_for('static', filename='js/ratings.js') }}"></script>
+    <!-- Favorites helper (compat) -->
+    <script src="{{ url_for('static', filename='favorites.js') }}"></script>
+    <!-- Tags handling -->
+    <script src="{{ url_for('static', filename='js/tags.js') }}"></script>
     
     {% block extra_scripts %}{% endblock %}
 </body>

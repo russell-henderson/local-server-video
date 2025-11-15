@@ -2,10 +2,6 @@
 
 {% block title %}Advanced Search - Local Video Server{% endblock %}
 
-{% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/advanced-search.css') }}">
-{% endblock %}
-
 {% block content %}
 <div class="container">
     <!-- Search Header -->
@@ -256,7 +252,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{{ url_for('static', filename='advanced-search.js') }}"></script>
+<script src="{{ url_for('static', filename='advanced-search.js') }}" defer></script>
 <script>
 // Global helper functions
 function clearAllFilters() {

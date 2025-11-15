@@ -17,6 +17,12 @@ try:
 except ImportError:
     DATABASE_AVAILABLE = False
 
+# Optional performance monitoring integration (non-fatal)
+try:
+    from performance_monitor import monitor as perf_monitor  # type: ignore
+except Exception:
+    perf_monitor = None
+
 class VideoCache:
     """Centralized cache manager for video metadata and file listings"""
     
@@ -32,7 +38,7 @@ class VideoCache:
         if self.use_database:
             try:
                 self.db = VideoDatabase()
-                print("✅ Database backend initialized")
+                print("[OK] Database backend initialized")
             except (ImportError, OSError) as e:
                 print(f"⚠️  Database initialization failed, falling back to JSON: {e}")
                 self.use_database = False
@@ -62,7 +68,15 @@ class VideoCache:
         self.video_dir = "videos"
         
         # Initialize cache
-        self.refresh_all()
+        # Allow tests to opt-out of the automatic refresh on construction by setting
+        # LVS_SKIP_INIT_REFRESH=1 in the environment. This helps test isolation so
+        # tests can set `cache.video_dir` before triggering a refresh.
+        if os.getenv('LVS_SKIP_INIT_REFRESH'):
+            # Do not refresh now; tests may set paths and trigger refresh later
+            self._last_refresh = {key: 0 for key in self._last_refresh}
+            self._video_metadata.clear()
+        else:
+            self.refresh_all()
 
     def _filter_existing(self, items: List[Dict]) -> List[Dict]:
         """Return only rows whose filename exists on disk."""
@@ -109,7 +123,8 @@ class VideoCache:
     def get_ratings(self) -> Dict[str, int]:
         """Get ratings with cache check"""
         with self._lock:
-            if not self._is_cache_valid('ratings'):
+            was_valid = self._is_cache_valid('ratings')
+            if not was_valid:
                 if self.use_database and self.db:
                     # Load from database
                     videos = self.db.get_all_videos()
@@ -118,12 +133,24 @@ class VideoCache:
                     # Load from JSON
                     self._ratings = self._load_json_file(self.ratings_file)
                 self._last_refresh['ratings'] = time.time()
+
+            # Record cache metrics if available
+            try:
+                if perf_monitor:
+                    if was_valid:
+                        perf_monitor.record_cache_hit()
+                    else:
+                        perf_monitor.record_cache_miss()
+            except Exception:
+                pass
+
             return self._ratings.copy()
     
     def get_views(self) -> Dict[str, int]:
         """Get views with cache check"""
         with self._lock:
-            if not self._is_cache_valid('views'):
+            was_valid = self._is_cache_valid('views')
+            if not was_valid:
                 if self.use_database and self.db:
                     # Load from database
                     videos = self.db.get_all_videos()
@@ -132,12 +159,23 @@ class VideoCache:
                     # Load from JSON
                     self._views = self._load_json_file(self.views_file)
                 self._last_refresh['views'] = time.time()
+
+            try:
+                if perf_monitor:
+                    if was_valid:
+                        perf_monitor.record_cache_hit()
+                    else:
+                        perf_monitor.record_cache_miss()
+            except Exception:
+                pass
+
             return self._views.copy()
     
     def get_tags(self) -> Dict[str, List[str]]:
         """Get tags with cache check"""
         with self._lock:
-            if not self._is_cache_valid('tags'):
+            was_valid = self._is_cache_valid('tags')
+            if not was_valid:
                 if self.use_database and self.db:
                     # Load from database
                     videos = self.db.get_all_videos()
@@ -146,12 +184,23 @@ class VideoCache:
                     # Load from JSON
                     self._tags = self._load_json_file(self.tags_file)
                 self._last_refresh['tags'] = time.time()
+
+            try:
+                if perf_monitor:
+                    if was_valid:
+                        perf_monitor.record_cache_hit()
+                    else:
+                        perf_monitor.record_cache_miss()
+            except Exception:
+                pass
+
             return self._tags.copy()
     
     def get_favorites(self) -> List[str]:
         """Get favorites with cache check"""
         with self._lock:
-            if not self._is_cache_valid('favorites'):
+            was_valid = self._is_cache_valid('favorites')
+            if not was_valid:
                 if self.use_database and self.db:
                     # Load from database
                     self._favorites = self.db.get_favorites()
@@ -160,12 +209,23 @@ class VideoCache:
                     data = self._load_json_file(self.favorites_file)
                     self._favorites = data.get("favorites", [])
                 self._last_refresh['favorites'] = time.time()
+
+            try:
+                if perf_monitor:
+                    if was_valid:
+                        perf_monitor.record_cache_hit()
+                    else:
+                        perf_monitor.record_cache_miss()
+            except Exception:
+                pass
+
             return self._favorites.copy()
     
     def get_video_list(self) -> List[str]:
         """Get video list with cache check and improved file detection"""
         with self._lock:
-            if not self._is_cache_valid('video_list'):
+            was_valid = self._is_cache_valid('video_list')
+            if not was_valid:
                 allowed_extensions = ('.mp4', '.webm', '.ogg')
                 if os.path.exists(self.video_dir):
                     current_videos = [
@@ -175,17 +235,28 @@ class VideoCache:
                     
                     # Check if we have new videos
                     if set(current_videos) != set(self._video_list):
-                        print(f"🔄 Video list changed: {len(current_videos)} videos found (was {len(self._video_list)})")
+                        videos_found = len(current_videos)
+                        was_videos = len(self._video_list)
+                        print(f"[REFRESH] Video list changed: {videos_found} "
+                              f"videos found (was {was_videos})")
                         
                         # Clear video metadata cache for new videos
-                        new_videos = set(current_videos) - set(self._video_list)
-                        removed_videos = set(self._video_list) - set(current_videos)
+                        new_videos = set(current_videos) - set(
+                            self._video_list)
+                        removed_videos = set(self._video_list) - set(
+                            current_videos)
                         
                         if new_videos:
-                            print(f"➕ New videos detected: {', '.join(list(new_videos)[:5])}{'...' if len(new_videos) > 5 else ''}")
+                            sample = list(new_videos)[:5]
+                            more = '...' if len(new_videos) > 5 else ''
+                            print(f"[NEW] New videos detected: "
+                                  f"{', '.join(sample)}{more}")
                         
                         if removed_videos:
-                            print(f"➖ Videos removed: {', '.join(list(removed_videos)[:5])}{'...' if len(removed_videos) > 5 else ''}")
+                            sample = list(removed_videos)[:5]
+                            more = '...' if len(removed_videos) > 5 else ''
+                            print(f"[REMOVED] Videos removed: "
+                                  f"{', '.join(sample)}{more}")
                             # Clean up metadata for removed videos
                             for video in removed_videos:
                                 self._video_metadata.pop(video, None)
@@ -194,6 +265,15 @@ class VideoCache:
                 else:
                     self._video_list = []
                 self._last_refresh['video_list'] = time.time()
+            try:
+                if perf_monitor:
+                    if was_valid:
+                        perf_monitor.record_cache_hit()
+                    else:
+                        perf_monitor.record_cache_miss()
+            except Exception:
+                pass
+
             return self._video_list.copy()
     
     def get_video_metadata(self, video_filename: str) -> Optional[Dict]:
@@ -218,6 +298,57 @@ class VideoCache:
                     return None
             
             return self._video_metadata[video_filename].copy()
+
+        def get(self, key: str, force_refresh: bool = False):
+            """Generic getter to support legacy cache.get(...) usage.
+
+            Supports keys like:
+              - 'all_videos', 'video_list', 'ratings', 'views', 'tags', 'favorites'
+              - 'tags_<filename>', 'views_<filename>', 'rating_<filename>'
+            """
+            # Allow forcing a refresh of specific caches
+            if force_refresh:
+                base = key
+                if '_' in key:
+                    base = key.split('_', 1)[0]
+                if base in self._last_refresh:
+                    self._last_refresh[base] = 0
+
+            if key == 'all_videos':
+                return self.get_all_video_data()
+            if key == 'video_list':
+                return self.get_video_list()
+            if key == 'ratings':
+                return self.get_ratings()
+            if key == 'views':
+                return self.get_views()
+            if key == 'tags':
+                return self.get_tags()
+            if key == 'favorites':
+                return self.get_favorites()
+
+            # Pattern keys
+            if key.startswith('tags_'):
+                filename = key[len('tags_'):]
+                return self.get_tags().get(filename, [])
+            if key.startswith('views_'):
+                filename = key[len('views_'):]
+                return self.get_views().get(filename, 0)
+            if key.startswith('rating_'):
+                filename = key[len('rating_'):]
+                return self.get_ratings().get(filename, 0)
+
+            return None
+
+        @property
+        def last_refresh(self) -> Dict[str, float]:
+            """Expose last refresh timestamps for admin endpoints"""
+            with self._lock:
+                return self._last_refresh.copy()
+
+        def is_cache_valid(self, key: str) -> bool:
+            """Public wrapper to check cache validity"""
+            return self._is_cache_valid(key)
     
     def update_rating(self, filename: str, rating: int):
         """Update rating with write-through cache"""
@@ -306,6 +437,42 @@ class VideoCache:
             self.get_favorites()
             self.get_video_list()
     
+    def invalidate_ratings(self):
+        """Invalidate ratings cache entry"""
+        with self._lock:
+            self._last_refresh['ratings'] = 0
+            self._ratings.clear()
+    
+    def invalidate_views(self):
+        """Invalidate views cache entry"""
+        with self._lock:
+            self._last_refresh['views'] = 0
+            self._views.clear()
+    
+    def invalidate_tags(self):
+        """Invalidate tags cache entry"""
+        with self._lock:
+            self._last_refresh['tags'] = 0
+            self._tags.clear()
+    
+    def invalidate_favorites(self):
+        """Invalidate favorites cache entry"""
+        with self._lock:
+            self._last_refresh['favorites'] = 0
+            self._favorites.clear()
+    
+    def invalidate_video_list(self):
+        """Invalidate video list cache entry"""
+        with self._lock:
+            self._last_refresh['video_list'] = 0
+            self._video_list.clear()
+    
+    def invalidate_metadata(self):
+        """Invalidate metadata cache entry"""
+        with self._lock:
+            self._last_refresh['metadata'] = 0
+            self._video_metadata.clear()
+    
     def _ensure_videos_in_database(self):
         """Ensure all videos from file system are in database"""
         if not (self.use_database and self.db):
@@ -327,7 +494,7 @@ class VideoCache:
         new_videos = set(video_list) - existing_videos
         
         if new_videos:
-            print(f"🔄 Adding {len(new_videos)} new videos to database...")
+            print(f"[SYNC] Adding {len(new_videos)} new videos to database...")
             
             # Add new videos to database
             try:
@@ -349,10 +516,10 @@ class VideoCache:
                             """, (video_filename, added_date, file_size))
                             conn.commit()
                         
-                        print(f"✅ Added {video_filename} to database")
+                        print(f"[OK] Added {video_filename} to database")
                 
             except Exception as e:
-                print(f"❌ Error adding videos to database: {e}")
+                print(f"[ERROR] Error adding videos to database: {e}")
 
     def get_all_video_data(self, sort_by: str = 'date', reverse: bool = True) -> List[Dict]:
         """Get all video data with efficient bulk operation"""

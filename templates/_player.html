@@ -7,9 +7,6 @@
     data-filename="{{ filename }}"
   ></video>
   
-  <!-- Subtitle overlay -->
-  <div class="subtitle-overlay" id="subtitle-overlay"></div>
-  
   <div class="player-controls" data-controls>
     <!-- Skip back 10 seconds -->
     <button data-action="back10" aria-label="Back 10 seconds" title="Back 10s (J)">
@@ -59,20 +56,26 @@
       title="Volume (↑/↓)"
     />
     
-    <!-- Subtitle controls -->
-    <div class="subtitle-controls">
-      <button data-action="subtitle-toggle" aria-label="Toggle Subtitles" title="Toggle Subtitles" class="subtitle-toggle-btn">
-        <span class="cc-text">CC</span>
-      </button>
-      <button data-action="subtitle-generate" aria-label="Generate Subtitles" title="Generate Subtitles" class="subtitle-generate-btn">
-        <span class="generate-text">Generate</span>
-        <span class="loading-text">
-          <i class="fas fa-spinner fa-spin"></i> Generating...
-        </span>
-      </button>
-    </div>
+    <!-- Player controls (no subtitle system) -->
 
     <!-- Fullscreen button -->
+    <!-- Favorite toggle (also included here so it remains visible when the video element is moved into an immersive/VR container) -->
+    <button class="btn btn-sm favorite-btn player-favorite-btn" data-filename="{{ filename }}" title="Toggle Favorite" aria-label="{% if filename in favorites_list %}Remove from favorites{% else %}Add to favorites{% endif %}">
+      <i class="fa{% if filename in favorites_list %}s{% else %}r{% endif %} fa-heart text-danger"></i>
+    </button>
+
+    <!-- Compact rating widget placed in player controls so it remains visible in fullscreen/VR -->
+    <div class="rating player-rating" data-filename="{{ filename }}" role="group" aria-label="Rate this video">
+      {% set current_rating = ratings.get(filename, 0) if (ratings is defined) else 0 %}
+      {% for i in range(1,6) %}
+        <i class="{{ 'fas' if i<=current_rating else 'far' }} fa-star"
+           data-value="{{ i }}"
+           role="button"
+           tabindex="0"
+           aria-label="Rate {{ i }} star{% if i != 1 %}s{% endif %}"></i>
+      {% endfor %}
+    </div>
+
     <button data-action="fullscreen" aria-label="Fullscreen" title="Fullscreen (F)">
       ⛶
     </button>

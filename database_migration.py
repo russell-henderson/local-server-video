@@ -72,6 +72,13 @@ class VideoDatabase:
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
                 
+                -- Media hash mapping (bidirectional lookup)
+                CREATE TABLE IF NOT EXISTS media_hash_map (
+                    media_hash TEXT PRIMARY KEY,
+                    filename TEXT UNIQUE NOT NULL REFERENCES videos(filename) ON DELETE CASCADE,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+                
                 -- Create indexes for performance
                 CREATE INDEX IF NOT EXISTS idx_videos_added_date ON videos(added_date);
                 CREATE INDEX IF NOT EXISTS idx_ratings_rating ON ratings(rating);
@@ -97,6 +104,36 @@ class VideoDatabase:
                     AFTER UPDATE ON views
                     BEGIN
                         UPDATE views SET updated_at = CURRENT_TIMESTAMP WHERE filename = NEW.filename;
+                    END;
+                
+                -- Gallery groups tables
+                CREATE TABLE IF NOT EXISTS gallery_groups (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL,
+                    slug TEXT UNIQUE NOT NULL,
+                    cover_image TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+                
+                CREATE TABLE IF NOT EXISTS gallery_group_items (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    group_id INTEGER NOT NULL REFERENCES gallery_groups(id) ON DELETE CASCADE,
+                    image_path TEXT NOT NULL,
+                    position INTEGER,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+                
+                -- Create indexes for gallery groups
+                CREATE INDEX IF NOT EXISTS idx_gallery_groups_slug ON gallery_groups(slug);
+                CREATE INDEX IF NOT EXISTS idx_gallery_group_items_group_id ON gallery_group_items(group_id);
+                CREATE INDEX IF NOT EXISTS idx_gallery_group_items_position ON gallery_group_items(position);
+                
+                -- Update trigger for gallery_groups
+                CREATE TRIGGER IF NOT EXISTS update_gallery_groups_timestamp 
+                    AFTER UPDATE ON gallery_groups
+                    BEGIN
+                        UPDATE gallery_groups SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
                     END;
             """)
             conn.commit()
@@ -506,6 +543,223 @@ class VideoDatabase:
                 print("Cleanup completed")
             else:
                 print("No orphaned data found")
+    
+    def register_media_hash(self, media_hash: str, filename: str) -> None:
+        """
+        Register or update a media_hash -> filename mapping.
+        
+        Args:
+            media_hash: SHA256 hash (16-char prefix) of filename
+            filename: Actual video filename
+        """
+        with self.get_connection() as conn:
+            conn.execute("""
+                INSERT OR REPLACE INTO media_hash_map (media_hash, filename)
+                VALUES (?, ?)
+            """, (media_hash, filename))
+            conn.commit()
+    
+    def get_filename_by_hash(self, media_hash: str) -> Optional[str]:
+        """
+        Look up filename from media_hash.
+        
+        Args:
+            media_hash: SHA256 hash (16-char prefix)
+            
+        Returns:
+            Filename if found, else None
+        """
+        with self.get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT filename FROM media_hash_map WHERE media_hash = ?",
+                (media_hash,)
+            )
+            row = cursor.fetchone()
+            return row['filename'] if row else None
+    
+    def get_media_hash_by_filename(self, filename: str) -> Optional[str]:
+        """
+        Look up media_hash from filename.
+        
+        Args:
+            filename: Video filename
+            
+        Returns:
+            Media hash if found, else None
+        """
+        with self.get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT media_hash FROM media_hash_map WHERE filename = ?",
+                (filename,)
+            )
+            row = cursor.fetchone()
+            return row['media_hash'] if row else None
+
+    # ─── Gallery Groups ─────────────────────────────────────────
+
+    def create_gallery_group(self, name: str, cover_image: Optional[str] = None) -> int:
+        """
+        Create a new gallery group.
+        
+        Args:
+            name: Display name for the group
+            cover_image: Path to cover image file
+            
+        Returns:
+            Group ID
+        """
+        import re
+        # Generate URL-safe slug from name
+        slug = re.sub(r'[^\w\s-]', '', name.lower())
+        slug = re.sub(r'[\s_]+', '-', slug).strip('-')
+        
+        with self.get_connection() as conn:
+            cursor = conn.execute(
+                """INSERT INTO gallery_groups (name, slug, cover_image)
+                   VALUES (?, ?, ?)""",
+                (name, slug, cover_image)
+            )
+            conn.commit()
+            return cursor.lastrowid
+
+    def get_gallery_groups(self) -> List[Dict]:
+        """Get all gallery groups with image count"""
+        with self.get_connection() as conn:
+            cursor = conn.execute(
+                """SELECT id, name, slug, cover_image,
+                   (SELECT COUNT(*) FROM gallery_group_items 
+                    WHERE group_id = gallery_groups.id) as image_count,
+                   created_at, updated_at
+                   FROM gallery_groups
+                   ORDER BY name ASC"""
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_gallery_group_by_slug(self, slug: str) -> Optional[Dict]:
+        """Get a gallery group by slug"""
+        with self.get_connection() as conn:
+            cursor = conn.execute(
+                """SELECT id, name, slug, cover_image,
+                   (SELECT COUNT(*) FROM gallery_group_items 
+                    WHERE group_id = gallery_groups.id) as image_count,
+                   created_at, updated_at
+                   FROM gallery_groups
+                   WHERE slug = ?""",
+                (slug,)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    def add_images_to_group(self, group_id: int,
+                            image_paths: List[str]) -> None:
+        """
+        Add images to a gallery group.
+        Skips duplicates that already exist in the group.
+        
+        Args:
+            group_id: ID of the group
+            image_paths: List of image file paths
+        """
+        with self.get_connection() as conn:
+            # Get existing images in this group
+            cursor = conn.execute(
+                """SELECT image_path FROM gallery_group_items
+                   WHERE group_id = ?""",
+                (group_id,)
+            )
+            existing = {row[0] for row in cursor.fetchall()}
+            
+            # Get max position
+            cursor = conn.execute(
+                """SELECT MAX(position) FROM gallery_group_items
+                   WHERE group_id = ?""",
+                (group_id,)
+            )
+            max_pos = cursor.fetchone()[0] or -1
+            
+            # Add only new images
+            for idx, image_path in enumerate(image_paths):
+                if image_path not in existing:
+                    conn.execute(
+                        """INSERT INTO gallery_group_items
+                           (group_id, image_path, position)
+                           VALUES (?, ?, ?)""",
+                        (group_id, image_path, max_pos + idx + 1)
+                    )
+                    existing.add(image_path)
+            conn.commit()
+
+    def get_group_images(self, group_id: int) -> List[str]:
+        """Get all image paths in a group, ordered by position"""
+        with self.get_connection() as conn:
+            cursor = conn.execute(
+                """SELECT image_path FROM gallery_group_items
+                   WHERE group_id = ?
+                   ORDER BY position ASC""",
+                (group_id,)
+            )
+            return [row['image_path'] for row in cursor.fetchall()]
+
+    def get_group_images_with_ids(self, group_id: int) -> List[Dict]:
+        """Get all images in a group with their IDs, ordered by position"""
+        with self.get_connection() as conn:
+            cursor = conn.execute(
+                """SELECT id, image_path FROM gallery_group_items
+                   WHERE group_id = ?
+                   ORDER BY position ASC""",
+                (group_id,)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def remove_image_from_group(self, group_id: int,
+                                image_path: str) -> None:
+        """Remove an image from a gallery group"""
+        with self.get_connection() as conn:
+            conn.execute(
+                """DELETE FROM gallery_group_items
+                   WHERE group_id = ? AND image_path = ?""",
+                (group_id, image_path)
+            )
+            conn.commit()
+
+    def remove_image_item_by_id(self, item_id: int) -> None:
+        """Remove a specific image item by its ID (handles duplicates)"""
+        with self.get_connection() as conn:
+            conn.execute(
+                """DELETE FROM gallery_group_items WHERE id = ?""",
+                (item_id,)
+            )
+            conn.commit()
+
+    def update_group_name(self, group_id: int, name: str) -> None:
+        """Update a gallery group's name"""
+        with self.get_connection() as conn:
+            conn.execute(
+                """UPDATE gallery_groups SET name = ?
+                   WHERE id = ?""",
+                (name, group_id)
+            )
+            conn.commit()
+
+    def update_group_cover_image(self, group_id: int, cover_image: str) -> None:
+        """Update a gallery group's cover image"""
+        with self.get_connection() as conn:
+            conn.execute(
+                """UPDATE gallery_groups SET cover_image = ?
+                   WHERE id = ?""",
+                (cover_image, group_id)
+            )
+            conn.commit()
+
+    def delete_gallery_group(self, group_id: int) -> None:
+        """Delete a gallery group (items deleted via CASCADE)"""
+        with self.get_connection() as conn:
+            conn.execute(
+                "DELETE FROM gallery_groups WHERE id = ?",
+                (group_id,)
+            )
+            conn.commit()
+
 
 def migration_script():
     """Run the migration from JSON to SQLite"""

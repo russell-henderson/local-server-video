@@ -19,8 +19,31 @@ from thumbnail_manager import (
     generate_async as generate_thumbnail_async,
     sync as sync_thumbnails,
 )
+from config import get_config
+import json
+
+# Register API blueprints
+try:
+    from backend.app.api.ratings import register_ratings_api
+    _ratings_api_available = True
+except ImportError:
+    _ratings_api_available = False
+
+try:
+    from backend.app.admin.routes import register_admin_routes
+    _admin_routes_available = True
+except ImportError:
+    _admin_routes_available = False
 
 app = Flask(__name__)
+
+# Register ratings API if available
+if _ratings_api_available:
+    register_ratings_api(app)
+
+# Register admin routes if available
+if _admin_routes_available:
+    register_admin_routes(app)
 
 
 # ────────────────────────────────────────────────────────────────────────────
@@ -61,9 +84,9 @@ executor = ThreadPoolExecutor(max_workers=2)
 try:
     from performance_monitor import flask_route_monitor, performance_monitor  # type: ignore
     app = flask_route_monitor(app)
-    print("✅ Performance monitoring enabled")
+    print("[OK] Performance monitoring enabled")
 except ImportError:
-    print("⚠️  Performance monitoring not available")
+    print("[WARN] Performance monitoring not available")
 
     def performance_monitor(arg=None):
         # Support both @performance_monitor and @performance_monitor("name")
@@ -114,12 +137,17 @@ def index():
     # Background thumbnail jobs
     ensure_thumbnails_exist([v["filename"] for v in video_data])
 
+    # Load config for feature flags
+    config = get_config()
+
     return render_template(
         "index.html",
         videos=video_data,
         current_sort=sort_param,
         current_order=order,
         favorites_list=favorites_list,
+        feature_vr_simplify=config.feature_vr_simplify,
+        feature_previews=config.feature_previews,
     )
 
 
@@ -130,6 +158,14 @@ def watch_video(filename: str):
     file_path = get_video_path(filename)
     if not file_path.exists():
         abort(404)
+
+    # Compute media_hash (use RatingsService utility if available)
+    try:
+        from backend.services.ratings_service import RatingsService
+        media_hash = RatingsService.get_media_hash(filename)
+    except (ImportError, Exception):
+        # Fallback: use filename as hash
+        media_hash = filename
 
     # Pull all cached metadata in bulk
     ratings = cache.get_ratings()
@@ -150,9 +186,13 @@ def watch_video(filename: str):
     # Thumbnails for related videos
     ensure_thumbnails_exist([v["filename"] for v in paginated])
 
+    # Load config for feature flags
+    config = get_config()
+
     return render_template(
         "watch.html",
         filename=filename,
+        media_hash=media_hash,
         ratings=ratings,
         views=views,
         tags=current_tags,
@@ -160,6 +200,8 @@ def watch_video(filename: str):
         page=page,
         total_pages=total,
         favorites_list=favorites_list,
+        feature_vr_simplify=config.feature_vr_simplify,
+        feature_previews=config.feature_previews,
     )
 
 
@@ -407,6 +449,226 @@ def best_of():
     ensure_thumbnails_exist([v['filename'] for v in video_data])
     
     return render_template('best_of.html', videos=video_data, favorites_list=favorites_list)
+
+
+@app.route('/links')
+def links():
+    """Links page"""
+    return render_template('links.html')
+
+
+@app.route('/gallery')
+def gallery():
+    """Gallery page for images"""
+    from database_migration import VideoDatabase
+    
+    gallery_dir = Path('images/gallery')
+    images = []
+    if gallery_dir.exists():
+        # Get all image files
+        image_extensions = {'.jpg', '.jpeg', '.png', '.gif', '.webp'}
+        images = [
+            img.name for img in gallery_dir.iterdir()
+            if img.is_file() and img.suffix.lower() in image_extensions
+        ]
+    
+    print(f"\n=== GALLERY DEBUG ===")
+    print(f"All files in gallery: {images}")
+    
+    # Exclude images that are already in groups
+    try:
+        db = VideoDatabase()
+        grouped_images = set()
+        all_groups = db.get_gallery_groups()
+        print(f"Total groups: {len(all_groups)}")
+        for group in all_groups:
+            group_items = db.get_group_images(group['id'])
+            print(f"Group '{group['name']}' (ID {group['id']}) items: {group_items}")
+            grouped_images.update(group_items)
+        
+        print(f"All grouped images: {grouped_images}")
+        print(f"Gallery before filter: {len(images)} images")
+        images = [img for img in images if img not in grouped_images]
+        print(f"Gallery after filter: {len(images)} images")
+        print(f"Filtered images: {images}")
+    except Exception as e:
+        print(f"ERROR: {e}")
+        import traceback
+        traceback.print_exc()
+    
+    images.sort(reverse=True)  # Newest first
+    print(f"=== END DEBUG ===\n")
+    return render_template('gallery.html', images=images)
+
+
+@app.route('/gallery/image/<path:filename>')
+def serve_gallery_image(filename: str):
+    """Serve gallery images"""
+    # Prevent directory traversal
+    if '..' in filename or filename.startswith('/'):
+        abort(403)
+    
+    file_path = Path('images/gallery') / filename
+    if not file_path.exists() or not file_path.is_file():
+        abort(404)
+    
+    mime_type, _ = mimetypes.guess_type(str(file_path))
+    mime_type = mime_type or "application/octet-stream"
+    return send_file(str(file_path), mimetype=mime_type)
+
+
+@app.route('/gallery/groups/<slug>')
+def gallery_group(slug: str):
+    """Display a specific gallery group"""
+    from database_migration import VideoDatabase
+    db = VideoDatabase()
+    
+    # Get group info
+    group_data = db.get_gallery_group_by_slug(slug)
+    if not group_data:
+        abort(404)
+    
+    # Type narrowing: group_data is dict[str, Any] after the None check
+    assert isinstance(group_data, dict), "group_data must be a dict"
+    group_id: int = group_data.get('id', 0)
+    images = db.get_group_images_with_ids(group_id)
+    
+    return render_template(
+        'gallery_group.html',
+        group=group_data,
+        images=images
+    )
+
+
+# ─── Gallery API Endpoints ──────────────────────────────────────────
+
+@app.route('/api/gallery', methods=['GET'])
+def api_gallery_images():
+    """Get list of all gallery images"""
+    gallery_dir = Path('images/gallery')
+    if not gallery_dir.exists():
+        return jsonify({'images': []})
+    
+    images = []
+    try:
+        for item in gallery_dir.iterdir():
+            if item.is_file() and item.suffix.lower() in [
+                '.jpg', '.jpeg', '.png', '.gif', '.webp'
+            ]:
+                images.append(item.name)
+    except Exception:
+        pass
+    
+    return jsonify({'images': sorted(images)})
+
+
+@app.route('/api/gallery/groups', methods=['GET', 'POST'])
+def api_gallery_groups():
+    """Get all gallery groups or create a new one"""
+    from database_migration import VideoDatabase
+    db = VideoDatabase()
+    
+    if request.method == 'GET':
+        groups = db.get_gallery_groups()
+        return jsonify(groups)
+    
+    # POST: Create new group
+    data = request.get_json()
+    name = data.get('name', '').strip()
+    images = data.get('images', [])
+    cover_image = data.get('cover_image')
+    
+    if not name or not images:
+        return jsonify({'error': 'Name and images required'}), 400
+    
+    try:
+        group_id = db.create_gallery_group(name, cover_image)
+        db.add_images_to_group(group_id, images)
+        
+        # Get the created group
+        group = db.get_gallery_group_by_slug(
+            name.lower().replace(' ', '-')
+        )
+        return jsonify(group), 201
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/gallery/groups/<int:group_id>/images',
+           methods=['POST'])
+def api_add_images_to_group(group_id: int):
+    """Add images to an existing group"""
+    from database_migration import VideoDatabase
+    db = VideoDatabase()
+    
+    data = request.get_json()
+    images = data.get('images', [])
+    
+    if not images:
+        return jsonify({'error': 'Images required'}), 400
+    
+    try:
+        db.add_images_to_group(group_id, images)
+        return jsonify({'success': True}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/gallery/groups/<int:group_id>/images/<path:image_path>',
+           methods=['DELETE'])
+def api_remove_image_from_group(group_id: int, image_path: str):
+    """Remove an image from a group"""
+    from database_migration import VideoDatabase
+    db = VideoDatabase()
+    
+    try:
+        db.remove_image_from_group(group_id, image_path)
+        return jsonify({'success': True}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/gallery/groups/<int:group_id>/items/<int:item_id>',
+           methods=['DELETE'])
+def api_remove_image_item(group_id: int, item_id: int):
+    """Remove a specific image item from a group by ID"""
+    from database_migration import VideoDatabase
+    db = VideoDatabase()
+    
+    try:
+        db.remove_image_item_by_id(item_id)
+        return jsonify({'success': True}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/gallery/groups/<int:group_id>', methods=['PUT', 'DELETE'])
+def api_modify_group(group_id: int):
+    """Update or delete a gallery group"""
+    from database_migration import VideoDatabase
+    db = VideoDatabase()
+    
+    if request.method == 'PUT':
+        # Update group name or cover image
+        data = request.get_json()
+        name = data.get('name', '').strip()
+        cover_image = data.get('cover_image', '').strip()
+        
+        try:
+            if name:
+                db.update_group_name(group_id, name)
+            if cover_image:
+                db.update_group_cover_image(group_id, cover_image)
+            return jsonify({'success': True}), 200
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+    
+    elif request.method == 'DELETE':
+        try:
+            db.delete_gallery_group(group_id)
+            return jsonify({'success': True}), 200
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
 
 # ─── BACKGROUND TASKS & STARTUP ─────────────────────────────────────
 
@@ -804,20 +1066,15 @@ def api_reindex_search():
         }), 500
 
 
-# Import subtitle integration to register routes
-try:
-    import app_subs_integration
-    app_subs_integration.register_subtitle_routes(app)
-    print("✅ Subtitle system loaded")
-except ImportError as e:
-    print(f"⚠️  Subtitle system not available: {e}")
+# Subtitle system removed — no subtitle routes registered
 
 
 if __name__ == '__main__':
-    print("🎬 Starting Video Server with Performance Optimizations...")
-    print(f"📁 Video directory: {VIDEO_DIR}")
-    print(f"🖼️  Thumbnail directory: {THUMBNAIL_DIR}")
-    print(f"💾 Backend: {'Database' if cache.use_database else 'JSON files'}")
+    print("[STARTUP] Starting Video Server with Performance Optimizations...")
+    print(f"[STARTUP] Video directory: {VIDEO_DIR}")
+    print(f"[STARTUP] Thumbnail directory: {THUMBNAIL_DIR}")
+    backend = 'Database' if cache.use_database else 'JSON files'
+    print(f"[STARTUP] Backend: {backend}")
 
     # Run startup tasks with app context
     with app.app_context():

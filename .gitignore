@@ -175,6 +175,9 @@ pyrightconfig.json
 
 ### Local Video Server Specific ###
 
+# Private template files (user-specific content)
+templates/links.html
+
 # Media files (user content)
 videos/
 images/
@@ -190,6 +193,7 @@ video_metadata.db
 *.db
 *.sqlite
 *.sqlite3
+*.backup
 
 # Log files
 logs/
@@ -221,10 +225,11 @@ Thumbs.db
 *.swo
 *~
 
-# Backup files
-*.bak
-*.backup
-*.old
+# Generated data files (private user data)
+views.json
+tags.json
+ratings.json
+favorites.json
 
 # Test files
 test_*.py

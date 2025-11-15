@@ -64,19 +64,7 @@ document.addEventListener('click', (e) => {
         handleFavoriteClick(e.target.closest('.favorite-btn'));
     }
 });
-```
 
-#### **2. Smart Caching**
-
-```javascript
-// Before: Repeated queries
-const video = document.querySelector('video');
-const video2 = document.querySelector('video'); // Same query!
-
-// After: Cached queries
-const video = optimizedUtils.getElement('video'); // Cached
-const video2 = optimizedUtils.getElement('video'); // From cache
-```
 
 #### **3. Batch DOM Operations**
 
@@ -132,37 +120,19 @@ const video2 = optimizedUtils.getElement('video'); // From cache
 
 ```python
 # Before: Multiple cache calls
+
 ratings = cache.get_ratings()           # Call 1
 favorites = cache.get_favorites()       # Call 2
 for filename in high_rated:
     metadata = cache.db.get_video_by_filename(filename)  # Call 3-N
 
 # After: Batch operation
+
 all_video_data = cache.get_all_video_data()  # Call 1
 favorites = cache.get_favorites()            # Call 2
 # Filter in memory - no additional calls
-```
 
-#### **Video Analytics**
 
-- **Before**: Canvas redrawn on every `timeupdate` (4x/second)
-- **After**: Debounced updates (1x/second max)
-- **Benefit**: 75% reduction in canvas operations
-
-### 🧹 **Maintenance Improvements**
-
-#### **Unified Maintenance Script**
-
-```bash
-# Before: Multiple scripts
-python purge_orphans.py
-python regenerate_thumbnails.py  
-python sanitize_video_filenames.py
-python test_db.py
-
-# After: Single script
-python maintenance.py all
-```
 
 #### **Smart Cleanup**
 
@@ -256,3 +226,5 @@ The optimization efforts have resulted in:
 - **Cleaner, more maintainable codebase**
 
 These improvements provide a significantly better user experience while making the codebase more maintainable and scalable for future development.
+
+
