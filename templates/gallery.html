@@ -247,8 +247,9 @@
     height: 24px;
     cursor: pointer;
     opacity: 0;
-    z-index: 2;
+    z-index: 10;
     transition: opacity var(--transition-fast);
+    pointer-events: none;
   }
   
   .gallery-item-checkbox:checked {
@@ -257,6 +258,7 @@
   
   .gallery-item.selection-mode .gallery-item-checkbox {
     opacity: 0.7;
+    pointer-events: auto;
   }
   
   .gallery-item.selection-mode .gallery-item-checkbox:hover {
@@ -481,6 +483,7 @@ let selectionMode = false;
 let selectedImages = new Set();
 let allGroups = [];
 let allImages = {{ images|tojson }};
+let lastSelectedIndex = null;
 
 // DOM Elements
 const selectionToggle = document.getElementById('selectionToggle');
@@ -568,6 +571,47 @@ function renderGroups() {
   });
 }
 
+// Central selection handler that supports Shift ranges
+function handleSelectionClick(event, index, image) {
+  if (!selectionMode) {
+    // Fallback: open lightbox when not in selection mode
+    openLightbox(image);
+    return;
+  }
+
+  const isShift = event.shiftKey;
+
+  if (isShift && lastSelectedIndex !== null) {
+    const start = Math.min(lastSelectedIndex, index);
+    const end = Math.max(lastSelectedIndex, index);
+
+    const clickedIsSelected = selectedImages.has(image);
+    const shouldSelect = !clickedIsSelected;
+
+    console.log('Shift range selection', { start, end, shouldSelect });
+
+    for (let i = start; i <= end; i++) {
+      const name = allImages[i];
+      if (shouldSelect) {
+        selectedImages.add(name);
+      } else {
+        selectedImages.delete(name);
+      }
+    }
+  } else {
+    const clickedIsSelected = selectedImages.has(image);
+    if (clickedIsSelected) {
+      selectedImages.delete(image);
+    } else {
+      selectedImages.add(image);
+    }
+    lastSelectedIndex = index;
+    console.log('Single selection', { index, image, selected: selectedImages.has(image) });
+  }
+
+  updateSelectionUI();
+}
+
 // Render image cards
 function renderImages() {
   if (allImages.length === 0) {
@@ -576,7 +620,7 @@ function renderImages() {
   }
   
   galleryGrid.innerHTML = '';
-  allImages.forEach(image => {
+  allImages.forEach((image, index) => {
     const item = document.createElement('div');
     item.className = 'gallery-item';
     item.dataset.image = image;
@@ -584,10 +628,11 @@ function renderImages() {
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
     checkbox.className = 'gallery-item-checkbox';
-    checkbox.onchange = (e) => {
+    checkbox.addEventListener('click', (e) => {
+      // Click directly on checkbox in selection mode
       e.stopPropagation();
-      toggleImageSelection(image, checkbox.checked);
-    };
+      handleSelectionClick(e, index, image);
+    });
     
     const img = document.createElement('img');
     img.src = `/gallery/image/${image}`;
@@ -607,19 +652,18 @@ function renderImages() {
     item.appendChild(overlay);
     
     item.onclick = (e) => {
-      if (selectionMode) {
-        checkbox.checked = !checkbox.checked;
-        toggleImageSelection(image, checkbox.checked);
-      } else {
-        openLightbox(image);
+      // Ignore direct clicks on the checkbox itself
+      if (e.target === checkbox) {
+        return;
       }
+      handleSelectionClick(e, index, image);
     };
     
     galleryGrid.appendChild(item);
   });
 }
 
-// Toggle image selection
+// Toggle image selection (kept for compatibility, not used by shift handler)
 function toggleImageSelection(image, selected) {
   if (selected) {
     selectedImages.add(image);
@@ -679,6 +723,7 @@ function toggleSelectionMode() {
 // Clear selection
 function clearSelection() {
   selectedImages.clear();
+  lastSelectedIndex = null;
   updateSelectionUI();
 }
 
