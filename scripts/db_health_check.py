@@ -47,11 +47,11 @@ def get_connection() -> sqlite3.Connection:
 
 
 def print_counts(conn: sqlite3.Connection) -> None:
-    print("📊 Table counts")
+    print("[DB] Table counts")
     for table, query in TABLES.items():
         cursor = conn.execute(query)
         count = cursor.fetchone()[0]
-        print(f"  • {table:11s}: {count}")
+        print(f"  - {table:11s}: {count}")
 
 
 def check_indexes(conn: sqlite3.Connection) -> bool:
@@ -69,19 +69,19 @@ def check_indexes(conn: sqlite3.Connection) -> bool:
 
     missing = [idx for idx in EXPECTED_INDEXES if idx not in indexes]
     if missing:
-        print("⚠️  Missing indexes:")
+        print("[WARN] Missing indexes:")
         for idx in missing:
             print(f"  - {idx}")
         return False
 
-    print("✅ All expected indexes present")
+    print("[OK] All expected indexes present")
     return True
 
 
 def main() -> None:
     conn = get_connection()
     try:
-        print(f"🔍 Checking database: {DB_PATH.resolve()}")
+        print(f"[DB] Checking database: {DB_PATH.resolve()}")
         print_counts(conn)
         indexes_ok = check_indexes(conn)
     finally:

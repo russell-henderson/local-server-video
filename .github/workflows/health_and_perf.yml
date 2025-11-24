@@ -1,0 +1,54 @@
+name: Health and Performance Checks
+
+on:
+  push:
+    branches: ["main", "master"]
+  pull_request:
+    branches: ["main", "master"]
+
+jobs:
+  health-perf:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run database health check
+        run: python scripts/db_health_check.py
+
+      - name: Start application
+        run: |
+          nohup python main.py > server.log 2>&1 &
+          echo $! > server.pid
+          sleep 5
+
+      - name: Run HTTP smoke load check
+        env:
+          LVS_SMOKE_BASE_URL: http://127.0.0.1:5000
+        run: python scripts/http_smoke_load_check.py --iterations 10
+
+      - name: Upload server logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-log
+          path: server.log
+
+      - name: Stop application
+        if: always()
+        run: |
+          if [ -f server.pid ]; then
+            kill $(cat server.pid) || true
+          fi
+

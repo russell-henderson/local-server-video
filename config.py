@@ -42,6 +42,7 @@ class ServerConfig:
     enable_analytics: bool = True
     log_level: str = "INFO"
     max_log_size: int = 10 * 1024 * 1024  # 10MB
+    enable_perf_log: bool = True
     
     # Security settings
     enable_cors: bool = False
@@ -204,6 +205,7 @@ class ConfigManager:
                 'search_enabled': config.search_enabled,
                 'search_index_on_startup': config.search_index_on_startup,
                 'enable_analytics': config.enable_analytics,
+                'enable_perf_log': config.enable_perf_log,
                 'log_level': config.log_level,
                 'max_log_size': config.max_log_size,
                 'enable_cors': config.enable_cors,

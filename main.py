@@ -6,12 +6,13 @@ import re
 import time
 import mimetypes
 import random
+from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from flask import (
     Flask, Response, request, render_template, send_file,
-    abort, url_for, redirect, jsonify
+    abort, url_for, redirect, jsonify, g
 )
 
 from cache_manager import cache
@@ -98,6 +99,46 @@ except ImportError:
         else:
             # Used as @performance_monitor("name") or @performance_monitor()
             return decorator
+
+
+# ────────────────────────────────────────────────────────────────────────────
+# Request timing logs (lightweight)
+# ────────────────────────────────────────────────────────────────────────────
+
+def _is_perf_log_enabled() -> bool:
+    """Return whether perf logging should run."""
+    cfg = get_config()
+    return getattr(cfg, "enable_perf_log", True)
+
+
+@app.before_request
+def _perf_log_before_request():
+    enabled = _is_perf_log_enabled()
+    g._perf_log_enabled = enabled
+    if not enabled:
+        return
+    g._perf_log_start = time.perf_counter()
+
+
+@app.after_request
+def _perf_log_after_request(response):
+    if not getattr(g, "_perf_log_enabled", False):
+        return response
+    start = getattr(g, "_perf_log_start", None)
+    if start is None:
+        return response
+
+    duration_ms = (time.perf_counter() - start) * 1000
+    ts = datetime.utcnow().isoformat()
+    app.logger.info(
+        "[PERF] ts=%s method=%s path=%s status=%s duration_ms=%.2f",
+        ts,
+        request.method,
+        request.path,
+        response.status_code,
+        duration_ms,
+    )
+    return response
 
 
 # ────────────────────────────────────────────────────────────────────────────
