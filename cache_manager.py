@@ -230,49 +230,52 @@ class VideoCache:
 
             return self._favorites.copy()
     
+    def _scan_video_directory(self) -> List[str]:
+        """Scan the filesystem for video files."""
+        allowed_extensions = ('.mp4', '.webm', '.ogg')
+        if not os.path.exists(self.video_dir):
+            return []
+        return [
+            video for video in os.listdir(self.video_dir)
+            if video.lower().endswith(allowed_extensions)
+        ]
+    
     def get_video_list(self) -> List[str]:
         """Get video list with cache check and improved file detection"""
         with self._lock:
             was_valid = self._is_cache_valid('video_list')
             if not was_valid:
-                allowed_extensions = ('.mp4', '.webm', '.ogg')
-                if os.path.exists(self.video_dir):
-                    current_videos = [
-                        video for video in os.listdir(self.video_dir) 
-                        if video.lower().endswith(allowed_extensions)
-                    ]
-                    
-                    # Check if we have new videos
-                    if set(current_videos) != set(self._video_list):
-                        videos_found = len(current_videos)
-                        was_videos = len(self._video_list)
-                        print(f"[REFRESH] Video list changed: {videos_found} "
-                              f"videos found (was {was_videos})")
-                        
-                        # Clear video metadata cache for new videos
-                        new_videos = set(current_videos) - set(
-                            self._video_list)
-                        removed_videos = set(self._video_list) - set(
-                            current_videos)
-                        
-                        if new_videos:
-                            sample = list(new_videos)[:5]
-                            more = '...' if len(new_videos) > 5 else ''
-                            print(f"[NEW] New videos detected: "
-                                  f"{', '.join(sample)}{more}")
-                        
-                        if removed_videos:
-                            sample = list(removed_videos)[:5]
-                            more = '...' if len(removed_videos) > 5 else ''
-                            print(f"[REMOVED] Videos removed: "
-                                  f"{', '.join(sample)}{more}")
-                            # Clean up metadata for removed videos
-                            for video in removed_videos:
-                                self._video_metadata.pop(video, None)
-                    
-                    self._video_list = current_videos
+                if self.use_database and self.db:
+                    self._ensure_videos_in_database()
+                    try:
+                        current_videos = self.db.get_all_filenames()
+                    except Exception as exc:
+                        print(f"[WARN] Could not read filenames from database: {exc}")
+                        current_videos = self._scan_video_directory()
                 else:
-                    self._video_list = []
+                    current_videos = self._scan_video_directory()
+                
+                if set(current_videos) != set(self._video_list):
+                    videos_found = len(current_videos)
+                    was_videos = len(self._video_list)
+                    print(f"[REFRESH] Video list changed: {videos_found} videos found (was {was_videos})")
+                    
+                    new_videos = set(current_videos) - set(self._video_list)
+                    removed_videos = set(self._video_list) - set(current_videos)
+                    
+                    if new_videos:
+                        sample = list(new_videos)[:5]
+                        more = '...' if len(new_videos) > 5 else ''
+                        print(f"[NEW] New videos detected: {', '.join(sample)}{more}")
+                    
+                    if removed_videos:
+                        sample = list(removed_videos)[:5]
+                        more = '...' if len(removed_videos) > 5 else ''
+                        print(f"[REMOVED] Videos removed: {', '.join(sample)}{more}")
+                        for video in removed_videos:
+                            self._video_metadata.pop(video, None)
+                
+                self._video_list = current_videos
                 self._last_refresh['video_list'] = time.time()
             try:
                 if perf_monitor:
@@ -498,7 +501,7 @@ class VideoCache:
             return
             
         # Get current video list from file system
-        video_list = self.get_video_list()
+        video_list = self._scan_video_directory()
         
         # Get videos already in database
         existing_videos = set()
@@ -511,6 +514,7 @@ class VideoCache:
         
         # Find videos that need to be added to database
         new_videos = set(video_list) - existing_videos
+        removed_videos = existing_videos - set(video_list)
         
         if new_videos:
             print(f"[SYNC] Adding {len(new_videos)} new videos to database...")
@@ -539,6 +543,18 @@ class VideoCache:
                 
             except Exception as e:
                 print(f"[ERROR] Error adding videos to database: {e}")
+        
+        if removed_videos:
+            print(f"[SYNC] Removing {len(removed_videos)} videos missing on disk...")
+            try:
+                with self.db.get_connection() as conn:
+                    conn.executemany(
+                        "DELETE FROM videos WHERE filename = ?",
+                        ((video,) for video in removed_videos)
+                    )
+                    conn.commit()
+            except Exception as e:
+                print(f"[ERROR] Error removing videos from database: {e}")
 
     def get_all_video_data(self, sort_by: str = 'date',
                            reverse: bool = True) -> List[Dict]:
