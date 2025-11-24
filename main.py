@@ -340,6 +340,15 @@ def delete_tag():
     return {"error": "Video not found in tags"}, 404
 
 
+@app.route('/api/tags/popular')
+def popular_tags_api():
+    """Expose most-used tags for autocomplete."""
+    limit = request.args.get('limit', default=50, type=int)
+    limit = max(1, min(limit or 50, 200))
+    tags = cache.get_popular_tags(limit)
+    return jsonify({"tags": tags})
+
+
 @app.route("/favorite", methods=["POST"])
 @performance_monitor("route_toggle_favorite")
 def toggle_favorite():

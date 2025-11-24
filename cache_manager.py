@@ -15,7 +15,8 @@ import os
 import json
 import time
 import threading
-from typing import Dict, List, Optional
+from collections import Counter
+from typing import Any, Dict, List, Optional
 from functools import wraps
 
 # Try to import database backend
@@ -60,6 +61,8 @@ class VideoCache:
         self._favorites: List[str] = []
         self._video_list: List[str] = []
         self._video_metadata: Dict[str, Dict] = {}
+        self._popular_tags: List[Dict[str, Any]] = []
+        self._popular_tag_cache_limit = 200
         
         # Cache timestamps
         self._last_refresh: Dict[str, float] = {
@@ -67,7 +70,8 @@ class VideoCache:
             'views': 0.0,
             'tags': 0.0,
             'favorites': 0.0,
-            'video_list': 0.0
+            'video_list': 0.0,
+            'popular_tags': 0.0
         }
         
         # File paths (for JSON fallback only - database is primary backend)
@@ -415,6 +419,9 @@ class VideoCache:
             # Invalidate video metadata cache
             if filename in self._video_metadata:
                 self._video_metadata[filename]['tags'] = tags
+
+            # Popular tags depend on overall usage counts
+            self.invalidate_popular_tags()
     
     def update_favorites(self, favorites: List[str]):
         """Update favorites with write-through cache"""
@@ -445,6 +452,7 @@ class VideoCache:
             self.get_ratings()
             self.get_views()
             self.get_tags()
+            self.get_popular_tags()
             self.get_favorites()
             self.get_video_list()
     
@@ -483,6 +491,12 @@ class VideoCache:
         with self._lock:
             self._last_refresh['metadata'] = 0
             self._video_metadata.clear()
+
+    def invalidate_popular_tags(self):
+        """Invalidate cached popular tag rankings."""
+        with self._lock:
+            self._last_refresh['popular_tags'] = 0
+            self._popular_tags.clear()
     
     def _ensure_videos_in_database(self):
         """Ensure all videos from file system are in database"""
@@ -623,6 +637,33 @@ class VideoCache:
             for tag_list in all_tags.values():
                 unique_tags.update(tag_list)
             return sorted(unique_tags, key=lambda x: x.lower())
+
+    def get_popular_tags(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """Return most-used tags with basic caching."""
+        with self._lock:
+            limit = max(1, min(limit, 500))
+            cached_limit = getattr(self, "_popular_tag_cache_limit", 200)
+            needs_limit_refresh = len(self._popular_tags) < limit and limit > cached_limit
+            was_valid = self._is_cache_valid('popular_tags') and not needs_limit_refresh
+
+            if not was_valid:
+                target_limit = max(limit, self._popular_tag_cache_limit)
+                if self.use_database and self.db:
+                    self._popular_tags = self.db.get_popular_tags(target_limit)
+                else:
+                    counter: Counter = Counter()
+                    all_tags = self.get_tags()
+                    for tag_list in all_tags.values():
+                        counter.update(tag_list)
+                    most_common = counter.most_common(target_limit)
+                    self._popular_tags = [
+                        {'tag': tag, 'count': count}
+                        for tag, count in most_common
+                    ]
+                self._popular_tag_cache_limit = target_limit
+                self._last_refresh['popular_tags'] = time.time()
+
+            return self._popular_tags[:limit]
 
 # Global cache instance
 cache = VideoCache()

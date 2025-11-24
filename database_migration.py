@@ -473,6 +473,21 @@ class VideoDatabase:
             """)
             return [row['tag'] for row in cursor]
     
+    def get_popular_tags(self, limit: int = 50) -> List[Dict]:
+        """Return tags ordered by usage count"""
+        with self.get_connection() as conn:
+            cursor = conn.execute("""
+                SELECT tag, COUNT(*) as usage_count
+                FROM video_tags
+                GROUP BY tag
+                ORDER BY usage_count DESC, tag COLLATE NOCASE
+                LIMIT ?
+            """, (limit,))
+            return [
+                {'tag': row['tag'], 'count': row['usage_count']}
+                for row in cursor
+            ]
+    
     def get_related_videos(self, filename: str, limit: int = 20) -> List[Dict]:
         """Get related videos based on shared tags"""
         with self.get_connection() as conn:

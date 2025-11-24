@@ -21,3 +21,10 @@ Consolidated UI documentation (design, player, and preview system). Original fil
 ---
 
 See docs/deferred/Local Video Server UI.md and docs/deferred/VIDEO_PREVIEW_IMPROVEMENTS.md for the full original text.
+
+## Tag Autocomplete
+
+- The watch page tag input now uses a datalist that surfaces the most frequently used tags.
+- Suggestions are powered by SQLite data via the `/api/tags/popular` endpoint and cached in `cache_manager`.
+- Typing filters the list; focusing on the field shows the top tags—helpful for videos that currently lack tags.
+- Each suggestion displays the tag and usage count, preserving the existing `#tag` convention.
