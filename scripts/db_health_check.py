@@ -2,8 +2,16 @@
 """
 Quick SQLite health check for Local Video Server.
 
-- Prints table row counts for critical metadata tables
-- Verifies that expected indexes exist
+Usage:
+    python scripts/db_health_check.py
+
+Outputs:
+    • Row counts for key tables
+    • Whether required indexes are present
+
+Exit codes:
+    0 -> All checks passed
+    1 -> Database file missing or an index/table check failed
 """
 from __future__ import annotations
 
@@ -46,7 +54,7 @@ def print_counts(conn: sqlite3.Connection) -> None:
         print(f"  • {table:11s}: {count}")
 
 
-def check_indexes(conn: sqlite3.Connection) -> None:
+def check_indexes(conn: sqlite3.Connection) -> bool:
     cursor = conn.execute("PRAGMA index_list('videos')")
     indexes = {row[1] for row in cursor.fetchall()}
 
@@ -64,8 +72,10 @@ def check_indexes(conn: sqlite3.Connection) -> None:
         print("⚠️  Missing indexes:")
         for idx in missing:
             print(f"  - {idx}")
-    else:
-        print("✅ All expected indexes present")
+        return False
+
+    print("✅ All expected indexes present")
+    return True
 
 
 def main() -> None:
@@ -73,9 +83,12 @@ def main() -> None:
     try:
         print(f"🔍 Checking database: {DB_PATH.resolve()}")
         print_counts(conn)
-        check_indexes(conn)
+        indexes_ok = check_indexes(conn)
     finally:
         conn.close()
+
+    if not indexes_ok:
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":
