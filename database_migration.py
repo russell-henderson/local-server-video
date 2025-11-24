@@ -487,6 +487,27 @@ class VideoDatabase:
                 {'tag': row['tag'], 'count': row['usage_count']}
                 for row in cursor
             ]
+
+    def get_ratings_map(self) -> Dict[str, int]:
+        """Return filename -> rating mapping."""
+        with self.get_connection() as conn:
+            cursor = conn.execute("SELECT filename, rating FROM ratings")
+            return {row['filename']: row['rating'] for row in cursor}
+
+    def get_views_map(self) -> Dict[str, int]:
+        """Return filename -> view_count mapping."""
+        with self.get_connection() as conn:
+            cursor = conn.execute("SELECT filename, view_count FROM views")
+            return {row['filename']: row['view_count'] for row in cursor}
+
+    def get_tags_map(self) -> Dict[str, List[str]]:
+        """Return filename -> [tags] mapping."""
+        tags: Dict[str, List[str]] = {}
+        with self.get_connection() as conn:
+            cursor = conn.execute("SELECT filename, tag FROM video_tags ORDER BY filename")
+            for row in cursor:
+                tags.setdefault(row['filename'], []).append(row['tag'])
+        return tags
     
     def get_related_videos(self, filename: str, limit: int = 20) -> List[Dict]:
         """Get related videos based on shared tags"""

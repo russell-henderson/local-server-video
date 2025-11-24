@@ -141,9 +141,7 @@ class VideoCache:
             was_valid = self._is_cache_valid('ratings')
             if not was_valid:
                 if self.use_database and self.db:
-                    # Load from database
-                    videos = self.db.get_all_videos()
-                    self._ratings = {v['filename']: v['rating'] for v in videos}
+                    self._ratings = self.db.get_ratings_map()
                 else:
                     # Load from JSON
                     self._ratings = self._load_json_file(self.ratings_file)
@@ -167,9 +165,7 @@ class VideoCache:
             was_valid = self._is_cache_valid('views')
             if not was_valid:
                 if self.use_database and self.db:
-                    # Load from database
-                    videos = self.db.get_all_videos()
-                    self._views = {v['filename']: v['views'] for v in videos}
+                    self._views = self.db.get_views_map()
                 else:
                     # Load from JSON
                     self._views = self._load_json_file(self.views_file)
@@ -192,9 +188,7 @@ class VideoCache:
             was_valid = self._is_cache_valid('tags')
             if not was_valid:
                 if self.use_database and self.db:
-                    # Load from database
-                    videos = self.db.get_all_videos()
-                    self._tags = {v['filename']: v['tags'] for v in videos}
+                    self._tags = self.db.get_tags_map()
                 else:
                     # Load from JSON
                     self._tags = self._load_json_file(self.tags_file)
