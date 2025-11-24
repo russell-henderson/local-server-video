@@ -1,7 +1,15 @@
 """
 Cache Manager for Video Server Performance Optimization
 Implements in-memory caching with periodic refresh and write-through caching
-Supports both JSON (backward compatibility) and SQLite (performance) backends
+
+Primary Backend: SQLite database (default, use_database=True)
+- All runtime operations read from and write to SQLite database
+- Database is the canonical source of truth for all video metadata
+
+Legacy Fallback: JSON files (emergency fallback only)
+- JSON files are backup snapshots, not the source of truth
+- Only used if database initialization fails (should not occur in normal operation)
+- See docs/DATA_BACKEND.md for architecture details
 """
 import os
 import json
@@ -22,6 +30,8 @@ try:
     from performance_monitor import monitor as perf_monitor  # type: ignore
 except Exception:
     perf_monitor = None
+
+
 
 class VideoCache:
     """Centralized cache manager for video metadata and file listings"""
@@ -60,7 +70,8 @@ class VideoCache:
             'video_list': 0.0
         }
         
-        # File paths (for JSON fallback)
+        # File paths (for JSON fallback only - database is primary backend)
+        # JSON files are used only if database is unavailable (emergency fallback)
         self.ratings_file = "ratings.json"
         self.views_file = "views.json"
         self.tags_file = "tags.json"
@@ -95,7 +106,7 @@ class VideoCache:
         return (time.time() - self._last_refresh[cache_key]) < ttl
     
     def _load_json_file(self, filepath: str) -> Dict:
-        """Load JSON file with error handling"""
+        """Load JSON file with error handling (legacy fallback only - not used in normal operation)"""
         if os.path.exists(filepath):
             try:
                 with open(filepath, 'r', encoding='utf-8') as f:
@@ -105,7 +116,7 @@ class VideoCache:
         return {}
     
     def _save_json_file(self, filepath: str, data: Dict):
-        """Save JSON file atomically"""
+        """Save JSON file atomically (legacy fallback only - not used when database is enabled)"""
         temp_file = filepath + '.tmp'
         try:
             with open(temp_file, 'w', encoding='utf-8') as f:
@@ -521,35 +532,42 @@ class VideoCache:
             except Exception as e:
                 print(f"[ERROR] Error adding videos to database: {e}")
 
-    def get_all_video_data(self, sort_by: str = 'date', reverse: bool = True) -> List[Dict]:
+    def get_all_video_data(self, sort_by: str = 'date',
+                           reverse: bool = True) -> List[Dict]:
         """Get all video data with efficient bulk operation"""
         if self.use_database and self.db:
             # Ensure all videos are in database first
             self._ensure_videos_in_database()
-            
+
             # Use database bulk operation
             order = 'desc' if reverse else 'asc'
-            return self._filter_existing(self.db.get_all_videos(sort_by, order))
+            return self._filter_existing(
+                self.db.get_all_videos(sort_by, order)
+            )
         else:
             # Use JSON files with caching
             videos = self.get_video_list()
             video_data = []
-            
+
             for video in videos:
                 metadata = self.get_video_metadata(video)
                 if metadata:
                     video_data.append(metadata)
-            
+
             # Sort efficiently
             if sort_by == 'rating':
-                video_data.sort(key=lambda x: x['rating'], reverse=reverse)
+                video_data.sort(key=lambda x: x['rating'],
+                                reverse=reverse)
             elif sort_by == 'title':
-                video_data.sort(key=lambda x: x['filename'], reverse=reverse)
+                video_data.sort(key=lambda x: x['filename'],
+                                reverse=reverse)
             elif sort_by == 'views':
-                video_data.sort(key=lambda x: x['views'], reverse=reverse)
+                video_data.sort(key=lambda x: x['views'],
+                                reverse=reverse)
             else:  # default to date
-                video_data.sort(key=lambda x: x['added_date'], reverse=reverse)
-            
+                video_data.sort(key=lambda x: x['added_date'],
+                                reverse=reverse)
+
             return video_data
         
     def get_videos_by_tag_optimized(self, tag: str) -> List[Dict]:

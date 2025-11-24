@@ -225,11 +225,14 @@ Thumbs.db
 *.swo
 *~
 
-# Generated data files (private user data)
+# Local JSON backup data (do not commit)
+
+# These files are backup snapshots only, database is the canonical source
+ratings.json
 views.json
 tags.json
-ratings.json
 favorites.json
+backup_json/
 
 # Test files
 test_*.py
