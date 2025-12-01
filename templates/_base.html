@@ -29,16 +29,16 @@
     </div>
     
     <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" defer></script>
     
     <!-- Video Player JS -->
-    <script src="{{ url_for('static', filename='js/player.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/player.js') }}" defer></script>
     <!-- Ratings (delegated) -->
-    <script src="{{ url_for('static', filename='js/ratings.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/ratings.js') }}" defer></script>
     <!-- Favorites helper (compat) -->
-    <script src="{{ url_for('static', filename='favorites.js') }}"></script>
+    <script src="{{ url_for('static', filename='favorites.js') }}" defer></script>
     <!-- Tags handling -->
-    <script src="{{ url_for('static', filename='js/tags.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/tags.js') }}" defer></script>
     
     {% block extra_scripts %}{% endblock %}
 </body>

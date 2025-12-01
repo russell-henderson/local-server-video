@@ -5,10 +5,6 @@
 {% block extra_head %}
   <!-- Performance metrics -->
   <script src="{{ url_for('static', filename='metrics.js') }}" defer></script>
-  
-  <!-- Additional CSS for video grid -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='adaptive-streaming.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -92,16 +88,8 @@
 {% endblock %}
 
 {% block extra_scripts %}
-  <!-- Additional scripts (deferred for non-blocking load) -->
   <script src="{{ url_for('static', filename='video-preview-enhanced.js') }}" defer></script>
-  <script src="{{ url_for('static', filename='video-preview-debug.js') }}" defer></script>
-  <script src="{{ url_for('static', filename='network-monitor.js') }}" defer></script>
-  <script src="{{ url_for('static', filename='adaptive-streaming.js') }}" defer></script>
-  <script src="{{ url_for('static', filename='adaptive-streaming-init.js') }}" defer></script>
-  <script src="{{ url_for('static', filename='theme-manager.js') }}" defer></script>
-  <script src="{{ url_for('static', filename='theme-integration.js') }}" defer></script>
   <script src="{{ url_for('static', filename='optimized-utils.js') }}" defer></script>
-  <script src="{{ url_for('static', filename='recently-played.js') }}" defer></script>
   <script src="{{ url_for('static', filename='dark.js') }}" defer></script>
 
   <script>
