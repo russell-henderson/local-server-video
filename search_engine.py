@@ -11,6 +11,8 @@ from pathlib import Path
 from dataclasses import dataclass, field
 from difflib import SequenceMatcher
 import json
+from datetime import datetime
+from ai_gateway import get_embedding
 
 @dataclass
 class SearchResult:
@@ -27,6 +29,8 @@ class SearchResult:
     view_count: int = 0
     rating: float = 0.0
     last_watched: Optional[str] = None
+    added_date: Optional[str] = None # Added for date filtering
+    last_modified: Optional[str] = None # Added for date filtering
 
 @dataclass 
 class SearchQuery:
@@ -43,6 +47,16 @@ class SearchQuery:
     limit: int = 50
     include_fuzzy: bool = True
     fuzzy_threshold: float = 0.6
+    semantic_threshold: float = 0.7 # Added for semantic search
+
+def cosine_similarity(vec1: List[float], vec2: List[float]) -> float:
+    """Calculates the cosine similarity between two vectors."""
+    dot_product = sum(a * b for a, b in zip(vec1, vec2))
+    magnitude_vec1 = (sum(a * a for a in vec1))**0.5
+    magnitude_vec2 = (sum(b * b for b in vec2))**0.5
+    if not magnitude_vec1 or not magnitude_vec2:
+        return 0.0
+    return dot_product / (magnitude_vec1 * magnitude_vec2)
 
 class AdvancedSearchEngine:
     """
@@ -96,7 +110,8 @@ class AdvancedSearchEngine:
                     rating REAL DEFAULT 0.0,
                     date_added TEXT,
                     last_watched TEXT,
-                    last_modified TEXT
+                    last_modified TEXT,
+                    embeddings BLOB
                 )
             """)
             
@@ -127,6 +142,17 @@ class AdvancedSearchEngine:
                 ORDER BY frequency DESC
             """)
     
+    def remove_video(self, video_path: str) -> bool:
+        """Remove a single video from the search index"""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                conn.execute("DELETE FROM video_index WHERE video_path = ?", (video_path,))
+                conn.execute("DELETE FROM video_fts WHERE video_path = ?", (video_path,))
+                return True
+        except Exception as e:
+            print(f"❌ Error removing video {video_path} from index: {e}")
+            return False
+
     def index_video(self, video_path: str, metadata: Dict[str, Any]) -> bool:
         """Index a single video for search"""
         try:
@@ -138,12 +164,17 @@ class AdvancedSearchEngine:
                 description = metadata.get('description', '')
                 performer_names = ' '.join(metadata.get('performer_names', []))
                 
+                # Prepare text for embedding
+                embedding_text = f"{title} {description} {' '.join(json.loads(tags))} {performer_names}"
+                embedding = get_embedding(embedding_text)
+                serialized_embedding = json.dumps(embedding)
+
                 # Insert/update main index
                 conn.execute("""
                     INSERT OR REPLACE INTO video_index 
                     (video_path, filename, title, tags, description, performer_names,
-                     duration, file_size, view_count, rating, date_added, last_modified)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                     duration, file_size, view_count, rating, date_added, last_modified, embeddings)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, (
                     video_path, filename, title, tags, description, performer_names,
                     metadata.get('duration', 0),
@@ -151,7 +182,8 @@ class AdvancedSearchEngine:
                     metadata.get('view_count', 0),
                     metadata.get('rating', 0.0),
                     metadata.get('date_added', time.strftime('%Y-%m-%d %H:%M:%S')),
-                    metadata.get('last_modified', time.strftime('%Y-%m-%d %H:%M:%S'))
+                    metadata.get('last_modified', time.strftime('%Y-%m-%d %H:%M:%S')),
+                    serialized_embedding
                 ))
                 
                 # Update FTS5 index
@@ -210,6 +242,11 @@ class AdvancedSearchEngine:
             if search_query.tags:
                 tag_results = self._tag_search(search_query)
                 results.extend(tag_results)
+
+            # Strategy 4: Semantic search using embeddings
+            if search_query.query.strip() and search_query.semantic_threshold:
+                semantic_results = self._semantic_search(search_query)
+                results.extend(semantic_results)
             
             # Remove duplicates and merge scores
             results = self._deduplicate_results(results)
@@ -344,8 +381,47 @@ class AdvancedSearchEngine:
             size=row[8],
             view_count=row[9],
             rating=row[10],
-            last_watched=row[12]
+            last_watched=row[12],
+            added_date=row[11], # Assuming row[11] is date_added
+            last_modified=row[13] # Assuming row[13] is last_modified
         )
+
+    def _semantic_search(self, search_query: SearchQuery) -> List[SearchResult]:
+        """Perform semantic search using embeddings"""
+        results = []
+        if not search_query.query.strip():
+            return results
+
+        try:
+            query_embedding = get_embedding(search_query.query)
+            if not any(query_embedding): # Check if the mock embedding is all zeros
+                print("⚠️  Semantic search skipped: Query embedding is all zeros (mocked).")
+                return results
+
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.execute("""
+                    SELECT 
+                        vi.*, 
+                        vi.embeddings 
+                    FROM video_index vi
+                    WHERE vi.embeddings IS NOT NULL
+                """)
+                
+                for row in cursor.fetchall():
+                    video_embedding_str = row['embeddings']
+                    if video_embedding_str:
+                        video_embedding = json.loads(video_embedding_str)
+                        if any(video_embedding): # Check if the mock embedding is all zeros
+                            similarity = cosine_similarity(query_embedding, video_embedding)
+                            if similarity >= search_query.semantic_threshold:
+                                result = self._row_to_search_result(row, "semantic", similarity)
+                                results.append(result)
+        except Exception as e:
+            print(f"⚠️  Semantic search error: {e}")
+        
+        results.sort(key=lambda x: x.relevance_score, reverse=True)
+        return results
+
     
     def _deduplicate_results(self, results: List[SearchResult]) -> List[SearchResult]:
         """Remove duplicates and merge relevance scores"""
@@ -377,8 +453,21 @@ class AdvancedSearchEngine:
             if query.min_rating and result.rating < query.min_rating:
                 continue
             
-            # Date filters would require additional metadata
-            # TODO: Implement date filtering when date metadata is available
+            if query.min_rating and result.rating < query.min_rating:
+                continue
+            
+            # Date filters
+            if query.date_from:
+                from_dt = datetime.strptime(query.date_from, '%Y-%m-%d %H:%M:%S')
+                result_date = datetime.strptime(result.added_date, '%Y-%m-%d %H:%M:%S') if result.added_date else None
+                if result_date and result_date < from_dt:
+                    continue
+            
+            if query.date_to:
+                to_dt = datetime.strptime(query.date_to, '%Y-%m-%d %H:%M:%S')
+                result_date = datetime.strptime(result.added_date, '%Y-%m-%d %H:%M:%S') if result.added_date else None
+                if result_date and result_date > to_dt:
+                    continue
             
             filtered.append(result)
         

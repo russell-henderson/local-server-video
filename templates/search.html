@@ -52,6 +52,12 @@
                     </label>
                 </div>
                 <div class="filter-group">
+                    <label>
+                        <input type="checkbox" id="semantic-search" class="search-filter">
+                        Enable semantic search (finds meaning)
+                    </label>
+                </div>
+                <div class="filter-group">
                     <label for="result-limit">Results per page</label>
                     <select id="result-limit" class="search-filter">
                         <option value="25">25</option>
@@ -258,7 +264,8 @@
 function clearAllFilters() {
     document.querySelectorAll('.search-filter').forEach(filter => {
         if (filter.type === 'checkbox') {
-            filter.checked = filter.id === 'fuzzy-search'; // Keep fuzzy search enabled
+            // Keep fuzzy search enabled, ensure semantic search is unchecked
+            filter.checked = filter.id === 'fuzzy-search' ? true : false; 
         } else {
             filter.value = '';
         }

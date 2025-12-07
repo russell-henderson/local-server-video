@@ -146,7 +146,8 @@ class AdvancedSearch {
             sort_by: this.getSortBy(),
             sort_order: this.getSortOrder(),
             limit: this.getResultLimit(),
-            include_fuzzy: this.getFuzzySearchEnabled()
+            include_fuzzy: this.getFuzzySearchEnabled(),
+            semantic_threshold: this.getSemanticSearchEnabled() ? 0.7 : 0 // Pass a threshold if enabled, else 0 or null
         };
         
         // Duration filters
@@ -240,6 +241,8 @@ class AdvancedSearch {
         const duration = this.formatDuration(result.duration);
         const fileSize = this.formatFileSize(result.size);
         const rating = this.renderRating(result.rating);
+        const addedDate = result.added_date ? new Date(result.added_date).toLocaleDateString() : 'N/A';
+        const lastModified = result.last_modified ? new Date(result.last_modified).toLocaleDateString() : 'N/A';
         
         return `
             <div class="search-result-card" data-video-path="${result.video_path}">
@@ -261,6 +264,8 @@ class AdvancedSearch {
                         <span class="result-size">${fileSize}</span>
                         <span class="result-views">${result.view_count} views</span>
                         <div class="result-rating">${rating}</div>
+                        <span class="result-date">Added: ${addedDate}</span>
+                        <span class="result-date">Modified: ${lastModified}</span>
                     </div>
                     
                     <div class="result-tags">${tags}</div>
@@ -270,7 +275,7 @@ class AdvancedSearch {
                             <div class="relevance-fill" 
                                  style="width: ${result.relevance_score * 100}%"></div>
                         </div>
-                        <span class="relevance-score">${Math.round(result.relevance_score * 100)}% match</span>
+                        <span class="relevance-score">${Math.round(result.relevance_score * 100)}% match (${result.match_type})</span>
                     </div>
                 </div>
                 
@@ -411,6 +416,12 @@ class AdvancedSearch {
         const fuzzyCheckbox = document.getElementById('fuzzy-search');
         return fuzzyCheckbox ? fuzzyCheckbox.checked : true;
     }
+
+    getSemanticSearchEnabled() {
+        const semanticCheckbox = document.getElementById('semantic-search');
+        return semanticCheckbox ? semanticCheckbox.checked : false;
+    }
+    
     
     // UI state methods
     showSearchLoading() {
