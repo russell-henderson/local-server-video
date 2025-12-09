@@ -57,3 +57,14 @@ Purpose: Plan a comprehensive admin dashboard that surfaces video/gallery analyt
   - [ ] Formats/compatibility: proactive codec checks for new uploads (flag unsupported before playback), ensure WMV and WEBP handling stay tested.
   - [ ] Logging/observability: structured logs for watch events, thumbnail jobs, and FFmpeg errors; ship concise summaries into the admin dashboard.
   - [ ] Quality gates: lightweight lint/format + smoke tests (thumbnail generation, key routes up, sample video playback) in CI/dev script.
+- [ ] Future add-ons
+  - Harden backup/restore: scripted exports of DBs (video_metadata, search, cache), integrity checks, and restore docs.
+  - Formal error budgets: alert thresholds for thumbnail failures, FFmpeg exits, 5xx spikes; log rotation for thumbnail_errors.log.
+  - Access control: auth for admin routes/gallery edits; per-user favorites if multi-user arrives.
+  - Data portability: export/import for favorites, ratings, tags, gallery groups.
+  - Observability gaps: structured logs for watch/play events; request IDs across thumbnail jobs and HTTP.
+  - CDN/offload strategy: optional static offload for thumbs/images and background prewarm for new uploads.
+  - Testing: automated smoke for key routes, thumbnail generation, codec handling (wmv/webp), player hotkeys.
+  - Search resilience: handle missing/dirty metadata, add debounced reindex and safe rebuild path.
+  - Performance budgets: resource caps for background workers; graceful degradation when FFmpeg is slow.
+  - Security basics: CSRF on forms, input validation for filenames/paths, request size limits for uploads.
