@@ -16,19 +16,16 @@
         <a class="nav-link" href="{{ url_for('index') }}">Home</a>
       </li>
       <li class="nav-item">
-        <a class="nav-link" href="{{ url_for('search_page') }}">🔍 Search</a>
-      </li>
-      <li class="nav-item">
         <a class="nav-link" href="{{ url_for('random_video') }}">Random</a>
       </li>
       <li class="nav-item">
         <a class="nav-link" href="{{ url_for('tags_page') }}">Tags</a>
       </li>
       <li class="nav-item">
-        <a class="nav-link" href="{{ url_for('favorites_page') }}">⭐ Favorites</a>
+        <a class="nav-link" href="{{ url_for('favorites_page') }}">Favorites</a>
       </li>
       <li class="nav-item">
-        <a class="nav-link" href="{{ url_for('best_of') }}">🏆 Best of</a>
+        <a class="nav-link" href="{{ url_for('best_of') }}">Best of</a>
       </li>
       <li class="nav-item">
         <a class="nav-link" href="{{ url_for('gallery') }}">Gallery</a>
@@ -38,10 +35,18 @@
       </li>
     </ul>
 
-    <button id="toggle-dark-mode"
-            class="btn btn-outline-secondary ms-2"
-            title="Dark Mode (Always On)">
-      <i class="fas fa-moon"></i>
-    </button>
+    <div class="d-flex align-items-center gap-2">
+      <a class="btn btn-outline-primary px-3"
+         href="{{ url_for('random_video') }}"
+         title="Surprise me">
+        <i class="fas fa-random me-1"></i>
+        Random
+      </a>
+      <button id="toggle-dark-mode"
+              class="btn btn-outline-secondary"
+              title="Dark Mode (Always On)">
+        <i class="fas fa-moon"></i>
+      </button>
+    </div>
   </div>
 </nav>

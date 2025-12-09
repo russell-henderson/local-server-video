@@ -34,10 +34,6 @@ class ServerConfig:
     enable_thumbnails: bool = True
     thumbnail_quality: int = 85
     
-    # Search settings
-    search_enabled: bool = True
-    search_index_on_startup: bool = True
-    
     # Monitoring settings
     enable_analytics: bool = True
     log_level: str = "INFO"
@@ -95,6 +91,10 @@ class ConfigManager:
         
         # 3. Override with environment variables
         config_data.update(self._load_env_vars())
+
+        # Drop deprecated keys that no longer exist in ServerConfig
+        for deprecated_key in ("search_enabled", "search_index_on_startup"):
+            config_data.pop(deprecated_key, None)
         
         # Create config object with validation
         try:
@@ -202,8 +202,6 @@ class ConfigManager:
                 'max_cache_size': config.max_cache_size,
                 'enable_thumbnails': config.enable_thumbnails,
                 'thumbnail_quality': config.thumbnail_quality,
-                'search_enabled': config.search_enabled,
-                'search_index_on_startup': config.search_index_on_startup,
                 'enable_analytics': config.enable_analytics,
                 'enable_perf_log': config.enable_perf_log,
                 'log_level': config.log_level,

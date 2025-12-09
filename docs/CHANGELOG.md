@@ -1,13 +1,17 @@
-# Changelog
+# CHANGELOG
 
-All notable changes to this project will be documented in this file.
+## 2025-12-09
 
-## v1.02 — 2025-11-09
+### Gallery UX and Favorites
+- Added favorites hearts to all gallery images (loose and grouped) with a Favorites filter that aggregates every favorited item.
+- Simplified gallery tiles by removing filename overlays for a cleaner visual grid.
+- Updated lightbox and selection handling to respect favorites filtering and maintain correct navigation/selection ranges.
 
-- Fixed
-  - No runtime code changes. Archival/tracker documents left unchanged to preserve historical traceability.
-- Docs
-  - Validated and confirmed integrity of internal doc index and all links referenced from archival and tracker docs.
-  - Confirmed non-active references remain in archival folders (no updates performed).
+## 2025-12-07
 
-Rationale: references discovered during the audit only live in archival and tracker documents; updating them would alter historical reports. These files are intentionally frozen for audit purposes.
+### Search Enhancements
+
+- **Automated Search Re-indexing**: Real-time updates for video metadata, ensuring search results are always current.
+- **Advanced Search Filters**: Added filters for duration, rating, and date to refine search queries.
+- **Semantic Search Integration**: Introduced AI-powered semantic search capabilities using embeddings and a new AI gateway (mocked for now).
+- **Improved Search UI**: Enhanced the user interface for search results, including new filter options and better display of video metadata and relevance.

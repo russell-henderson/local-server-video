@@ -38,6 +38,7 @@
     <span class="time-display" data-time>
       <span data-current-time>0:00</span> / <span data-duration>0:00</span>
     </span>
+    <span class="time-preview small text-muted" data-preview>Seek: 0:00</span>
     
     <!-- Mute button -->
     <button data-action="mute" aria-label="Mute" title="Mute (M)">
@@ -55,6 +56,18 @@
       aria-label="Volume"
       title="Volume (↑/↓)"
     />
+
+    <!-- Speed controls -->
+    <div class="speed-controls ms-2" aria-label="Playback speed">
+      <button data-action="speed-down" title="Slow down ([)">-</button>
+      <span data-speed-display title="Current speed">1.0x</span>
+      <button data-action="speed-up" title="Speed up (])">+</button>
+    </div>
+
+    <!-- Loop toggle -->
+    <button data-action="loop" aria-pressed="false" title="Toggle loop (B)">
+      Loop
+    </button>
     
     <!-- Player controls (no subtitle system) -->
 

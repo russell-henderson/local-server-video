@@ -18,12 +18,26 @@ body {
   top: 0;
   z-index: 1020;
   background: var(--navbar-bg) !important;
-  transition: background 0.3s;
+  transition: background 0.3s, box-shadow 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }
 
 .navbar-nav .nav-link,
 .btn-outline-primary {
   transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.navbar-nav .nav-link {
+  padding: 0.55rem 0.9rem;
+  border-radius: 0.6rem;
+  color: var(--navbar-text);
+  letter-spacing: 0.01em;
+}
+
+.navbar-nav .nav-link:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
 }
 
 .navbar-nav .nav-link:hover,
@@ -32,8 +46,14 @@ body {
 }
 
 .navbar-nav .nav-link.active {
-  font-weight: bold;
+  font-weight: 700;
   border-bottom: 2px solid var(--primary-color);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.navbar-brand {
+  letter-spacing: 0.12em;
+  font-weight: 800;
 }
 
 /* ––––– Video Cards ––––– */
@@ -193,6 +213,48 @@ body {
   font-size: 0.75rem;
 }
 
+/* --- Tag Index Grid --- */
+.tags-hero {
+  background: linear-gradient(135deg, rgba(0,0,0,0.35), rgba(0,0,0,0.15));
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 1.75rem 1rem;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+}
+
+.tag-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 18px 14px;
+}
+
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-color);
+  text-decoration: none;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  border: 1px solid rgba(255,255,255,0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.tag-chip:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+}
+
+.tag-chip .hash {
+  color: var(--accent-color);
+  font-weight: 800;
+}
+
 /* ––––– Sorting Links ––––– */
 .sorting-links a {
   margin: 0 0.5rem;
@@ -274,6 +336,28 @@ body {
   background: rgba(255, 255, 255, 1);
   color: #000;
   transform: scale(1.1);
+}
+
+.player-controls .speed-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 6px;
+}
+
+.player-controls .speed-controls span[data-speed-display] {
+  min-width: 48px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.player-controls button.active {
+  background: rgba(255, 255, 255, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.time-preview {
+  min-width: 90px;
 }
 
 .player-controls input[type="range"] {

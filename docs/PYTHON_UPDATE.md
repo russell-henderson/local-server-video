@@ -202,17 +202,9 @@ These are **lightweight compatibility stubs** that prevent ImportError but provi
 
 ---
 
-#### 14. **search_engine.py** (531 lines)
+#### 14. **search_engine.py** (removed)
 
-- **Purpose:** Advanced search with FTS5 (Full-Text Search 5), fuzzy matching
-- **Function:** Provides search database and advanced filtering
-- **Features:**
-  - SQLite FTS5 virtual tables
-  - Fuzzy matching with relevance scoring
-  - Tag-based filtering
-  - Search history and analytics
-  - Multiple sort options (relevance, name, date, rating, duration, views)
-- **Used By:** `main.py` has `/api/search` endpoint referencing search functionality
+- Removed along with the search/LLM features; related endpoints were deleted from `main.py`.
 - **Database:** `video_search.db` (separate from main metadata DB)
 - **Status:** ✅ **LIKELY KEEP** - Search API exists in main.py
 
@@ -251,11 +243,10 @@ git commit -m "chore: remove deprecated subtitle and maintenance stub files"
 - If No → Consider moving to `tools/` or `docs/archive/`
 - Current Status: Not imported by main.py, likely utility script
 
-**search_engine.py (531 lines):**
+**search_engine.py (removed):**
 
-- Status: Appears active (API endpoints in main.py)
-- Current Action: KEEP (verify API endpoints work)
-- Current Status: Not imported by main.py, but `/api/search` routes exist
+- Status: Removed with search/LLM features
+- Current Action: None
 
 ---
 
@@ -268,7 +259,7 @@ git commit -m "chore: remove deprecated subtitle and maintenance stub files"
 | database_migration.py | 811 | 🟢 Active | **KEEP** | Database authority |
 | file_watcher.py | 402 | 🟢 Active | **KEEP** | File monitoring |
 | performance_monitor.py | 303 | 🟢 Active | **KEEP** | Performance tracking |
-| search_engine.py | 531 | 🟢 Active | **KEEP** | Search functionality |
+| search_engine.py | — | ✅ Removed | **DONE** | Search/LLM functionality retired |
 | thumbnail_manager.py | 272 | 🟢 Active | **KEEP** | Thumbnail generation |
 | healthcheck.py | 886 | ❓ Utility | **REVIEW** | May be unused or should move to `tools/` |
 | **app_subs_integration.py** | ~20 | ✅ Removed | **DONE** | No-op stub, no imports found |
@@ -289,13 +280,12 @@ git commit -m "chore: remove deprecated subtitle and maintenance stub files"
 4. ✅ Preserved 8 active Python files in root:
    - Core: `config.py`, `cache_manager.py`, `database_migration.py`
    - Performance: `performance_monitor.py`, `thumbnail_manager.py`
-   - Monitoring: `file_watcher.py`, `search_engine.py`
+   - Monitoring: `file_watcher.py`
    - Utilities: `healthcheck.py` (pending review)
 
 ### Future Considerations
 
 - Review `healthcheck.py` usage: Is it actively used for monitoring or should it move to `tools/`?
-- Consider whether search_engine.py should be imported by main.py or managed as external utility
 - Monitor root directory for new files and keep documentation up-to-date
 
 ---
@@ -309,4 +299,3 @@ git commit -m "chore: remove deprecated subtitle and maintenance stub files"
 - Database and cache systems are tightly coupled; keep both together
 - Thumbnail and file watcher are critical for video discovery and performance
 - Root directory now contains only 10 essential Python files (down from 15 originally)
-

@@ -20,7 +20,6 @@ from typing import Any, Dict, List, Optional
 from functools import wraps
 
 # Import search engine
-from search_engine import get_search_engine
 
 # Try to import database backend
 try:
@@ -67,9 +66,6 @@ class VideoCache:
         self._popular_tags: List[Dict[str, Any]] = []
         self._popular_tag_cache_limit = 200
 
-        # Initialize search engine
-        self.search_engine = get_search_engine()
-                
         # Cache timestamps
         self._last_refresh: Dict[str, float] = {
             'ratings': 0.0,
@@ -294,102 +290,6 @@ class VideoCache:
 
             return self._video_list.copy()
     
-    def get_video_metadata_for_search(self, video_filename: str) -> Optional[Dict]:
-        """
-        Retrieves comprehensive metadata for a video, suitable for the search engine.
-        This includes all fields the search engine uses for indexing.
-        """
-        with self._lock:
-            if not self.use_database or not self.db:
-                # Fallback for JSON-only or DB-less mode, get what's available
-                metadata = self.get_video_metadata(video_filename) # Basic metadata
-                if metadata:
-                    metadata['description'] = '' # Default empty description
-                    metadata['performer_names'] = [] # Default empty performers
-                    metadata['file_size'] = os.path.getsize(os.path.join(self.video_dir, video_filename)) if os.path.exists(os.path.join(self.video_dir, video_filename)) else 0
-                    metadata['duration'] = 0 # Placeholder, actual duration needs to be extracted elsewhere
-                    metadata['date_added'] = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(os.path.getctime(os.path.join(self.video_dir, video_filename)))) if os.path.exists(os.path.join(self.video_dir, video_filename)) else ''
-                    metadata['last_modified'] = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(os.path.getmtime(os.path.join(self.video_dir, video_filename)))) if os.path.exists(os.path.join(self.video_dir, video_filename)) else ''
-                return metadata
-            
-            # Use database to get full metadata
-            video_data = self.db.get_video_by_filename(video_filename)
-            if not video_data:
-                return None
-            
-            # Convert database row to a dictionary with all required fields for search engine
-            metadata = {
-                'filename': video_data.get('filename'),
-                'video_path': os.path.join(self.video_dir, video_data.get('filename')), # Construct full path
-                'title': video_data.get('title') or video_data.get('filename'),
-                'tags': self.db.get_video_tags(video_filename), # Get tags from db
-                'description': video_data.get('description', ''),
-                'performer_names': self.db.get_video_performers(video_filename), # Assuming a method to get performers
-                'duration': video_data.get('duration', 0),
-                'file_size': video_data.get('file_size', 0),
-                'view_count': video_data.get('views', 0),
-                'rating': video_data.get('rating', 0.0),
-                'date_added': video_data.get('added_date', ''),
-                'last_modified': video_data.get('last_modified', '')
-            }
-            return metadata
-
-    def get_video_metadata_for_search(self, video_filename: str) -> Optional[Dict]:
-        """
-        Retrieves comprehensive metadata for a video, suitable for the search engine.
-        This includes all fields the search engine uses for indexing.
-        """
-        with self._lock:
-            video_path = os.path.join(self.video_dir, video_filename)
-
-            if not self.use_database or not self.db:
-                # Fallback for JSON-only or DB-less mode
-                metadata = self.get_video_metadata(video_filename) # Basic metadata from cache
-                if metadata:
-                    # Enrich with defaults or filesystem info
-                    metadata['video_path'] = video_path
-                    metadata['title'] = metadata.get('filename') # Use filename as title if not explicit
-                    metadata['description'] = '' # Not available in JSON fallback
-                    metadata['performer_names'] = [] # Not available in JSON fallback
-                    
-                    if os.path.exists(video_path):
-                        metadata['file_size'] = os.path.getsize(video_path)
-                        metadata['date_added'] = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(os.path.getctime(video_path)))
-                        metadata['last_modified'] = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(os.path.getmtime(video_path)))
-                    else:
-                        metadata['file_size'] = 0
-                        metadata['date_added'] = ''
-                        metadata['last_modified'] = ''
-                    
-                    # Ensure duration is present, though likely 0 if not extracted
-                    metadata['duration'] = metadata.get('duration', 0)
-                    metadata['view_count'] = metadata.get('views', 0) # Map 'views' to 'view_count'
-                    metadata['rating'] = metadata.get('rating', 0.0)
-                return metadata
-            
-            # Use database to get full metadata
-            video_data = self.db.get_video_by_filename(video_filename)
-            if not video_data:
-                return None
-            
-            # Convert database row to a dictionary with all required fields for search engine
-            # Note: description and performer_names are not in video_metadata.db, so they are default empty.
-            metadata = {
-                'filename': video_data.get('filename'),
-                'video_path': video_path,
-                'title': video_data.get('title') or video_data.get('filename'), # Use title if present, else filename
-                'tags': video_data.get('tags', []), # get_video_by_filename already returns tags
-                'description': '', # Not present in current database schema
-                'performer_names': [], # Not present in current database schema
-                'duration': video_data.get('duration', 0), # Duration is in videos table
-                'file_size': video_data.get('file_size', 0),
-                'view_count': video_data.get('views', 0),
-                'rating': video_data.get('rating', 0.0),
-                'date_added': time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(video_data.get('added_date', 0))) if video_data.get('added_date') else '',
-                'last_modified': time.strftime('%Y-%m-%d %H:%M:%S') # Database has updated_at trigger for videos, but get_video_by_filename doesn't expose it. Defaulting to current time for consistency or should be fetched from os.path.getmtime if possible/relevant
-            }
-            return metadata
-
     def get_video_metadata(self, video_filename: str) -> Optional[Dict]:
         """Get cached video metadata or compute it"""
         with self._lock:
@@ -413,56 +313,52 @@ class VideoCache:
             
             return self._video_metadata[video_filename].copy()
 
-        def get(self, key: str, force_refresh: bool = False):
-            """Generic getter to support legacy cache.get(...) usage.
+    def get(self, key: str, force_refresh: bool = False):
+        """Generic getter to support legacy cache.get(...) usage.
 
-            Supports keys like:
-              - 'all_videos', 'video_list', 'ratings', 'views', 'tags', 'favorites'
-              - 'tags_<filename>', 'views_<filename>', 'rating_<filename>'
-            """
-            # Allow forcing a refresh of specific caches
-            if force_refresh:
-                base = key
-                if '_' in key:
-                    base = key.split('_', 1)[0]
-                if base in self._last_refresh:
-                    self._last_refresh[base] = 0
+        Supports keys like:
+          - 'all_videos', 'video_list', 'ratings', 'views', 'tags', 'favorites'
+          - 'tags_<filename>', 'views_<filename>', 'rating_<filename>'
+        """
+        if force_refresh:
+            base = key.split('_', 1)[0]
+            if base in self._last_refresh:
+                self._last_refresh[base] = 0
 
-            if key == 'all_videos':
-                return self.get_all_video_data()
-            if key == 'video_list':
-                return self.get_video_list()
-            if key == 'ratings':
-                return self.get_ratings()
-            if key == 'views':
-                return self.get_views()
-            if key == 'tags':
-                return self.get_tags()
-            if key == 'favorites':
-                return self.get_favorites()
+        if key == 'all_videos':
+            return self.get_all_video_data()
+        if key == 'video_list':
+            return self.get_video_list()
+        if key == 'ratings':
+            return self.get_ratings()
+        if key == 'views':
+            return self.get_views()
+        if key == 'tags':
+            return self.get_tags()
+        if key == 'favorites':
+            return self.get_favorites()
 
-            # Pattern keys
-            if key.startswith('tags_'):
-                filename = key[len('tags_'):]
-                return self.get_tags().get(filename, [])
-            if key.startswith('views_'):
-                filename = key[len('views_'):]
-                return self.get_views().get(filename, 0)
-            if key.startswith('rating_'):
-                filename = key[len('rating_'):]
-                return self.get_ratings().get(filename, 0)
+        if key.startswith('tags_'):
+            filename = key[len('tags_'):]
+            return self.get_tags().get(filename, [])
+        if key.startswith('views_'):
+            filename = key[len('views_'):]
+            return self.get_views().get(filename, 0)
+        if key.startswith('rating_'):
+            filename = key[len('rating_'):]
+            return self.get_ratings().get(filename, 0)
 
-            return None
+        return None
 
-        @property
-        def last_refresh(self) -> Dict[str, float]:
-            """Expose last refresh timestamps for admin endpoints"""
-            with self._lock:
-                return self._last_refresh.copy()
+    @property
+    def last_refresh(self) -> Dict[str, float]:
+        """Expose last refresh timestamps for admin endpoints."""
+        with self._lock:
+            return self._last_refresh.copy()
 
-        def is_cache_valid(self, key: str) -> bool:
-            """Public wrapper to check cache validity"""
-            return self._is_cache_valid(key)
+    def is_cache_valid(self, key: str) -> bool:
+        """Public wrapper to check cache validity."""
+        return self._is_cache_valid(key)
     
     def update_rating(self, filename: str, rating: int):
         """Update rating with write-through cache"""
@@ -476,11 +372,6 @@ class VideoCache:
                 # Save to JSON
                 self._save_json_file(self.ratings_file, self._ratings)
             
-            # Trigger search engine re-index for this video
-            full_metadata = self.get_video_metadata_for_search(filename)
-            if full_metadata:
-                full_metadata['rating'] = rating
-                self.search_engine.index_video(os.path.join(self.video_dir, filename), full_metadata)
     
     def update_view(self, filename: str):
         """Increment view count with write-through cache"""
@@ -495,12 +386,6 @@ class VideoCache:
                 self._views[filename] = current_views
                 self._save_json_file(self.views_file, self._views)
                 new_count = current_views
-            
-            # Trigger search engine re-index for this video
-            full_metadata = self.get_video_metadata_for_search(filename)
-            if full_metadata:
-                full_metadata['view_count'] = new_count
-                self.search_engine.index_video(os.path.join(self.video_dir, filename), full_metadata)
             
             return new_count
     
@@ -520,12 +405,6 @@ class VideoCache:
                 # Save to JSON
                 self._save_json_file(self.tags_file, self._tags)
             
-            # Trigger search engine re-index for this video
-            full_metadata = self.get_video_metadata_for_search(filename)
-            if full_metadata:
-                full_metadata['tags'] = tags
-                self.search_engine.index_video(os.path.join(self.video_dir, filename), full_metadata)
-
             # Popular tags depend on overall usage counts
             self.invalidate_popular_tags()
     
@@ -626,9 +505,9 @@ class VideoCache:
         removed_videos = existing_videos - set(video_list)
         
         if new_videos:
-            print(f"[SYNC] Adding {len(new_videos)} new videos to database and search index...")
+            print(f"[SYNC] Adding {len(new_videos)} new videos to database...")
             
-            # Add new videos to database and search index
+            # Add new videos to database
             try:
                 for video_filename in new_videos:
                     video_path = os.path.join(self.video_dir, video_filename)
@@ -648,18 +527,13 @@ class VideoCache:
                             """, (video_filename, added_date, file_size))
                             conn.commit()
                         
-                        # Index new video in search engine
-                        full_metadata = self.get_video_metadata_for_search(video_filename)
-                        if full_metadata:
-                            self.search_engine.index_video(video_path, full_metadata)
-                        
-                        print(f"[OK] Added {video_filename} to database and search index")
+                        print(f"[OK] Added {video_filename} to database")
                 
             except Exception as e:
-                print(f"[ERROR] Error adding videos to database/search index: {e}")
+                print(f"[ERROR] Error adding videos to database: {e}")
         
         if removed_videos:
-            print(f"[SYNC] Removing {len(removed_videos)} videos missing on disk from database and search index...")
+            print(f"[SYNC] Removing {len(removed_videos)} videos missing on disk from database...")
             try:
                 with self.db.get_connection() as conn:
                     conn.executemany(
@@ -667,14 +541,10 @@ class VideoCache:
                         ((video,) for video in removed_videos)
                     )
                     conn.commit()
-                
-                # Remove from search index
                 for video_filename in removed_videos:
-                    video_path = os.path.join(self.video_dir, video_filename)
-                    self.search_engine.remove_video(video_path)
-                    print(f"[OK] Removed {video_filename} from database and search index")
+                    print(f"[OK] Removed {video_filename} from database")
             except Exception as e:
-                print(f"[ERROR] Error removing videos from database/search index: {e}")
+                print(f"[ERROR] Error removing videos from database: {e}")
 
     def get_all_video_data(self, sort_by: str = 'date',
                            reverse: bool = True) -> List[Dict]:
@@ -739,21 +609,46 @@ class VideoCache:
             current_tags = all_tags.get(filename, [])
             if not current_tags:
                 return []
-            
+
             current_tags_set = set(current_tags)
-            related_videos = []
-            
+            related_videos: List[Dict] = []
+
+            # Heuristic scoring to make recommendations feel smarter without DB support
             for video, video_tags in all_tags.items():
-                if video != filename:
-                    overlap = len(current_tags_set & set(video_tags))
-                    if overlap > 0:
-                        metadata = self.get_video_metadata(video)
-                        if metadata:
-                            metadata['tag_overlap'] = overlap
-                            related_videos.append(metadata)
-            
-            # Sort by overlap, then by rating
-            related_videos.sort(key=lambda x: (x.get('tag_overlap', 0), x['rating']), reverse=True)
+                if video == filename:
+                    continue
+                overlap = len(current_tags_set & set(video_tags))
+                if overlap <= 0:
+                    continue
+
+                metadata = self.get_video_metadata(video)
+                if not metadata:
+                    continue
+
+                rating = float(metadata.get('rating', 0) or 0)
+                views = int(metadata.get('views', 0) or 0)
+                recency = float(metadata.get('added_date', 0) or 0)
+
+                score = (
+                    overlap * 3.0
+                    + rating * 0.6
+                    + min(views, 5000) / 500.0
+                    + (recency / 1e9) * 0.1  # lightweight bias toward newer items
+                )
+
+                metadata['tag_overlap'] = overlap
+                metadata['related_score'] = score
+                related_videos.append(metadata)
+
+            related_videos.sort(
+                key=lambda x: (
+                    x.get('related_score', 0),
+                    x.get('tag_overlap', 0),
+                    x.get('rating', 0),
+                    x.get('views', 0),
+                ),
+                reverse=True,
+            )
             return related_videos[:limit]
     
     def get_all_unique_tags(self) -> List[str]:

@@ -16,12 +16,22 @@ class VideoPlayer {
     this.fwdBtn = root.querySelector('[data-action="fwd10"]');
     this.muteBtn = root.querySelector('[data-action="mute"]');
     this.fullscreenBtn = root.querySelector('[data-action="fullscreen"]');
+    this.speedDownBtn = root.querySelector('[data-action="speed-down"]');
+    this.speedUpBtn = root.querySelector('[data-action="speed-up"]');
+    this.loopBtn = root.querySelector('[data-action="loop"]');
     
     this.seekBar = root.querySelector('[data-role="seek"]');
     this.volumeBar = root.querySelector('[data-role="volume"]');
     
     this.currentTimeEl = root.querySelector('[data-current-time]');
     this.durationEl = root.querySelector('[data-duration]');
+    this.previewEl = root.querySelector('[data-preview]');
+    this.speedDisplay = root.querySelector('[data-speed-display]');
+
+    this.playbackRate = 1.0;
+    this.speedSteps = [0.75, 1.0, 1.25, 1.5, 2.0];
+    this.loopStart = null;
+    this.loopEnd = null;
     
     this.init();
   }
@@ -48,8 +58,14 @@ class VideoPlayer {
     this.fwdBtn.addEventListener('click', () => this.skipForward());
     this.muteBtn.addEventListener('click', () => this.toggleMute());
     this.fullscreenBtn.addEventListener('click', () => this.toggleFullscreen());
+    if (this.speedDownBtn) this.speedDownBtn.addEventListener('click', () => this.adjustSpeed(-1));
+    if (this.speedUpBtn) this.speedUpBtn.addEventListener('click', () => this.adjustSpeed(1));
+    if (this.loopBtn) this.loopBtn.addEventListener('click', () => this.toggleLoop());
     
     this.seekBar.addEventListener('input', () => this.seek());
+    this.seekBar.addEventListener('pointermove', (e) => this.updatePreviewFromEvent(e));
+    this.seekBar.addEventListener('mousemove', (e) => this.updatePreviewFromEvent(e));
+    this.seekBar.addEventListener('touchmove', (e) => this.updatePreviewFromEvent(e));
     this.volumeBar.addEventListener('input', () => this.setVolume());
     
     // Save position periodically
@@ -81,6 +97,22 @@ class VideoPlayer {
         case 'f':
           e.preventDefault();
           this.toggleFullscreen();
+          break;
+        case 'b':
+          e.preventDefault();
+          this.toggleLoop();
+          break;
+        case '[':
+          e.preventDefault();
+          this.adjustSpeed(-1);
+          break;
+        case ']':
+          e.preventDefault();
+          this.adjustSpeed(1);
+          break;
+        case 'r':
+          e.preventDefault();
+          this.setSpeed(1.0);
           break;
         case 'm':
           e.preventDefault();
@@ -204,11 +236,14 @@ class VideoPlayer {
     this.seekBar.value = progress || 0;
     
     this.currentTimeEl.textContent = this.formatTime(this.video.currentTime);
+    this.updatePreviewDisplay(this.video.currentTime);
+    this.enforceLoopWindow();
   }
   
   updateDuration() {
     this.durationEl.textContent = this.formatTime(this.video.duration);
     this.seekBar.max = 100;
+    this.setSpeed(this.playbackRate);
   }
   
   formatTime(seconds) {
@@ -229,6 +264,103 @@ class VideoPlayer {
     // Clear saved position when video ends
     if (this.filename) {
       localStorage.removeItem(`video-position-${this.filename}`);
+    }
+  }
+
+  setSpeed(rate) {
+    const closest = this.speedSteps.reduce((prev, curr) =>
+      Math.abs(curr - rate) < Math.abs(prev - rate) ? curr : prev
+    );
+    this.playbackRate = closest;
+    this.video.playbackRate = closest;
+    if (this.speedDisplay) {
+      const label = `${closest.toFixed(2).replace(/0+$/, '').replace(/\.$/, '')}x`;
+      this.speedDisplay.textContent = label;
+    }
+  }
+
+  adjustSpeed(direction) {
+    const idx = this.speedSteps.findIndex(s => s === this.playbackRate);
+    let newIdx = idx === -1 ? 1 : idx + direction;
+    newIdx = Math.max(0, Math.min(this.speedSteps.length - 1, newIdx));
+    this.setSpeed(this.speedSteps[newIdx]);
+  }
+
+  toggleLoop() {
+    // Cycle through: set start -> set end -> clear
+    if (this.loopStart === null) {
+      this.loopStart = this.video.currentTime;
+      this.loopEnd = null;
+      this.video.loop = false;
+      this.updateLoopButton('start');
+      return;
+    }
+
+    if (this.loopEnd === null) {
+      let end = this.video.currentTime;
+      if (end <= this.loopStart + 0.5) {
+        end = this.loopStart + 1;
+      }
+      const duration = this.video.duration || end;
+      this.loopEnd = Math.min(duration, end);
+      this.video.loop = false;
+      this.updateLoopButton('ab');
+      return;
+    }
+
+    // Clear loop
+    this.loopStart = null;
+    this.loopEnd = null;
+    this.video.loop = false;
+    this.updateLoopButton('off');
+  }
+
+  updatePreviewFromEvent(evt) {
+    if (!this.previewEl || !this.video.duration) return;
+    const rect = this.seekBar.getBoundingClientRect();
+    const clientX = evt.clientX || (evt.touches && evt.touches[0] && evt.touches[0].clientX);
+    if (!clientX && clientX !== 0) return;
+    const percent = (clientX - rect.left) / rect.width;
+    const clamped = Math.max(0, Math.min(1, percent));
+    const time = clamped * this.video.duration;
+    this.updatePreviewDisplay(time);
+  }
+
+  updatePreviewDisplay(seconds) {
+    if (this.previewEl) {
+      this.previewEl.textContent = `Seek: ${this.formatTime(seconds)}`;
+    }
+  }
+
+  updateLoopButton(state) {
+    if (!this.loopBtn) return;
+    switch (state) {
+      case 'start':
+        this.loopBtn.textContent = 'Loop A…';
+        this.loopBtn.title = 'Set loop end (B)';
+        this.loopBtn.setAttribute('aria-pressed', 'true');
+        this.loopBtn.classList.add('active');
+        break;
+      case 'ab':
+        this.loopBtn.textContent = 'Loop A-B';
+        this.loopBtn.title = 'Loop section (click to clear)';
+        this.loopBtn.setAttribute('aria-pressed', 'true');
+        this.loopBtn.classList.add('active');
+        break;
+      default:
+        this.loopBtn.textContent = 'Loop';
+        this.loopBtn.title = 'Toggle loop (B)';
+        this.loopBtn.setAttribute('aria-pressed', 'false');
+        this.loopBtn.classList.remove('active');
+        break;
+    }
+  }
+
+  enforceLoopWindow() {
+    if (this.loopStart === null || this.loopEnd === null) return;
+    const end = this.loopEnd;
+    if (this.video.currentTime >= end - 0.05) {
+      this.video.currentTime = this.loopStart;
     }
   }
 }

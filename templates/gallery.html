@@ -27,6 +27,7 @@
     display: flex;
     align-items: center;
     gap: 12px;
+    flex-wrap: wrap;
   }
   
   .selection-toggle-btn {
@@ -47,6 +48,31 @@
   
   .selection-toggle-btn.active {
     background: var(--accent-color);
+  }
+
+  .favorites-toggle-btn {
+    padding: 8px 16px;
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.2);
+    color: var(--text-color);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all var(--transition-fast);
+  }
+
+  .favorites-toggle-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+
+  .favorites-toggle-btn.active {
+    background: rgba(255,255,255,0.08);
+    border-color: var(--accent-color);
+    color: var(--accent-color);
   }
   
   .selection-info {
@@ -217,27 +243,60 @@
   }
   
   /* Image Gallery Items */
-  .gallery-item {
-    position: relative;
-    background: var(--card-background);
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    cursor: pointer;
-    transition: all var(--transition-fast);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  }
+.gallery-item {
+  position: relative;
+  background: var(--card-background);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
   
   .gallery-item:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   }
   
-  .gallery-item img {
-    width: 100%;
-    height: 200px;
-    object-fit: cover;
-    display: block;
-  }
+.gallery-item img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  display: block;
+}
+
+.image-fav-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0,0,0,0.55);
+  color: #fff;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  opacity: 0;
+  transition: all var(--transition-fast);
+  z-index: 11;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gallery-item:hover .image-fav-btn {
+  opacity: 1;
+}
+
+.image-fav-btn.active {
+  background: #e63972;
+  opacity: 1;
+}
+
+.image-fav-btn i {
+  pointer-events: none;
+}
+
   
   .gallery-item-checkbox {
     position: absolute;
@@ -270,28 +329,6 @@
     outline-offset: -3px;
   }
   
-  .gallery-item-overlay {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
-    padding: 12px;
-    transform: translateY(100%);
-    transition: transform var(--transition-normal);
-  }
-  
-  .gallery-item:hover .gallery-item-overlay {
-    transform: translateY(0);
-  }
-  
-  .gallery-item-title {
-    color: white;
-    font-size: 0.85rem;
-    margin: 0;
-    word-break: break-word;
-  }
-  
   /* Lightbox */
   .lightbox {
     display: none;
@@ -315,13 +352,44 @@
     max-width: 90vw;
     max-height: 90vh;
     position: relative;
+    background: rgba(15, 15, 15, 0.9);
+    padding: 16px;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
   }
   
   .lightbox-content img {
     max-width: 100%;
-    max-height: 90vh;
+    max-height: 72vh;
     object-fit: contain;
+    border-radius: 10px;
   }
+
+  .lightbox-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0, 0, 0, 0.4);
+    color: #fff;
+    border: none;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    transition: background 0.2s ease, transform 0.2s ease;
+  }
+
+  .lightbox-nav:hover {
+    background: rgba(0, 0, 0, 0.6);
+    transform: translateY(-50%) scale(1.05);
+  }
+
+  .lightbox-nav.prev { left: -56px; }
+  .lightbox-nav.next { right: -56px; }
   
   .lightbox-close {
     position: absolute;
@@ -343,6 +411,56 @@
   
   .lightbox-close:hover {
     background: rgba(255, 255, 255, 0.3);
+  }
+
+  .lightbox-actions {
+    margin-top: 16px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+    align-items: center;
+  }
+
+  .lightbox-actions select,
+  .lightbox-actions input {
+    padding: 6px 10px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    color: white;
+    min-width: 180px;
+    height: 38px;
+  }
+
+  .lightbox-actions button {
+    padding: 10px 14px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    color: #fff;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+
+  .lightbox-actions button:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+
+  .lightbox-actions .primary {
+    background: var(--accent-color);
+  }
+
+  .lightbox-actions .secondary {
+    background: #2fa36b;
+  }
+
+  @media (max-width: 640px) {
+    .lightbox-content {
+      padding: 12px;
+    }
+    .lightbox-actions {
+      grid-template-columns: 1fr;
+    }
   }
   
   /* Empty State */
@@ -418,7 +536,10 @@
     <h1 class="mb-0">Gallery</h1>
     <div class="gallery-controls">
       <button class="selection-toggle-btn" id="selectionToggle">
-        📋 Selection Mode
+        Selection Mode
+      </button>
+      <button class="favorites-toggle-btn" id="favoritesToggle">
+        <i class="fas fa-heart"></i> Favorites
       </button>
       <span class="selection-info" id="selectionInfo">
         Selected: <strong id="selectedCount">0</strong>
@@ -467,26 +588,45 @@
       <!-- Image cards will be inserted here by JavaScript -->
     </div>
   </div>
-  
+
   <!-- Lightbox -->
-  <div class="lightbox" id="lightbox">
-    <button class="lightbox-close" id="lightboxClose">&times;</button>
-    <div class="lightbox-content">
-      <img id="lightboxImage" src="" alt="">
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" id="lightboxClose">&times;</button>
+  <div class="lightbox-content">
+    <button class="lightbox-nav prev" id="lightboxPrev" aria-label="Previous image">
+      <i class="fas fa-chevron-left"></i>
+    </button>
+    <button class="lightbox-nav next" id="lightboxNext" aria-label="Next image">
+      <i class="fas fa-chevron-right"></i>
+    </button>
+    <img id="lightboxImage" src="" alt="">
+    <div class="lightbox-actions">
+      <select id="lightboxGroupSelect">
+        <option value="">Add to group...</option>
+      </select>
+      <button class="primary" id="lightboxAddToGroupBtn" disabled>Add</button>
+      <input type="text" id="lightboxNewGroupName" placeholder="New group name">
+      <button class="secondary" id="lightboxCreateGroupBtn" disabled>Create</button>
     </div>
   </div>
+</div>
 </div>
 
 <script>
 // Gallery State
 let selectionMode = false;
+let showFavoritesOnly = false;
 let selectedImages = new Set();
+let favoriteImages = new Set(loadFavoriteImages());
 let allGroups = [];
 let allImages = {{ images|tojson }};
+let fullImageListAll = [...allImages]; // includes grouped images once fetched
+let currentRenderList = [];
 let lastSelectedIndex = null;
 
 // DOM Elements
 const selectionToggle = document.getElementById('selectionToggle');
+const favoritesToggle = document.getElementById('favoritesToggle');
 const selectionInfo = document.getElementById('selectionInfo');
 const selectionActions = document.getElementById('selectionActions');
 const selectedCount = document.getElementById('selectedCount');
@@ -500,13 +640,40 @@ const clearSelectionBtn = document.getElementById('clearSelectionBtn');
 const lightbox = document.getElementById('lightbox');
 const lightboxImage = document.getElementById('lightboxImage');
 const lightboxClose = document.getElementById('lightboxClose');
+const lightboxGroupSelect = document.getElementById('lightboxGroupSelect');
+const lightboxAddToGroupBtn = document.getElementById('lightboxAddToGroupBtn');
+const lightboxNewGroupName = document.getElementById('lightboxNewGroupName');
+const lightboxCreateGroupBtn = document.getElementById('lightboxCreateGroupBtn');
+let lightboxCurrentImage = null;
+let lightboxCurrentIndex = -1;
+const lightboxPrev = document.getElementById('lightboxPrev');
+const lightboxNext = document.getElementById('lightboxNext');
 
 // Initialize
 async function init() {
   await loadGroups();
+  await loadAllImages();
   renderGroups();
   renderImages();
   setupEventListeners();
+}
+
+// Fetch all gallery images (including those in groups) for favorites view
+async function loadAllImages() {
+  try {
+    const resp = await fetch('/api/gallery');
+    const data = await resp.json();
+    if (Array.isArray(data.images)) {
+      fullImageListAll = [...data.images].sort().reverse();
+      // If currently showing favorites, re-render to include grouped favorites
+      if (showFavoritesOnly) {
+        renderImages();
+      }
+    }
+  } catch (err) {
+    console.error('Failed to load full image list for favorites', err);
+    fullImageListAll = [...allImages];
+  }
 }
 
 // Load groups from API
@@ -529,6 +696,15 @@ function updateGroupSelect() {
     option.value = group.id;
     option.textContent = `${group.name} (${group.image_count} images)`;
     existingGroupSelect.appendChild(option);
+  });
+
+  // Lightbox select mirrors existing groups
+  lightboxGroupSelect.innerHTML = '<option value="">Add to group...</option>';
+  allGroups.forEach(group => {
+    const option = document.createElement('option');
+    option.value = group.id;
+    option.textContent = `${group.name} (${group.image_count} images)`;
+    lightboxGroupSelect.appendChild(option);
   });
 }
 
@@ -572,7 +748,7 @@ function renderGroups() {
 }
 
 // Central selection handler that supports Shift ranges
-function handleSelectionClick(event, index, image) {
+function handleSelectionClick(event, index, image, renderList = currentRenderList) {
   if (!selectionMode) {
     // Fallback: open lightbox when not in selection mode
     openLightbox(image);
@@ -580,10 +756,12 @@ function handleSelectionClick(event, index, image) {
   }
 
   const isShift = event.shiftKey;
+  const list = renderList && renderList.length ? renderList : allImages;
+  const resolvedIndex = index ?? list.indexOf(image);
 
   if (isShift && lastSelectedIndex !== null) {
-    const start = Math.min(lastSelectedIndex, index);
-    const end = Math.max(lastSelectedIndex, index);
+    const start = Math.min(lastSelectedIndex, resolvedIndex);
+    const end = Math.max(lastSelectedIndex, resolvedIndex);
 
     const clickedIsSelected = selectedImages.has(image);
     const shouldSelect = !clickedIsSelected;
@@ -591,7 +769,7 @@ function handleSelectionClick(event, index, image) {
     console.log('Shift range selection', { start, end, shouldSelect });
 
     for (let i = start; i <= end; i++) {
-      const name = allImages[i];
+      const name = list[i];
       if (shouldSelect) {
         selectedImages.add(name);
       } else {
@@ -605,8 +783,8 @@ function handleSelectionClick(event, index, image) {
     } else {
       selectedImages.add(image);
     }
-    lastSelectedIndex = index;
-    console.log('Single selection', { index, image, selected: selectedImages.has(image) });
+    lastSelectedIndex = resolvedIndex;
+    console.log('Single selection', { index: resolvedIndex, image, selected: selectedImages.has(image) });
   }
 
   updateSelectionUI();
@@ -614,24 +792,30 @@ function handleSelectionClick(event, index, image) {
 
 // Render image cards
 function renderImages() {
-  if (allImages.length === 0) {
+  const baseList = showFavoritesOnly ? fullImageListAll : allImages;
+  const renderList = showFavoritesOnly
+    ? baseList.filter(img => favoriteImages.has(img))
+    : baseList;
+  currentRenderList = renderList;
+
+  if (renderList.length === 0) {
     galleryGrid.innerHTML = '<div class="empty-state"><i class="fas fa-image"></i><p>No images found in gallery.</p></div>';
     return;
   }
-  
+
   galleryGrid.innerHTML = '';
-  allImages.forEach((image, index) => {
+  renderList.forEach((image, index) => {
     const item = document.createElement('div');
     item.className = 'gallery-item';
     item.dataset.image = image;
-    
+
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
     checkbox.className = 'gallery-item-checkbox';
     checkbox.addEventListener('click', (e) => {
       // Click directly on checkbox in selection mode
       e.stopPropagation();
-      handleSelectionClick(e, index, image);
+      handleSelectionClick(e, index, image, renderList);
     });
     
     const img = document.createElement('img');
@@ -639,26 +823,29 @@ function renderImages() {
     img.alt = image;
     img.loading = 'lazy';
     
-    const overlay = document.createElement('div');
-    overlay.className = 'gallery-item-overlay';
-    
-    const title = document.createElement('p');
-    title.className = 'gallery-item-title';
-    title.textContent = image;
-    overlay.appendChild(title);
-    
-    item.appendChild(checkbox);
-    item.appendChild(img);
-    item.appendChild(overlay);
-    
-    item.onclick = (e) => {
-      // Ignore direct clicks on the checkbox itself
-      if (e.target === checkbox) {
-        return;
-      }
-      handleSelectionClick(e, index, image);
+    const favBtn = document.createElement('button');
+    favBtn.className = 'image-fav-btn';
+    favBtn.innerHTML = '<i class="fas fa-heart"></i>';
+    if (favoriteImages.has(image)) {
+      favBtn.classList.add('active');
+    }
+    favBtn.onclick = (e) => {
+      e.stopPropagation();
+      toggleFavoriteImage(image, favBtn);
     };
     
+    item.appendChild(checkbox);
+    item.appendChild(favBtn);
+    item.appendChild(img);
+
+    item.onclick = (e) => {
+      // Ignore direct clicks on the checkbox itself
+      if (e.target === checkbox || e.target === favBtn || favBtn.contains(e.target)) {
+        return;
+      }
+      handleSelectionClick(e, index, image, renderList);
+    };
+
     galleryGrid.appendChild(item);
   });
 }
@@ -672,6 +859,35 @@ function toggleImageSelection(image, selected) {
   }
   
   updateSelectionUI();
+}
+
+function loadFavoriteImages() {
+  try {
+    const raw = localStorage.getItem('gallery-favorites');
+    if (!raw) return [];
+    return JSON.parse(raw);
+  } catch (e) {
+    console.error('Failed to load favorites', e);
+    return [];
+  }
+}
+
+function saveFavoriteImages() {
+  localStorage.setItem('gallery-favorites', JSON.stringify(Array.from(favoriteImages)));
+}
+
+function toggleFavoriteImage(image, btn) {
+  if (favoriteImages.has(image)) {
+    favoriteImages.delete(image);
+    btn.classList.remove('active');
+  } else {
+    favoriteImages.add(image);
+    btn.classList.add('active');
+  }
+  saveFavoriteImages();
+  if (showFavoritesOnly) {
+    renderImages();
+  }
 }
 
 // Update selection UI
@@ -692,7 +908,9 @@ function updateSelectionUI() {
       item.classList.remove('selection-mode');
     }
     
-    if (selectedImages.has(item.dataset.image)) {
+    const name = item.dataset.image;
+    const isSelected = selectedImages.has(name);
+    if (isSelected) {
       item.classList.add('selected');
       item.querySelector('.gallery-item-checkbox').checked = true;
     } else {
@@ -793,23 +1011,34 @@ async function addToGroup() {
 
 // Open lightbox
 function openLightbox(image) {
+  lightboxCurrentIndex = currentRenderList.indexOf(image);
   lightboxImage.src = `/gallery/image/${image}`;
+  lightboxCurrentImage = image;
   lightbox.classList.add('active');
+  lightboxAddToGroupBtn.disabled = !lightboxGroupSelect.value;
+  lightboxCreateGroupBtn.disabled = !lightboxNewGroupName.value.trim();
 }
 
 // Close lightbox
 function closeLightbox() {
   lightbox.classList.remove('active');
   lightboxImage.src = '';
+  lightboxCurrentImage = null;
+  lightboxCurrentIndex = -1;
 }
 
 // Setup event listeners
 function setupEventListeners() {
   selectionToggle.onclick = toggleSelectionMode;
+  favoritesToggle.onclick = toggleFavoritesOnly;
   createGroupBtn.onclick = createGroup;
   addToGroupBtn.onclick = addToGroup;
   clearSelectionBtn.onclick = clearSelection;
   lightboxClose.onclick = closeLightbox;
+  lightboxAddToGroupBtn.onclick = addCurrentToGroupFromLightbox;
+  lightboxCreateGroupBtn.onclick = createGroupFromLightbox;
+  lightboxPrev.onclick = showPrevImage;
+  lightboxNext.onclick = showNextImage;
   
   lightbox.onclick = (e) => {
     if (e.target === lightbox) closeLightbox();
@@ -822,6 +1051,13 @@ function setupEventListeners() {
   existingGroupSelect.onchange = () => {
     addToGroupBtn.disabled = !existingGroupSelect.value || selectedImages.size === 0;
   };
+
+  lightboxGroupSelect.onchange = () => {
+    lightboxAddToGroupBtn.disabled = !lightboxGroupSelect.value || !lightboxCurrentImage;
+  };
+  lightboxNewGroupName.oninput = () => {
+    lightboxCreateGroupBtn.disabled = !lightboxNewGroupName.value.trim() || !lightboxCurrentImage;
+  };
   
   // Keyboard shortcuts
   document.addEventListener('keydown', (e) => {
@@ -831,8 +1067,94 @@ function setupEventListeners() {
       } else if (selectionMode) {
         toggleSelectionMode();
       }
+    } else if (lightbox.classList.contains('active')) {
+      if (e.key === 'ArrowLeft') {
+        showPrevImage();
+      } else if (e.key === 'ArrowRight') {
+        showNextImage();
+      }
     }
   });
+}
+
+function toggleFavoritesOnly() {
+  showFavoritesOnly = !showFavoritesOnly;
+  lastSelectedIndex = null;
+  favoritesToggle.classList.toggle('active', showFavoritesOnly);
+  favoritesToggle.innerHTML = showFavoritesOnly
+    ? '<i class="fas fa-heart"></i> Favorites (On)'
+    : '<i class="fas fa-heart"></i> Favorites';
+  renderImages();
+}
+
+async function addCurrentToGroupFromLightbox() {
+  if (!lightboxCurrentImage) return;
+  const groupId = parseInt(lightboxGroupSelect.value);
+  if (!groupId) return;
+  try {
+    const response = await fetch(`/api/gallery/groups/${groupId}/images`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ images: [lightboxCurrentImage] })
+    });
+    if (response.ok) {
+      alert('Added to group.');
+    } else {
+      const error = await response.json();
+      alert(`Failed to add image: ${error.error}`);
+    }
+  } catch (error) {
+    console.error('Error adding to group from lightbox:', error);
+    alert('Failed to add to group. Please try again.');
+  }
+}
+
+async function createGroupFromLightbox() {
+  if (!lightboxCurrentImage) return;
+  const name = lightboxNewGroupName.value.trim();
+  if (!name) return;
+  try {
+    const response = await fetch('/api/gallery/groups', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, images: [lightboxCurrentImage], cover_image: lightboxCurrentImage })
+    });
+    if (response.ok) {
+      lightboxNewGroupName.value = '';
+      alert('Group created.');
+      await loadGroups();
+      updateGroupSelect();
+    } else {
+      const error = await response.json();
+      alert(`Failed to create group: ${error.error}`);
+    }
+  } catch (error) {
+    console.error('Error creating group from lightbox:', error);
+    alert('Failed to create group. Please try again.');
+  }
+}
+
+function showPrevImage() {
+  if (lightboxCurrentIndex <= 0) return;
+  const newIndex = lightboxCurrentIndex - 1;
+  const nextImg = currentRenderList[newIndex];
+  if (nextImg) {
+    lightboxCurrentIndex = newIndex;
+    lightboxCurrentImage = nextImg;
+    lightboxImage.src = `/gallery/image/${nextImg}`;
+  }
+}
+
+function showNextImage() {
+  if (lightboxCurrentIndex === -1) return;
+  const newIndex = lightboxCurrentIndex + 1;
+  if (newIndex >= currentRenderList.length) return;
+  const nextImg = currentRenderList[newIndex];
+  if (nextImg) {
+    lightboxCurrentIndex = newIndex;
+    lightboxCurrentImage = nextImg;
+    lightboxImage.src = `/gallery/image/${nextImg}`;
+  }
 }
 
 // Utility: Escape HTML
@@ -844,5 +1166,7 @@ function escapeHtml(text) {
 
 // Initialize on page load
 init();
+
+// Also render videos after init uses fetched groups
 </script>
 {% endblock %}

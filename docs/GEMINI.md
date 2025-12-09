@@ -2,6 +2,8 @@
 
 Last-updated: 2025-10-31
 
+> Note: The LLM/search integration described here has been removed from the app; keep this document for historical reference only.
+
 ## Purpose
 
 Provide a short, practical roadmap and immediate todos to evaluate and add a GEMINI-style LLM capability for non-critical automation: metadata enrichment and semantic search. This document is provider-agnostic and focuses on a small, testable rollout.

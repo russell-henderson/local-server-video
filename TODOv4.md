@@ -1,0 +1,59 @@
+# TODOv4 — Admin Dashboard Checklist (Analytics Focus)
+
+Purpose: Plan a comprehensive admin dashboard that surfaces video/gallery analytics and operational health. Do not build yet; use this as implementation guidance next time.
+
+- [ ] Access & Layout
+  - [ ] Protected admin route with auth gate.
+  - [ ] Responsive dashboard shell (nav/sidebar, cards, charts, tables).
+  - [ ] Theme alignment with existing UI (dark/light awareness).
+- [ ] Video Analytics
+  - [ ] Top viewed videos (counts, time window filters).
+  - [ ] Watch time per video (total, avg per session).
+  - [ ] Completion rate distribution (25/50/75/100% buckets).
+  - [ ] Playback device breakdown (desktop/mobile/tablet if detectable).
+  - [ ] Format/codec breakdown (mp4/mkv/webm/avi/wmv).
+  - [ ] Errors per video (serve errors, missing thumbnails).
+- [ ] Engagement Metrics
+  - [ ] Ratings histogram and averages per video.
+  - [ ] Favorites list and trend over time.
+  - [ ] Tag usage frequency; top co-occurring tags.
+  - [ ] Related/recommended click-through rates.
+- [ ] Gallery Insights
+  - [ ] Group counts, sizes, and cover status.
+  - [ ] Favorites across gallery (loose + grouped).
+  - [ ] Orphaned images (loose, ungrouped) count.
+  - [ ] Most/least viewed gallery items (if tracked).
+- [ ] Search & Discovery
+  - [ ] Search query volume and zero-result queries.
+  - [ ] Average response time for search endpoints.
+  - [ ] Popular filters/sorts used.
+- [ ] Performance & Health
+  - [ ] Route latency percentiles (p50/p95/p99) for key endpoints.
+  - [ ] Thumbnail generation stats (success/fail, retry counts, queue depth).
+  - [ ] Storage usage (videos, thumbnails, images).
+  - [ ] Background worker status (executor queues).
+- [ ] Error Monitoring
+  - [ ] Surface `thumbnail_errors.log` summaries and latest entries.
+  - [ ] Recent 4xx/5xx routes with counts.
+  - [ ] FFmpeg/codec failure reasons and affected files.
+- [ ] Controls & Maintenance
+  - [ ] Manual requeue thumbnails for failed items.
+  - [ ] Clear/refresh caches (video metadata, thumbnails) with safeguards.
+  - [ ] Export analytics (CSV/JSON) per section.
+- [ ] Data Sources & Storage
+  - [ ] Identify tables/files: `video_metadata.db`, `video_search.db`, `views.json`, `ratings.json`, favorites cache, `thumbnail_errors.log`, gallery groups/images.
+  - [ ] Define lightweight aggregation jobs or on-demand queries.
+  - [ ] Persisted time-series vs. computed-on-request strategy.
+- [ ] UX/Interactions
+  - [ ] Drill-down pages for a single video/gallery item.
+  - [ ] Time-range selectors (24h/7d/30d/custom).
+  - [ ] Sortable/filterable tables with pagination.
+  - [ ] Tooltips and inline help for metrics definitions.
+- [ ] Core App Improvements (for future sprints)
+  - [ ] Player UX: finalize loop controls, add AB-repeat presets, remember per-video playback speed, and surface keyboard shortcut hints.
+  - [ ] Thumbnail pipeline: add retry/backoff, shorter timestamp fallback for short clips, surface failures in admin dashboard, and expose a “requeue failed” action.
+  - [ ] Recommendations/Tags: tighten related-video logic (shared tags + duration proximity) and add tag weight/recency tuning; ensure tag editor shows top-used suggestions.
+  - [ ] Gallery: optional server-side favorites store (so hearts roam across devices), plus a one-click “add to favorites” from lightbox and group views.
+  - [ ] Formats/compatibility: proactive codec checks for new uploads (flag unsupported before playback), ensure WMV and WEBP handling stay tested.
+  - [ ] Logging/observability: structured logs for watch events, thumbnail jobs, and FFmpeg errors; ship concise summaries into the admin dashboard.
+  - [ ] Quality gates: lightweight lint/format + smoke tests (thumbnail generation, key routes up, sample video playback) in CI/dev script.

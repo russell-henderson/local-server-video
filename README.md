@@ -42,11 +42,10 @@ A modern, professional-grade local video streaming application with intelligent 
 - **Concurrent Processing** - ThreadPoolExecutor for background tasks
 
 ### 🖼️ Gallery System (New!)
-- **Image Gallery** - Organize images into virtual groups
-- **Group Management** - Create, edit, and delete image groups
-- **Cover Images** - Set custom thumbnails for groups
-- **Non-Destructive** - Groups are virtual; deleting groups doesn't delete files
-- **Image Grid** - Responsive image layout with lazy loading
+- **Image Gallery** - Organize loose images into virtual groups with selection mode
+- **Favorites Everywhere** - Heart any image (loose or grouped) and filter to see all favorites at once
+- **Covers & Management** - Set cover images, create/edit/delete groups without touching files
+- **Clean Grid & Lightbox** - Filename-free tiles, lazy loading, keyboard/lightbox navigation, quick add-to-group/create-group actions
 
 ### 🔒 Privacy & Security
 - **Local-Only Storage** - All data stored locally, no cloud required
@@ -123,7 +122,6 @@ LVS_CACHE_TIMEOUT=3600
 LVS_CACHE_ENABLED=true
 
 # Features
-LVS_SEARCH_ENABLED=true
 LVS_ANALYTICS_ENABLED=true
 ```
 
@@ -134,7 +132,7 @@ Edit `config.py` to customize:
 - Video and thumbnail directories
 - Database paths
 - Cache TTL and size limits
-- Feature flags (search, analytics, VR mode)
+- Feature flags (analytics, VR mode)
 - CORS settings
 
 ## 📁 Project Structure
@@ -148,7 +146,6 @@ local-video-server/
 ├── file_watcher.py            # Directory monitoring for new files
 ├── thumbnail_manager.py       # Thumbnail generation and sync
 ├── performance_monitor.py     # Route latency tracking
-├── search_engine.py           # Advanced search with FTS5
 ├── healthcheck.py             # System health check utility
 ├── static/                    # Frontend assets
 │   ├── styles.css            # Main stylesheet
@@ -278,13 +275,11 @@ Start here for different tasks:
 - [x] Performance monitoring and metrics
 - [x] Responsive mobile/tablet support
 - [x] Gallery system with image grouping
-- [x] Search with FTS5
 - [x] Multi-theme support
 - [x] Accessibility compliance
 
 ### 🚧 In Progress / Planned
 
-- [ ] Advanced search filters
 - [ ] Playlist management
 - [ ] Mini-player (PiP)
 - [ ] User authentication (multi-user support)

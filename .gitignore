@@ -234,6 +234,13 @@ tags.json
 favorites.json
 backup_json/
 
+# Personal/PII-sensitive artifacts (ensure no user content is tracked)
+images/
+videos/
+static/thumbnails/
+logs/
+*.log
+
 # Test files
 test_*.py
 *_test.py

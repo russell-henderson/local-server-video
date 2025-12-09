@@ -59,6 +59,11 @@
   .action-btn.danger {
     background: #dc3545;
   }
+
+  .action-btn.cover {
+    background: #2fa36b; /* complementary green */
+    color: #fff;
+  }
   
   /* Group Image Grid */
   .group-grid {
@@ -90,6 +95,34 @@
     object-fit: cover;
     display: block;
   }
+
+  .image-fav-btn {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background: rgba(0,0,0,0.55);
+    color: #fff;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    opacity: 0;
+    transition: all var(--transition-fast);
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .group-image-item:hover .image-fav-btn {
+    opacity: 1;
+  }
+
+  .image-fav-btn.active {
+    background: #e63972;
+    opacity: 1;
+  }
   
   .image-remove-btn {
     position: absolute;
@@ -117,28 +150,6 @@
   .image-remove-btn:hover {
     background: #dc3545;
     transform: scale(1.1);
-  }
-  
-  .image-overlay {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
-    padding: 12px;
-    transform: translateY(100%);
-    transition: transform var(--transition-normal);
-  }
-  
-  .group-image-item:hover .image-overlay {
-    transform: translateY(0);
-  }
-  
-  .image-title {
-    color: white;
-    font-size: 0.85rem;
-    margin: 0;
-    word-break: break-word;
   }
   
   /* Lightbox */
@@ -255,6 +266,9 @@
       <button class="action-btn danger" id="deleteGroupBtn">
         <i class="fas fa-trash"></i> Delete Group
       </button>
+      <button class="action-btn cover" id="coverGroupBtn">
+        <i class="fas fa-image"></i> Set Cover
+      </button>
     </div>
   </div>
   
@@ -278,11 +292,13 @@ const groupId = {{ group.id }};
 const groupName = {{ group.name|tojson }};
 const groupSlug = {{ group.slug|tojson }};
 let groupImages = {{ images|tojson }};
+let favoriteImages = new Set(loadFavoriteImages());
 
 // DOM Elements
 const groupGrid = document.getElementById('groupGrid');
 const editGroupBtn = document.getElementById('editGroupBtn');
 const deleteGroupBtn = document.getElementById('deleteGroupBtn');
+const coverGroupBtn = document.getElementById('coverGroupBtn');
 const lightbox = document.getElementById('lightbox');
 const lightboxImage = document.getElementById('lightboxImage');
 const lightboxClose = document.getElementById('lightboxClose');
@@ -307,6 +323,17 @@ function renderImages() {
     imageDiv.dataset.itemId = item.id;
     imageDiv.dataset.imagePath = item.image_path;
     
+    const favBtn = document.createElement('button');
+    favBtn.className = 'image-fav-btn';
+    favBtn.innerHTML = '<i class="fas fa-heart"></i>';
+    if (favoriteImages.has(item.image_path)) {
+      favBtn.classList.add('active');
+    }
+    favBtn.onclick = (e) => {
+      e.stopPropagation();
+      toggleFavoriteImage(item.image_path, favBtn);
+    };
+    
     const img = document.createElement('img');
     img.src = `/gallery/image/${item.image_path}`;
     img.alt = item.image_path;
@@ -320,22 +347,40 @@ function renderImages() {
       removeImage(item.id, item.image_path);
     };
     
-    const overlay = document.createElement('div');
-    overlay.className = 'image-overlay';
-    
-    const title = document.createElement('p');
-    title.className = 'image-title';
-    title.textContent = item.image_path;
-    overlay.appendChild(title);
-    
+    imageDiv.appendChild(favBtn);
     imageDiv.appendChild(img);
     imageDiv.appendChild(removeBtn);
-    imageDiv.appendChild(overlay);
     
     imageDiv.onclick = () => openLightbox(item.image_path);
     
     groupGrid.appendChild(imageDiv);
   });
+}
+
+function loadFavoriteImages() {
+  try {
+    const raw = localStorage.getItem('gallery-favorites');
+    if (!raw) return [];
+    return JSON.parse(raw);
+  } catch (e) {
+    console.error('Failed to load favorites', e);
+    return [];
+  }
+}
+
+function saveFavoriteImages() {
+  localStorage.setItem('gallery-favorites', JSON.stringify(Array.from(favoriteImages)));
+}
+
+function toggleFavoriteImage(imagePath, btn) {
+  if (favoriteImages.has(imagePath)) {
+    favoriteImages.delete(imagePath);
+    btn.classList.remove('active');
+  } else {
+    favoriteImages.add(imagePath);
+    btn.classList.add('active');
+  }
+  saveFavoriteImages();
 }
 
 // Remove image from group
@@ -421,6 +466,7 @@ function closeLightbox() {
 function setupEventListeners() {
   editGroupBtn.onclick = editGroupName;
   deleteGroupBtn.onclick = deleteGroup;
+  coverGroupBtn.onclick = enterCoverSelect;
   lightboxClose.onclick = closeLightbox;
   
   lightbox.onclick = (e) => {
@@ -431,8 +477,58 @@ function setupEventListeners() {
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && lightbox.classList.contains('active')) {
       closeLightbox();
+      exitCoverSelect();
     }
   });
+}
+
+// Cover selection mode
+let selectingCover = false;
+
+function enterCoverSelect() {
+  selectingCover = true;
+  coverGroupBtn.classList.add('active');
+  coverGroupBtn.textContent = 'Pick Cover';
+  groupGrid.classList.add('selection-mode');
+  groupGrid.querySelectorAll('.group-image-item').forEach(item => {
+    item.classList.add('selection-mode');
+    item.onclick = () => setCover(item.dataset.imagePath);
+  });
+}
+
+function exitCoverSelect() {
+  if (!selectingCover) return;
+  selectingCover = false;
+  coverGroupBtn.classList.remove('active');
+  coverGroupBtn.innerHTML = '<i class="fas fa-image"></i> Set Cover';
+  groupGrid.classList.remove('selection-mode');
+  // Restore lightbox click
+  groupGrid.querySelectorAll('.group-image-item').forEach(item => {
+    item.classList.remove('selection-mode');
+    item.onclick = () => openLightbox(item.dataset.imagePath);
+  });
+}
+
+async function setCover(imagePath) {
+  try {
+    const response = await fetch(`/api/gallery/groups/${groupId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cover_image: imagePath })
+    });
+    if (response.ok) {
+      exitCoverSelect();
+      window.location.reload();
+    } else {
+      const error = await response.json();
+      alert(`Failed to set cover: ${error.error}`);
+      exitCoverSelect();
+    }
+  } catch (error) {
+    console.error('Error setting cover:', error);
+    alert('Failed to set cover. Please try again.');
+    exitCoverSelect();
+  }
 }
 
 // Initialize on page load
