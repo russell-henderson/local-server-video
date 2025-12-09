@@ -70,6 +70,8 @@ def favicon():
 
 VIDEO_DIR = Path("videos")
 THUMBNAIL_DIR = Path("static") / "thumbnails"
+INDEX_DEFAULT_PER_PAGE = 60
+INDEX_MAX_PER_PAGE = 120
 
 # Guarantee required folders exist
 THUMBNAIL_DIR.mkdir(parents=True, exist_ok=True)
@@ -166,13 +168,31 @@ def ensure_thumbnails_exist(video_list: list[str]) -> None:
 @app.route("/")
 @performance_monitor("route_index")
 def index():
-    """Home page – list videos with on-demand thumbnail generation."""
+    """Home page - list videos with on-demand thumbnail generation."""
     sort_param = request.args.get("sort", "date")
     order = request.args.get("order", "desc")
     reverse = order == "desc"
+    try:
+        page = int(request.args.get("page", "1"))
+    except (TypeError, ValueError):
+        page = 1
+    try:
+        per_page = int(request.args.get("per_page", str(INDEX_DEFAULT_PER_PAGE)))
+    except (TypeError, ValueError):
+        per_page = INDEX_DEFAULT_PER_PAGE
+
+    page = max(1, page)
+    per_page = max(1, min(per_page, INDEX_MAX_PER_PAGE))
+    offset = (page - 1) * per_page
+
+    total_videos = len(cache.get_video_list())
+    if offset >= total_videos and total_videos:
+        page = max(1, (total_videos - 1) // per_page + 1)
+        offset = (page - 1) * per_page
 
     # Metadata via cache_manager
-    video_data = cache.get_all_video_data(sort_param, reverse)
+    video_data = cache.get_all_video_data(sort_param, reverse, limit=per_page, offset=offset)
+    total_pages = max(1, (total_videos + per_page - 1) // per_page)
     favorites_list = cache.get_favorites()
 
     # Background thumbnail jobs
@@ -186,6 +206,10 @@ def index():
         videos=video_data,
         current_sort=sort_param,
         current_order=order,
+        current_page=page,
+        total_pages=total_pages,
+        per_page=per_page,
+        total_videos=total_videos,
         favorites_list=favorites_list,
         feature_vr_simplify=config.feature_vr_simplify,
         feature_previews=config.feature_previews,

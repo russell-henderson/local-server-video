@@ -68,7 +68,7 @@ class ServerConfig:
         Path(self.thumbnail_directory).mkdir(parents=True, exist_ok=True)
 
 class ConfigManager:
-    """Manages configuration loading with cascade: env vars → .env → config.json → defaults"""
+    """Manages configuration loading with cascade: env vars -> .env -> config.json -> defaults"""
     
     def __init__(self, config_file: str = "config.json", env_file: str = ".env"):
         self.config_file = config_file
@@ -99,10 +99,10 @@ class ConfigManager:
         # Create config object with validation
         try:
             self._config = ServerConfig(**config_data)
-            print(f"✅ Configuration loaded successfully")
+            print("[OK] Configuration loaded successfully")
             return self._config
         except Exception as e:
-            print(f"❌ Configuration error: {e}")
+            print(f"[ERROR] Configuration error: {e}")
             print("Using default configuration...")
             self._config = ServerConfig()
             return self._config
@@ -115,10 +115,10 @@ class ConfigManager:
         try:
             with open(self.config_file, 'r') as f:
                 data = json.load(f)
-                print(f"📄 Loaded config from {self.config_file}")
+                print(f"[INFO] Loaded config from {self.config_file}")
                 return data
         except Exception as e:
-            print(f"⚠️  Error loading {self.config_file}: {e}")
+            print(f"[WARN] Error loading {self.config_file}: {e}")
             return {}
     
     def _load_env_file(self) -> Dict[str, Any]:
@@ -137,12 +137,12 @@ class ConfigManager:
                         if key.startswith('LVS_'):
                             key = key[4:]
                         config_data[key.lower()] = self._parse_env_value(value)
-            
+
             if config_data:
-                print(f"🔧 Loaded config from {self.env_file}")
+                print(f"[INFO] Loaded config from {self.env_file}")
             return config_data
         except Exception as e:
-            print(f"⚠️  Error loading {self.env_file}: {e}")
+            print(f"[WARN] Error loading {self.env_file}: {e}")
             return {}
     
     def _load_env_vars(self) -> Dict[str, Any]:
@@ -154,9 +154,9 @@ class ConfigManager:
             if key.startswith(prefix):
                 config_key = key[len(prefix):].lower()
                 config_data[config_key] = self._parse_env_value(value)
-        
+
         if config_data:
-            print(f"🌍 Loaded config from environment variables")
+            print("[INFO] Loaded config from environment variables")
         return config_data
     
     def _parse_env_value(self, value: str) -> Any:
@@ -215,10 +215,10 @@ class ConfigManager:
             with open(self.config_file, 'w') as f:
                 json.dump(config_dict, f, indent=2)
             
-            print(f"💾 Configuration saved to {self.config_file}")
+            print(f"[INFO] Configuration saved to {self.config_file}")
             return True
         except Exception as e:
-            print(f"❌ Error saving configuration: {e}")
+            print(f"[ERROR] Error saving configuration: {e}")
             return False
     
     def reload_config(self) -> ServerConfig:

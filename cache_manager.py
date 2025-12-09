@@ -546,17 +546,24 @@ class VideoCache:
             except Exception as e:
                 print(f"[ERROR] Error removing videos from database: {e}")
 
-    def get_all_video_data(self, sort_by: str = 'date',
-                           reverse: bool = True) -> List[Dict]:
-        """Get all video data with efficient bulk operation"""
+    def get_all_video_data(
+        self,
+        sort_by: str = 'date',
+        reverse: bool = True,
+        limit: Optional[int] = None,
+        offset: int = 0,
+    ) -> List[Dict]:
+        """Get video data with optional pagination (limit/offset)"""
         if self.use_database and self.db:
             # Ensure all videos are in database first
             self._ensure_videos_in_database()
 
             # Use database bulk operation
             order = 'desc' if reverse else 'asc'
+            limit_val = None if limit is None else max(1, limit)
+            offset_val = max(0, offset)
             return self._filter_existing(
-                self.db.get_all_videos(sort_by, order)
+                self.db.get_all_videos(sort_by, order, limit=limit_val, offset=offset_val)
             )
         else:
             # Use JSON files with caching
@@ -581,6 +588,10 @@ class VideoCache:
             else:  # default to date
                 video_data.sort(key=lambda x: x['added_date'],
                                 reverse=reverse)
+
+            if limit is not None:
+                offset_val = max(0, offset)
+                return video_data[offset_val:offset_val + max(1, limit)]
 
             return video_data
         

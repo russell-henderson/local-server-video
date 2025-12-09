@@ -15,17 +15,32 @@
   <span>Sort by:</span>
   {% set next_order = 'asc' if current_order == 'desc' else 'desc' %}
   
-  <a href="{{ url_for('index', sort='rating', order=next_order if current_sort == 'rating' else 'desc') }}"
+  <a href="{{ url_for('index', sort='rating', order=next_order if current_sort == 'rating' else 'desc', page=1, per_page=per_page) }}"
      class="{% if current_sort == 'rating' %}active{% endif %}">Rating</a>
 
-  <a href="{{ url_for('index', sort='title', order=next_order if current_sort == 'title' else 'asc') }}"
+  <a href="{{ url_for('index', sort='title', order=next_order if current_sort == 'title' else 'asc', page=1, per_page=per_page) }}"
      class="{% if current_sort == 'title' %}active{% endif %}">Title</a>
 
-  <a href="{{ url_for('index', sort='views', order=next_order if current_sort == 'views' else 'desc') }}"
+  <a href="{{ url_for('index', sort='views', order=next_order if current_sort == 'views' else 'desc', page=1, per_page=per_page) }}"
      class="{% if current_sort == 'views' %}active{% endif %}">Views</a>
   
-  <a href="{{ url_for('index', sort='date', order=next_order if current_sort == 'date' else 'desc') }}"
+  <a href="{{ url_for('index', sort='date', order=next_order if current_sort == 'date' else 'desc', page=1, per_page=per_page) }}"
      class="{% if current_sort == 'date' %}active{% endif %}">Date Added</a>
+</div>
+
+<!-- Pagination controls -->
+<div class="d-flex justify-content-center align-items-center mb-3 gap-3">
+  <span>Page {{ current_page }} of {{ total_pages }}</span>
+  <div class="btn-group" role="group" aria-label="Pagination">
+    {% if current_page > 1 %}
+      <a class="btn btn-outline-secondary btn-sm"
+         href="{{ url_for('index', page=current_page-1, per_page=per_page, sort=current_sort, order=current_order) }}">&larr; Prev</a>
+    {% endif %}
+    {% if current_page < total_pages %}
+      <a class="btn btn-outline-secondary btn-sm"
+         href="{{ url_for('index', page=current_page+1, per_page=per_page, sort=current_sort, order=current_order) }}">Next &rarr;</a>
+    {% endif %}
+  </div>
 </div>
 
 <!-- Video grid -->

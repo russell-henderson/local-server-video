@@ -230,8 +230,14 @@ class VideoDatabase:
             conn.commit()
             print("Migration completed successfully!")
     
-    def get_all_videos(self, sort_by: str = 'added_date', order: str = 'desc') -> List[Dict]:
-        """Get all videos with metadata efficiently"""
+    def get_all_videos(
+        self,
+        sort_by: str = 'added_date',
+        order: str = 'desc',
+        limit: int | None = None,
+        offset: int = 0,
+    ) -> List[Dict]:
+        """Get all videos with metadata efficiently (supports limit/offset)"""
         order_clause = 'DESC' if order.lower() == 'desc' else 'ASC'
         
         # Map sort parameters to SQL columns
@@ -246,6 +252,12 @@ class VideoDatabase:
         
         sort_column = sort_mapping.get(sort_by, 'v.added_date')
         
+        limit_clause = ""
+        params: list = []
+        if limit is not None:
+            limit_clause = " LIMIT ? OFFSET ?"
+            params.extend([max(1, limit), max(0, offset)])
+
         with self.get_connection() as conn:
             cursor = conn.execute(f"""
                 SELECT 
@@ -262,8 +274,8 @@ class VideoDatabase:
                 LEFT JOIN video_tags vt ON v.filename = vt.filename
                 LEFT JOIN favorites f ON v.filename = f.filename
                 GROUP BY v.filename, v.added_date, v.file_size, r.rating, view.view_count, f.filename
-                ORDER BY {sort_column} {order_clause}
-            """)
+                ORDER BY {sort_column} {order_clause}{limit_clause}
+            """, params)
             
             videos = []
             for row in cursor:
