@@ -1,0 +1,33 @@
+**Replace `.dockerignore` with:**
+```
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.db
+*.log
+.git
+.github
+.vscode
+.pytest_cache
+node_modules
+venv
+.env
+
+# IMPORTANT: Don't copy videos/images into the image
+videos/
+videos/*
+images/
+images/*
+static/thumbnails/
+static/thumbnails/*
+logs/
+logs/*
+
+# Don't copy databases
+*.db
+
+# Don't copy archives
+*.zip
+*.tar.gz

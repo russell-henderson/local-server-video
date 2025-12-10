@@ -765,16 +765,6 @@ def startup_tasks():
 # ─── PERFORMANCE MONITORING ENDPOINTS ───────────────────────────────
 
 
-@app.route('/admin/performance')
-def performance_stats():
-    """Performance monitoring endpoint"""
-    try:
-        from performance_monitor import performance_report
-        return f"<pre>{performance_report()}</pre>"
-    except ImportError:
-        return "Performance monitoring not available"
-
-
 @app.route('/admin/cache/status')
 def cache_status():
     """Cache status endpoint with detailed information"""
@@ -799,7 +789,14 @@ def cache_status():
             # Fallback: skip cache age details if not available
             pass
 
-        return jsonify({
+        preview_cache = {}
+        try:
+            from performance_monitor import _cache_metrics  # type: ignore
+            preview_cache = _cache_metrics()
+        except Exception:
+            preview_cache = {}
+
+        payload = {
             'backend': 'Database (SQLite)' if cache.use_database else 'JSON Files',
             'video_count': len(video_list),
             'favorites_count': len(favorites),
@@ -807,7 +804,9 @@ def cache_status():
             'video_list_ttl': cache.video_list_ttl,
             'cache_ages': cache_ages,
             'recent_videos': video_list[:10] if video_list else []
-        })
+        }
+        payload.update(preview_cache)
+        return jsonify(payload)
     except (OSError, AttributeError) as e:
         return jsonify({"error": str(e)}), 500
 

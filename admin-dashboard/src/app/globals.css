@@ -1,0 +1,84 @@
+@import "tailwindcss";
+
+:root {
+  --background: #0f172a;
+  --foreground: #e2e8f0;
+  --surface: rgba(17, 24, 39, 0.78);
+  --card: rgba(15, 23, 42, 0.82);
+  --border: rgba(148, 163, 184, 0.35);
+  --glow: rgba(56, 189, 248, 0.45);
+  --shadow-strong: 0 24px 80px rgba(0, 0, 0, 0.55);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-card: var(--card);
+  --color-border: var(--border);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  min-height: 100vh;
+  background-color: var(--background);
+  background-image:
+    radial-gradient(circle at 25% 20%, rgba(56, 189, 248, 0.12), transparent 28%),
+    radial-gradient(circle at 80% 10%, rgba(168, 85, 247, 0.14), transparent 26%),
+    radial-gradient(circle at 50% 80%, rgba(236, 72, 153, 0.12), transparent 30%),
+    linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(8, 12, 24, 0.96));
+  color: var(--foreground);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.glass {
+  background: var(--card);
+  backdrop-filter: blur(18px);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-strong), 0 0 0 1px rgba(255, 255, 255, 0.02);
+}
+
+.neon-plate {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: var(--card);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-strong);
+}
+
+.neon-plate::before {
+  content: "";
+  position: absolute;
+  inset: -40% -60%;
+  background: conic-gradient(
+    from 90deg,
+    rgba(56, 189, 248, 0.2),
+    rgba(168, 85, 247, 0.25),
+    rgba(236, 72, 153, 0.18),
+    rgba(56, 189, 248, 0.2)
+  );
+  filter: blur(40px);
+  opacity: 0.9;
+  z-index: -1;
+}
+
+.grid-overlay {
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    rgba(56, 189, 248, 0.25) 1px,
+    transparent 0
+  );
+  background-size: 20px 20px;
+  opacity: 0.35;
+}
+
+.text-glow {
+  text-shadow:
+    0 0 12px rgba(56, 189, 248, 0.6),
+    0 0 28px rgba(88, 28, 135, 0.35);
+}

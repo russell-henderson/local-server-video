@@ -1,166 +1,213 @@
-# Project Documentation: Local Video Server
+# Local Video Server Project Overview
 
-## Overview
+## 1. Purpose
 
-This project is a local video server designed to manage, serve, and organize a collection of video files. It provides features for video metadata management, user favorites, ratings, tagging, thumbnail generation, performance monitoring, and more. The project is structured to be modular and maintainable, with clear separation of concerns across scripts, static assets, templates, and data files.
+Local Video Server is a local first media server for personal video libraries.  
+It scans a folder of videos, builds thumbnails and metadata, and presents a modern gallery with previews, ratings, favorites, tags, and analytics.
 
-## Project Structure
-
-.
-├── cache_manager.py
-├── database_migration.py
-├── favorites.json
-├── main.py
-├── performance_monitor.py
-├── project_structure.txt
-├── ratings.json
-├── regenerate_thumbnails.py
-├── sanitize_video_filenames.py
-├── Sort-DesktopFiles.ps1
-├── tags.json
-├── terminal.log
-├── test_db.py
-├── video_metadata.db
-├── views.json
-├── __pycache__/
-├── docs/
-│   ├── code_descriptions.txt
-│   ├── OPENAI_COST_ANALYSIS.md
-│   ├── PERFORMANCE_ANALYSIS_SUMMARY.md
-│   ├── PERFORMANCE_OPTIMIZATION_GUIDE.md
-│   ├── project_structure.txt
-│   ├── README.md
-│   ├── VIDEO_PREVIEW_FEATURE.md
-├── images/
-│   └── gallery/
-├── scratchoff/
-│   └── index.html
-├── scripts/
-│   ├── analyze_thumbnails.py
-│   ├── export-code-descriptions-openai.ps1
-│   ├── export-code-descriptions.ps1
-│   ├── export-project-structure-no-media.ps1
-│   ├── export-project-structure.ps1
-├── static/
-│   ├── chat.js
-│   ├── dark.js
-│   ├── favorites.js
-│   ├── style.css
-│   ├── styles.css
-│   ├── theme.css
-│   └── thumbnails/
-├── templates/
-│   ├── favorites.html
-│   ├── image_gallery.html
-│   ├── index.html
-│   ├── navbar.html
-│   ├── tag_videos.html
-│   ├── tags.html
-│   └── watch.html
-├── videos/
-│   └── *.mp4
-
-## Key Components
-
-### Python Scripts
-
-- __main.py__: Entry point for the server. Handles routing, video serving, and core logic.
-- __cache_manager.py__: Manages caching of video metadata and thumbnails for performance.
-- __database_migration.py__: Handles database schema migrations and updates.
-- __performance_monitor.py__: Monitors server performance and logs metrics.
-- __regenerate_thumbnails.py__: Script to regenerate video thumbnails in bulk.
-- __sanitize_video_filenames.py__: Cleans and standardizes video filenames.
-- __test_db.py__: Contains database tests and validation scripts.
-
-### Data Files
-
-- __video_metadata.db__: SQLite database storing video metadata (title, tags, ratings, etc.).
-- __favorites.json__: Stores user favorite videos.
-- __ratings.json__: Stores user ratings for videos.
-- __tags.json__: Stores tags and their associations with videos.
-- __views.json__: Tracks video view counts and statistics.
-
-### Static Assets
-
-- __static/__: Contains JavaScript, CSS, and thumbnail images for the web interface.
-  - __chat.js, favorites.js, dark.js__: JS modules for UI features.
-  - __style.css, styles.css, theme.css__: Stylesheets for theming and layout.
-  - __thumbnails/__: Generated video thumbnail images.
-
-### Templates
-
-- __templates/__: HTML templates for rendering web pages.
-  - __index.html__: Main landing page.
-  - __favorites.html__: User favorites view.
-  - __image_gallery.html__: Gallery view for images/videos.
-  - __navbar.html__: Navigation bar partial.
-  - __tag_videos.html, tags.html__: Tag management and browsing.
-  - __watch.html__: Video player page.
-
-### Scripts
-
-- __scripts/__: Utility scripts for analysis and export.
-  - __analyze_thumbnails.py__: Analyzes thumbnail quality and coverage.
-  - **export-code-descriptions*.ps1**: PowerShell scripts for exporting code documentation.
-  - **export-project-structure*.ps1**: Scripts for exporting project structure.
-
-### Documentation
-
-- __docs/__: Contains documentation and analysis files.
-  - __README.md__: General project overview and setup instructions.
-  - __PERFORMANCE_ANALYSIS_SUMMARY.md__: Performance analysis results.
-  - __PERFORMANCE_OPTIMIZATION_GUIDE.md__: Guide for optimizing server performance.
-  - __VIDEO_PREVIEW_FEATURE.md__: Details on video preview implementation.
-  - __code_descriptions.txt__: Descriptions of code modules and functions.
-
-### Media
-
-- __videos/__: Directory containing all video files served by the application.
-- __images/gallery/__: Image assets for gallery features.
-
-### Miscellaneous
-
-- ____pycache__/__: Compiled Python bytecode for faster execution.
-- __terminal.log__: Log file for terminal output and debugging.
-- __project_structure.txt__: Text export of the project structure.
-- __Sort-DesktopFiles.ps1__: PowerShell script for sorting desktop files.
-- __scratchoff/index.html__: Standalone HTML demo or feature page.
-
-## Features
-
-- __Video Serving__: Stream and download videos from the local server.
-- __Metadata Management__: Store and edit video metadata, including tags, ratings, and favorites.
-- __Thumbnail Generation__: Automatically generate and manage video thumbnails.
-- __Tagging System__: Organize videos with tags for easy browsing and filtering.
-- __Favorites & Ratings__: Users can mark favorites and rate videos.
-- __Performance Monitoring__: Track server performance and optimize resource usage.
-- __Database Migration__: Update and maintain the database schema as features evolve.
-- __Web Interface__: Responsive UI for browsing, searching, and watching videos.
-- __Documentation__: Comprehensive docs for setup, features, and optimization.
-
-## Setup & Usage
-
-1. __Install Python 3.13+ and required packages.__
-2. __Run `main.py` to start the server.__
-3. __Access the web interface via browser.__
-4. __Use utility scripts for maintenance and analysis as needed.__
-
-## Extending the Project
-
-- Add new features by creating scripts and updating templates/static assets.
-- Update the database schema using `database_migration.py`.
-- Document changes in the `docs/` folder for maintainability.
-
-## Contribution Guidelines
-
-- Follow PEP8 for Python code.
-- Keep documentation up to date.
-- Use modular design for new features.
-- Test changes with `test_db.py` and review logs in `terminal.log`.
-
-## License
-
-Specify your license here (e.g., MIT, GPL, etc.).
+This file is the high level project overview and the map for all other documentation.
 
 ---
-For more details, see the documentation in the `docs/` folder.
+
+## 2. Core documentation set
+
+These are the canonical docs that describe the system.  
+If you update the system in a significant way, you should usually update at least one of these files.
+
+- `README.md`  
+  Short public facing introduction plus quick start instructions.
+
+- `docs/PROJECT.md`  
+  This file. High level overview, phases, and doc map.
+
+- `docs/ARCHITECTURE.md`  
+  System architecture, core components, and data flow between backend, storage, and front end.
+
+- `docs/IMPLEMENTATION.md`  
+  How to work on the codebase day to day. Development workflow, modules, patterns, and testing.
+
+- `docs/API.md`  
+  REST API layout for gallery, metadata, and admin dashboard endpoints.
+
+- `docs/UI.md`  
+  Design system for gallery and dashboard. Layout patterns, components, and interaction rules.
+
+- `docs/PERFORMANCE.md`  
+  Performance goals, bottlenecks, and optimization strategy.
+
+- `docs/PERFORMANCE_MONITORING.md`  
+  How metrics are collected, stored, and exposed to the admin dashboard.
+
+- `docs/DATA_BACKEND.md`  
+  Details of SQLite databases, JSON stores, indexes, and any future storage changes.
+
+- `docs/QA_TESTING_GUIDE.md`  
+  Manual and automated test strategy, including smoke tests for gallery and admin dashboard.
+
+- `docs/TODOS.md`  
+  Live actionable task list. Short form what to do next.
+
+- `TODOv4.md`  
+  Long form roadmap and strategy. Background and future plan.
+
+- `docs/DOCS_INVENTORY.md`  
+  Inventory of all docs with Type and Scope classifications.
+
+- `docs/ARCHIVE_INDEX.md`  
+  Index of historical docs that are kept only for reference.
+
+- `docs/releases/index.md`  
+  Release catalogue with links to individual release docs.
+
+You can treat this list as the spine of the documentation set.
+
+---
+
+## 3. Project phases
+
+The project is organized into four broad phases that can repeat as needed.
+
+### Phase 1: Documentation consolidation
+
+Goal: make the documentation trustworthy and compact.
+
+Key outcomes:
+
+- `DOCS_INVENTORY.md` lists all doc like files with Type and Scope.
+- Redundant performance, implementation, and planning docs are archived and merged into:
+  - `PERFORMANCE.md`
+  - `IMPLEMENTATION.md`
+  - `TODOS.md` and `TODOv4.md`
+- `ARCHIVE_INDEX.md` explains what is historical and what replaced it.
+
+Status:
+
+- Inventory created.
+- Performance cluster consolidated.
+- Implementation cluster consolidated.
+- Planning cluster normalized.
+
+### Phase 2: Core system spec
+
+Goal: have a clean, current description of the system that matches the running code.
+
+Key outcomes:
+
+- `ARCHITECTURE.md` describes the real architecture and data flow.
+- `IMPLEMENTATION.md` matches the current module layout and developer workflow.
+- `DATA_BACKEND.md` describes the current state of SQLite and JSON usage.
+- `UI.md` documents active gallery and base dashboard design.
+
+Status:
+
+- In progress. Some files may already exist, but each should be checked and updated against the real code.
+
+### Phase 3: Admin dashboard specification and API
+
+Goal: fully specify what the admin dashboard does and how it talks to the backend.
+
+Key outcomes:
+
+- `API.md` lists all endpoints used by the dashboard, including:
+  - video analytics
+  - engagement metrics
+  - search analytics
+  - performance and health
+  - error monitoring
+  - maintenance and export
+- Admin dashboard sections are described in enough detail to implement:
+  - Overview
+  - Videos and engagement
+  - Gallery and search
+  - Performance and health
+  - Errors and maintenance
+- Any stack choice for the dashboard front end is recorded here or in `IMPLEMENTATION.md`.
+
+Status:
+
+- High level structure defined in earlier planning docs.
+- Needs validation against the current code and any new metrics schema.
+
+### Phase 4: Implementation, monitoring, and polish
+
+Goal: ship and maintain a production ready Local Video Server with a usable admin dashboard.
+
+Key outcomes:
+
+- Admin dashboard front end runs and uses real data.
+- Metrics recorded in the backend match `PERFORMANCE_MONITORING.md`.
+- QA checks in `QA_TESTING_GUIDE.md` are run and kept up to date.
+- New feature work and refactors always update:
+  - `ARCHITECTURE.md`
+  - `IMPLEMENTATION.md`
+  - `API.md`
+  - `PERFORMANCE.md`
+  - `UI.md` when visuals change
+
+Status:
+
+- To be driven by `docs/TODOS.md` and `TODOv4.md`.
+
+---
+
+## 4. How to work with the docs
+
+Use this section as a personal rule set for future you and for any AI agent.
+
+1. When you add or change a major feature  
+   - Update `ARCHITECTURE.md` and `IMPLEMENTATION.md`  
+   - If there is a new route or API, update `API.md`  
+   - If there is a visible UI change, update `UI.md`  
+   - If performance is affected, update `PERFORMANCE.md`
+
+2. When you plan work  
+   - Put narrative and strategy into `TODOv4.md`  
+   - Put concrete tasks and checklists into `docs/TODOS.md`
+
+3. When you retire or replace a doc  
+   - Move the old file into `docs/archive/` or `docs/deferred/`  
+   - Add or update an entry in `ARCHIVE_INDEX.md`  
+   - Update `DOCS_INVENTORY.md` so the path and Type are correct
+
+4. When you cut a new release  
+   - Create a new file under `docs/releases/`  
+   - Update `docs/releases/index.md`  
+   - Mention any documentation changes that future work depends on
+
+---
+
+## 5. Admin dashboard at a glance
+
+This is a quick summary so you always remember what the admin dashboard is supposed to do.
+
+High level:
+
+- Runs as a web interface that talks to Flask APIs.
+- Shows analytics and health for:
+  - video usage
+  - engagement
+  - search
+  - performance
+  - errors
+  - storage and workers
+- Provides tools to:
+  - clear caches
+  - reprocess thumbnails
+  - reindex databases
+  - export analytics
+
+Detailed behavior and endpoint contracts live in:
+
+- `docs/API.md` for routes and response shapes
+- `docs/UI.md` for layout and visual patterns
+- `docs/PERFORMANCE_MONITORING.md` for metrics definitions
+
+---
+
+## 6. Next steps from here
+
+When you pick up the project next time, start by:
+
+1. Checking `docs/TODOS.md` for active tasks.  
+2. Confirming that any work you plan fits into the phases above.  
+3. Updating this file only when the overall project state or doc set changes in a meaningful way.

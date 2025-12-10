@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  video-server:
+    build: .
+    container_name: local-video-server
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./videos:/app/videos
+      - ./images:/app/images
+      - ./static/thumbnails:/app/static/thumbnails
+      - ./logs:/app/logs
+      - ./video_metadata.db:/app/video_metadata.db
+      - ./video_search.db:/app/video_search.db
+    environment:
+      - LVS_HOST=0.0.0.0
+      - LVS_PORT=5000
+      - LVS_DEBUG=false
+    restart: unless-stopped
+
+  admin-dashboard:
+    build:
+      context: ./admin-dashboard
+      dockerfile: Dockerfile
+    container_name: admin-dashboard
+    depends_on:
+      - video-server
+    environment:
+      - NODE_ENV=production
+      - NEXT_TELEMETRY_DISABLED=1
+      - NEXT_PUBLIC_VIDEO_SERVER_URL=http://video-server:5000
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./logs:/app/logs:ro
+      - ./videos:/app/videos:ro
+      - ./images:/app/images:ro
+      - ./video_metadata.db:/app/video_metadata.db:ro

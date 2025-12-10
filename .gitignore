@@ -250,4 +250,10 @@ tests/
 docs/_build/
 docs/build/
 
+# Admin dashboard frontend artifacts
+admin-dashboard/node_modules/
+admin-dashboard/.next/
+admin-dashboard/.turbo/
+admin-dashboard/.env.local
+
 # End of https://www.toptal.com/developers/gitignore/api/python
