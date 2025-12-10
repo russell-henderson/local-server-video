@@ -85,7 +85,7 @@ Neumorphic controls
 
 Glassmorphic layers
 
-- [ ] Main display window: The video feed is bordered by a semi-transparent, frosted-glass panel. The background behind the player—a dynamic gradient, album artwork, or the user's desktop—is visible but blurred, adding depth and focusing the user's attention on the video.  
+- [ ] Main display window: The video feed is bordered by a semi-transparent, frosted-glass panel. The background behind the player-a dynamic gradient, album artwork, or the user's desktop-is visible but blurred, adding depth and focusing the user's attention on the video.  
 - [ ] Overlays: Any additional information, like video title or a channel logo, can appear on a smaller, dedicated glassmorphic panel in a corner of the screen.  
 - [ ] Dynamic effects: Hovering over the glassmorphic video window could increase the blur slightly or add a subtle light reflection, enhancing the realistic glass effect.
 

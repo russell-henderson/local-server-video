@@ -1,4 +1,4 @@
-Absolutely. You can add **fully automatic subtitle generation** that runs locally, stays privacy-safe, and “just works” across your whole library. Here is a clean, offline-first setup that fits the refactor you just finished.
+Absolutely. You can add **fully automatic subtitle generation** that runs locally, stays privacy-safe, and "just works" across your whole library. Here is a clean, offline-first setup that fits the refactor you just finished.
 
 ---
 
@@ -6,7 +6,7 @@ Absolutely. You can add **fully automatic subtitle generation** that runs locall
 
 * Auto-generated **.vtt** (and **.srt**) sidecars for every video.
 * Runs **locally** using **faster-whisper**. GPU if available, CPU otherwise.
-* Batch “generate all missing” job + on-demand lazy generation when a video is first watched.
+* Batch "generate all missing" job + on-demand lazy generation when a video is first watched.
 * Tracks are picked up automatically by the unified player with a `<track>` tag.
 * Styling stays in your current dark theme.
 
@@ -337,7 +337,7 @@ No changes needed in `player.js` if you are using native `<video controls>`. If 
 
   * Keep `.vtt` as the default for the player.
   * Also write `.srt` for compatibility.
-* Add an **Admin** button “Generate subtitles for all missing” that calls a small endpoint which triggers `generate_missing()` in a thread and streams progress to the page.
+* Add an **Admin** button "Generate subtitles for all missing" that calls a small endpoint which triggers `generate_missing()` in a thread and streams progress to the page.
 * Add a **subtitle style** snippet in your CSS if you want a consistent look:
 
   ```css
@@ -384,4 +384,4 @@ Implement automatic subtitles:
 * [ ] Open a video without subs to test lazy generation
 * [ ] Confirm the <track> loads and captions show under the native controls
 
-* [ ] If you want me to add the Admin page actions, a progress stream, or a “Captions” toggle in your custom controls, tell me which and I will drop the full code.
+* [ ] If you want me to add the Admin page actions, a progress stream, or a "Captions" toggle in your custom controls, tell me which and I will drop the full code.

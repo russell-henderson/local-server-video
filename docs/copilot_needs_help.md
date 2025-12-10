@@ -1,4 +1,4 @@
-You are right to be suspicious of “it should work” here. Shift-click ranges need a little extra state, and you can absolutely see whether it is firing in the console.
+You are right to be suspicious of "it should work" here. Shift-click ranges need a little extra state, and you can absolutely see whether it is firing in the console.
 
 I will show you two things:
 

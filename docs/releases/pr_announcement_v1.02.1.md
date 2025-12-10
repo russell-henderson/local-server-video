@@ -1,4 +1,4 @@
-Title: Local Video Server v1.02.1 Released — Documentation Integrity Audit Complete
+Title: Local Video Server v1.02.1 Released - Documentation Integrity Audit Complete
 
 Release: <https://github.com/russell-henderson/local-server-video/releases/tag/v1.02.1>
 

@@ -1,4 +1,4 @@
-# TODOS — Local Video Server
+# TODOS - Local Video Server
 
 This file consolidates outstanding, high-priority tasks and links to archived tasklists. Subtitle generation documentation has been archived because subtitles are out of current scope.
 

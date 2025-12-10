@@ -1,4 +1,4 @@
-# Performance — Local Video Server
+# Performance - Local Video Server
 
 Consolidated performance analysis, optimization plan, and practical guide. Original files archived to `docs/deferred/`.
 
@@ -9,10 +9,10 @@ Consolidated performance analysis, optimization plan, and practical guide. Origi
 
 ## Solutions Implemented
 
-1. Cache manager (`cache_manager.py`) — in-memory TTL cache, write-through persistence, thread-safe.
-2. Optimized routing (`main_optimized.py`) — bulk operations, background thumbnail generation, caching headers.
-3. Database migration path (`database_migration.py`) — SQLite backend for indexed, atomic operations.
-4. Performance monitoring (`performance_monitor.py`) — route timings, cache hit rates, health endpoints.
+1. Cache manager (`cache_manager.py`) - in-memory TTL cache, write-through persistence, thread-safe.
+2. Optimized routing (`main_optimized.py`) - bulk operations, background thumbnail generation, caching headers.
+3. Database migration path (`database_migration.py`) - SQLite backend for indexed, atomic operations.
+4. Performance monitoring (`performance_monitor.py`) - route timings, cache hit rates, health endpoints.
 
 ## Key Metrics & Expected Gains
 
