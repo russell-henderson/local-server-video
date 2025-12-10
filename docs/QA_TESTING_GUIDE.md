@@ -6,7 +6,7 @@ This guide combines verification steps with functional QA testing for a streamli
 
 ---
 
-## 🚀 **Phase 1 — Fast Verification (5 minutes)**
+## 🚀 **Phase 1 - Fast Verification (5 minutes)**
 
 ### **1) Keyboard shortcuts (Ctrl+1–4, Ctrl+D)**
 
@@ -103,7 +103,7 @@ grep -n "outline|focus-visible" static/*.css
 
 ---
 
-## 🧪 **Phase 2 — Functional QA Testing (10 minutes)**
+## 🧪 **Phase 2 - Functional QA Testing (10 minutes)**
 
 ### **1) Keyboard Shortcuts Testing**
 
@@ -189,7 +189,7 @@ grep -n "outline|focus-visible" static/*.css
 
 ---
 
-## 🔍 **Phase 3 — Lighthouse & WCAG Compliance Testing**
+## 🔍 **Phase 3 - Lighthouse & WCAG Compliance Testing**
 
 ### **Lighthouse Audit**
 

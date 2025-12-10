@@ -1,4 +1,4 @@
-# Implementation — Local Video Server
+# Implementation - Local Video Server
 
 This consolidated implementation document combines the project-level summary, development workflow, and UI implementation guidance into a single reference. The original documents have been archived to docs/deferred/ for traceability.
 
@@ -13,7 +13,8 @@ See the archived originals for full historical context. Key points:
 ### Architecture Highlights
 
 - Modular Python scripts: main.py, cache_manager.py, database_migration.py, performance_monitor.py.
-- Data files: ideo_metadata.db (SQLite), avorites.json, atings.json, 	ags.json, iews.json.
+- Data files: ideo_metadata.db (SQLite), avorites.json, 
+atings.json, 	ags.json, iews.json.
 - Templates & static assets under 	emplates/ and static/.
 
 ## UI Implementation Summary

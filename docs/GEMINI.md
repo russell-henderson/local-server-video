@@ -1,4 +1,4 @@
-# GEMINI — Consolidated plan (short)
+# GEMINI - Consolidated plan (short)
 
 Last-updated: 2025-10-31
 
@@ -66,4 +66,4 @@ Provide a short, practical roadmap and immediate todos to evaluate and add a GEM
 
 ## Notes
 
-This file is intentionally concise — use it as the canonical sprint plan for adding LLM capabilities. Expand into `docs/gemini-prompts.md` and `docs/gemini-provider-eval.md` as work progresses.
+This file is intentionally concise - use it as the canonical sprint plan for adding LLM capabilities. Expand into `docs/gemini-prompts.md` and `docs/gemini-provider-eval.md` as work progresses.

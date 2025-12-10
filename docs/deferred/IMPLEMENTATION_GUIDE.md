@@ -296,7 +296,7 @@ toggleHighContrast() {
 ### ✅ **VR Devices**
 
 - **Status**: ✅ Complete
-- **Implementation**: Meta Quest tested — long-press/tap triggers preview, controls usable without motion sickness
+- **Implementation**: Meta Quest tested - long-press/tap triggers preview, controls usable without motion sickness
 
 ---
 

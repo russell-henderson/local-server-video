@@ -1,7 +1,7 @@
 ```markdown
 <!-- Historical: Subtitle Generation System moved to archive -->
 
-# Subtitle Generation System — REMOVED (Archived)
+# Subtitle Generation System - REMOVED (Archived)
 
 The automatic subtitle generation system has been removed from this
 repository. The implementation (AI transcription, CLI tools, API

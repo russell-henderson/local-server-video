@@ -259,7 +259,7 @@ git commit -m "chore: remove deprecated subtitle and maintenance stub files"
 | database_migration.py | 811 | 🟢 Active | **KEEP** | Database authority |
 | file_watcher.py | 402 | 🟢 Active | **KEEP** | File monitoring |
 | performance_monitor.py | 303 | 🟢 Active | **KEEP** | Performance tracking |
-| search_engine.py | — | ✅ Removed | **DONE** | Search/LLM functionality retired |
+| search_engine.py | - | ✅ Removed | **DONE** | Search/LLM functionality retired |
 | thumbnail_manager.py | 272 | 🟢 Active | **KEEP** | Thumbnail generation |
 | healthcheck.py | 886 | ❓ Utility | **REVIEW** | May be unused or should move to `tools/` |
 | **app_subs_integration.py** | ~20 | ✅ Removed | **DONE** | No-op stub, no imports found |
