@@ -1,4 +1,4 @@
-# TODOv4 — Admin Dashboard Checklist (Analytics Focus)
+# TODOv4 - Admin Dashboard Checklist (Analytics Focus)
 
 Purpose: Plan a comprehensive admin dashboard that surfaces video/gallery analytics and operational health. Do not build yet; use this as implementation guidance next time.
 
@@ -51,9 +51,9 @@ Purpose: Plan a comprehensive admin dashboard that surfaces video/gallery analyt
   - [ ] Tooltips and inline help for metrics definitions.
 - [ ] Core App Improvements (for future sprints)
   - [ ] Player UX: finalize loop controls, add AB-repeat presets, remember per-video playback speed, and surface keyboard shortcut hints.
-  - [ ] Thumbnail pipeline: add retry/backoff, shorter timestamp fallback for short clips, surface failures in admin dashboard, and expose a “requeue failed” action.
+  - [ ] Thumbnail pipeline: add retry/backoff, shorter timestamp fallback for short clips, surface failures in admin dashboard, and expose a "requeue failed" action.
   - [ ] Recommendations/Tags: tighten related-video logic (shared tags + duration proximity) and add tag weight/recency tuning; ensure tag editor shows top-used suggestions.
-  - [ ] Gallery: optional server-side favorites store (so hearts roam across devices), plus a one-click “add to favorites” from lightbox and group views.
+  - [ ] Gallery: optional server-side favorites store (so hearts roam across devices), plus a one-click "add to favorites" from lightbox and group views.
   - [ ] Formats/compatibility: proactive codec checks for new uploads (flag unsupported before playback), ensure WMV and WEBP handling stay tested.
   - [ ] Logging/observability: structured logs for watch events, thumbnail jobs, and FFmpeg errors; ship concise summaries into the admin dashboard.
   - [ ] Quality gates: lightweight lint/format + smoke tests (thumbnail generation, key routes up, sample video playback) in CI/dev script.
