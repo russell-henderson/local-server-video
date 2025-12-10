@@ -7,11 +7,13 @@ The Local Video Server uses **SQLite** as the primary backend for all video meta
 ## Primary Backend: SQLite Database
 
 ### Database File
+
 - **Location**: `video_metadata.db` (root directory)
 - **Type**: SQLite 3 database
 - **Schema**: Managed by `database_migration.py`
 
 ### Data Stored
+
 - **Videos**: Video file metadata (filename, added_date, file_size, duration)
 - **Ratings**: User ratings (1-5 stars) per video
 - **Views**: View counts and last viewed timestamps
@@ -19,6 +21,7 @@ The Local Video Server uses **SQLite** as the primary backend for all video meta
 - **Favorites**: User favorite video selections
 
 ### Access Pattern
+
 - All runtime operations read from and write to the database
 - `cache_manager.py` defaults to `use_database=True`
 - Database is initialized automatically on application startup
@@ -34,12 +37,14 @@ cache = VideoCache(use_database=True)  # Database is primary backend
 ```
 
 ### Runtime Behavior
+
 - **Primary Path**: All data operations use SQLite database
 - **Fallback Path**: JSON files are only used if database initialization fails (emergency fallback)
 - **Caching**: In-memory cache with TTL (5 minutes default) for performance
 - **Thread Safety**: All operations are thread-safe with RLock
 
 ### Data Access Methods
+
 - `get_ratings()` → Reads from database (cached)
 - `get_views()` → Reads from database (cached)
 - `get_tags()` → Reads from database (cached)
@@ -52,6 +57,7 @@ cache = VideoCache(use_database=True)  # Database is primary backend
 ## JSON Files: Backup Snapshots Only
 
 ### File Locations
+
 - `ratings.json` (root directory)
 - `views.json` (root directory)
 - `tags.json` (root directory)
@@ -59,12 +65,14 @@ cache = VideoCache(use_database=True)  # Database is primary backend
 - `backup_json/` (directory containing backup copies)
 
 ### Purpose
+
 - **Backup snapshots**: JSON files are backup copies of data, not the source of truth
 - **Migration source**: Used by `database_migration.py` for initial data import
 - **Emergency fallback**: Only used if database is unavailable (should not occur in normal operation)
 - **Diagnostics**: Can be used for data inspection without affecting the live database
 
 ### Git Status
+
 - **Ignored by Git**: All JSON files and `backup_json/` directory are in `.gitignore`
 - **Not committed**: These files contain user-specific data and should not be pushed to GitHub
 - **Local only**: JSON files remain on disk for backup purposes but are not tracked in version control
@@ -72,6 +80,7 @@ cache = VideoCache(use_database=True)  # Database is primary backend
 ## Migration and Restore
 
 ### Running a Migration
+
 If you need to migrate JSON data to the database (e.g., after restoring from backup):
 
 ```python
@@ -82,12 +91,14 @@ db.migrate_from_json()  # Migrates all JSON files to database
 ```
 
 The migration function:
+
 - Loads data from all JSON files
 - Merges with existing database data (uses `INSERT OR REPLACE` for safe updates)
 - Handles missing videos by adding them to the videos table
 - Preserves existing database data that isn't in JSON files
 
 ### Using Backup Files for Diagnostics
+
 To inspect backup data without affecting the live database:
 
 ```python
@@ -116,16 +127,19 @@ To verify the application is using the database backend correctly:
 ## Architecture Benefits
 
 ### Performance
+
 - **Indexed queries**: Sub-millisecond data access
 - **Reduced I/O**: No file system reads per request
 - **Efficient caching**: In-memory cache with database persistence
 
 ### Reliability
+
 - **ACID compliance**: Database transactions ensure data integrity
 - **Concurrent access**: Thread-safe operations with proper locking
 - **Data relationships**: Foreign keys maintain referential integrity
 
 ### Scalability
+
 - **Efficient queries**: SQL queries with indexes scale better than JSON parsing
 - **Bulk operations**: Database supports efficient batch updates
 - **Future-ready**: Easy to migrate to PostgreSQL or other databases if needed
@@ -133,6 +147,7 @@ To verify the application is using the database backend correctly:
 ## Maintenance
 
 ### Database Backup
+
 Regular database backups are recommended:
 
 ```bash
@@ -141,6 +156,7 @@ cp video_metadata.db video_metadata.db.backup_$(date +%Y%m%d)
 ```
 
 ### Orphaned Data Cleanup
+
 The database automatically cleans up orphaned data (videos that no longer exist on disk):
 
 ```python
@@ -157,4 +173,3 @@ db.cleanup_orphaned_data()  # Removes data for deleted video files
 - **JSON Files**: Backup snapshots only, ignored by Git
 - **Runtime**: All operations use database, JSON is emergency fallback only
 - **Backup Strategy**: JSON files and `backup_json/` directory for manual backups
-

@@ -3,6 +3,7 @@
 ## 2025-12-09
 
 ### Gallery UX and Favorites
+
 - Added favorites hearts to all gallery images (loose and grouped) with a Favorites filter that aggregates every favorited item.
 - Simplified gallery tiles by removing filename overlays for a cleaner visual grid.
 - Updated lightbox and selection handling to respect favorites filtering and maintain correct navigation/selection ranges.

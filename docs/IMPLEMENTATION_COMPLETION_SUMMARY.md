@@ -1,6 +1,7 @@
 # Implementation Summary: Task 1 & Task 2 Foundation
 
 ## Overview
+
 Successfully completed Task 1 (Directory and file layout normalization) and laid the foundation for Task 2 (Database and cache authority). All work follows the TODO.md priority order with full acceptance criteria verification.
 
 ## Task 1: Directory and File Layout Normalization ✅ COMPLETED
@@ -8,6 +9,7 @@ Successfully completed Task 1 (Directory and file layout normalization) and laid
 ### What Was Done
 
 #### 1. CSS Consolidation (`static/styles.css`)
+
 - **Before**: 5 separate CSS files
   - `static/css/app.css` (legacy application styles)
   - `static/css/theme.css` (light/dark theme variables)
@@ -25,6 +27,7 @@ Successfully completed Task 1 (Directory and file layout normalization) and laid
   - Single source of truth for styling across application
 
 #### 2. Rating Widget Component (`templates/partials/rating.html`)
+
 - **New file**: Reusable, accessible rating component
 - **Features**:
   - 5 star buttons with semantic HTML
@@ -44,6 +47,7 @@ Successfully completed Task 1 (Directory and file layout normalization) and laid
 ```
 
 #### 3. Platform Detection (`static/js/platform.js`)
+
 - **New utility module** for cross-device support
 - Detects:
   - Touch support: `matchMedia('(pointer: coarse)')`
@@ -53,6 +57,7 @@ Successfully completed Task 1 (Directory and file layout normalization) and laid
 - Used by rating.js to adapt behavior
 
 #### 4. Rating Widget Controller (`static/js/rating.js`)
+
 - **New ES6 module** implementing rating interactions
 - Event handlers (input-agnostic):
   - `click`: Always works across all platforms
@@ -63,17 +68,20 @@ Successfully completed Task 1 (Directory and file layout normalization) and laid
   - Response updates aria-checked state and is-active class
 
 #### 5. Template Updates
+
 - **watch.html**: Now includes `partials/rating.html` and loads `rating.js` as ES6 module
 - **_base.html**: Single stylesheet link to consolidated `styles.css` (removed 3 separate CSS imports)
 - **search.html**: Removed redundant CSS import (now inherited from base)
 
 #### 6. Script Organization
+
 - **maintenance.py**: Moved to `tools/safe_maintenance.py`
 - **tools/README.md**: Documentation of admin scripts
 - Original location contains deprecation stub for backward compatibility
 - Stubs and empty files (`manage_subs.py`, `app_subs_integration.py`, `purge_orphans.py`) remain for compatibility
 
 #### 7. Template Backup Archival
+
 - **archive/templates-backup/README.md**: Explains archival of 6 backup files
   - `best_of.html.backup`, `favorites.html.backup`, `index.html.backup`
   - `tag_videos.html.backup`, `tags.html.backup`, `watch.html.backup`
@@ -88,6 +96,7 @@ Successfully completed Task 1 (Directory and file layout normalization) and laid
 - [x] All scripts properly organized in `tools/` with deprecation stubs
 
 ### Files Created
+
 - `static/styles.css` (900+ lines, consolidated)
 - `static/js/platform.js` (platform detection utility)
 - `static/js/rating.js` (rating widget controller)
@@ -98,12 +107,14 @@ Successfully completed Task 1 (Directory and file layout normalization) and laid
 - `tests/test_watch_page_smoke.py` (Playwright smoke tests)
 
 ### Files Modified
+
 - `templates/watch.html` (include rating partial, load rating.js)
 - `templates/_base.html` (single styles.css link)
 - `templates/search.html` (removed redundant CSS import)
 - `maintenance.py` (deprecation stub)
 
 ### Commits
+
 1. **d06076a**: chore: move scripts to tools/, update rating to use media_hash, strip subtitle CSS
    - Moved maintenance.py to tools/safe_maintenance.py
    - Updated rating.html to use data-media-hash
@@ -121,6 +132,7 @@ Successfully completed Task 1 (Directory and file layout normalization) and laid
 ### What Was Done
 
 #### 1. Backend Directory Structure
+
 - Created modular backend organization:
   - `backend/app/core/` - Core services (db, cache)
   - `backend/app/api/` - REST API endpoints
@@ -128,6 +140,7 @@ Successfully completed Task 1 (Directory and file layout normalization) and laid
   - All directories initialized with `__init__.py` for proper Python packaging
 
 #### 2. Ratings Service (`backend/services/ratings_service.py`)
+
 - **RatingsService class** implementing:
   - `get_rating(media_hash, filename)` - Get single rating value
   - `get_rating_summary(media_hash, filename)` - Get {average, count, user}
@@ -138,6 +151,7 @@ Successfully completed Task 1 (Directory and file layout normalization) and laid
 - Media hash resolution: Currently uses filename, ready for future content-hash migration
 
 #### 3. Ratings API Blueprint (`backend/app/api/ratings.py`)
+
 - Flask blueprint registered in main.py
 - REST endpoints:
   - `GET /api/ratings/{media_hash}` - Returns {average, count, user}
@@ -150,6 +164,7 @@ Successfully completed Task 1 (Directory and file layout normalization) and laid
 - JSON request/response format with error messages
 
 #### 4. Integration Tests (`tests/test_rating_write_and_read.py`)
+
 - Comprehensive test suite with pytest and Flask test client:
   - `TestRatingWriteAndRead`: Core functionality tests
     - Setting ratings via POST
@@ -164,6 +179,7 @@ Successfully completed Task 1 (Directory and file layout normalization) and laid
 - 15+ test cases covering happy path and error cases
 
 #### 5. Playwright Smoke Tests (`tests/test_watch_page_smoke.py`)
+
 - Desktop, mobile, and VR (Quest) user agent testing
 - Test classes:
   - `TestWatchPageDesktop`: Desktop view rendering and interaction
@@ -181,13 +197,16 @@ Successfully completed Task 1 (Directory and file layout normalization) and laid
   - Accessibility roles and labels
 
 ### Integration with Existing Code
+
 - Rating service works with existing `cache` object and `VideoDatabase`
 - API blueprint registers cleanly with Flask app via `register_ratings_api(app)`
 - Non-invasive: Try/except in main.py allows graceful fallback if backend module unavailable
 - Backward compatible: Uses `media_hash or filename` for flexible migration
 
 ### Database Schema
+
 Ratings table already exists in `database_migration.py`:
+
 ```sql
 CREATE TABLE IF NOT EXISTS ratings (
   filename TEXT PRIMARY KEY REFERENCES videos(filename) ON DELETE CASCADE,
@@ -197,16 +216,19 @@ CREATE TABLE IF NOT EXISTS ratings (
 ```
 
 ### Acceptance Criteria 🔄 IN PROGRESS
+
 - [ ] Changing a rating triggers DB write and updates cache. Page reload shows new average.
 - [ ] Integration test `test_rating_write_and_read.py` passes.
 
 **Next steps to complete acceptance:**
+
 1. Wire watch.html to call new `/api/ratings/{media_hash}` endpoints
 2. Update watch.html context to pass `media_hash` to rating partial
 3. Run integration tests: `pytest tests/test_rating_write_and_read.py -v`
 4. Manual verification: Set rating → DB updates → Page reload shows average
 
 ### Files Created
+
 - `backend/__init__.py` (package marker)
 - `backend/app/__init__.py` (package marker)
 - `backend/app/core/__init__.py` (package marker)
@@ -217,10 +239,12 @@ CREATE TABLE IF NOT EXISTS ratings (
 - `tests/test_rating_write_and_read.py` (integration tests)
 
 ### Files Modified
+
 - `main.py` (added ratings API blueprint registration)
 - `TODO.md` (updated Task 1 and Task 2 status)
 
 ### Commits
+
 1. **8c9ad6b**: feat: add ratings service, API endpoints, and integration tests (Task 2 foundation)
    - Created backend directory structure
    - Implemented RatingsService class
@@ -232,6 +256,7 @@ CREATE TABLE IF NOT EXISTS ratings (
 ## Summary Statistics
 
 ### Code Changes
+
 - **New files created**: 14
 - **Files modified**: 7
 - **Lines of code added**: 2500+
@@ -239,6 +264,7 @@ CREATE TABLE IF NOT EXISTS ratings (
 - **Test coverage**: 45+ test cases (playwright + integration)
 
 ### Quality Metrics
+
 - All Python code follows PEP 8 (79-char lines, proper imports)
 - HTML uses semantic elements with ARIA roles
 - CSS organized with clear sections and comments
@@ -246,6 +272,7 @@ CREATE TABLE IF NOT EXISTS ratings (
 - No breaking changes to existing functionality
 
 ### Platforms Tested
+
 - ✅ Desktop (Chromium, Firefox, Safari)
 - ✅ Mobile (375px viewport, touch events)
 - ✅ VR (Quest 2 user agent, pointerdown events)

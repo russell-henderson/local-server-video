@@ -11,6 +11,7 @@ A modern, professional-grade local video streaming application with intelligent 
 ## ✨ Features
 
 ### 📺 Video Streaming
+
 - **Unified Video Player** - Consistent player across all pages
 - **Range-Based Streaming** - Efficient HTTP range requests for large files
 - **Resume Playback** - Automatic position saving and resume prompts
@@ -19,6 +20,7 @@ A modern, professional-grade local video streaming application with intelligent 
 - **Multiple Format Support** - MP4, MKV, WebM, MOV, AVI and more
 
 ### 🎨 User Interface
+
 - **Responsive Design** - Desktop, mobile, tablet, and VR support
 - **Dark/Light Themes** - Modern glassmorphic and neomorphic designs
 - **Touch-Friendly Controls** - 44px+ minimum touch targets for accessibility
@@ -26,6 +28,7 @@ A modern, professional-grade local video streaming application with intelligent 
 - **High Contrast Mode** - Enhanced accessibility for vision impaired users
 
 ### 🎥 Video Management
+
 - **5-Star Rating System** - Rate and track video quality
 - **Favorites** - Quick-save your favorite videos
 - **Custom Tags** - Organize videos with flexible tagging system
@@ -34,6 +37,7 @@ A modern, professional-grade local video streaming application with intelligent 
 - **Related Videos** - Intelligent content discovery recommendations
 
 ### 📊 Performance & Data
+
 - **Intelligent Caching** - Dual-backend cache (SQLite + JSON fallback)
 - **Automatic Thumbnail Generation** - Background FFmpeg thumbnail extraction
 - **File Monitoring** - Real-time detection of new videos with debouncing
@@ -42,12 +46,14 @@ A modern, professional-grade local video streaming application with intelligent 
 - **Concurrent Processing** - ThreadPoolExecutor for background tasks
 
 ### 🖼️ Gallery System (New!)
+
 - **Image Gallery** - Organize loose images into virtual groups with selection mode
 - **Favorites Everywhere** - Heart any image (loose or grouped) and filter to see all favorites at once
 - **Covers & Management** - Set cover images, create/edit/delete groups without touching files
 - **Clean Grid & Lightbox** - Filename-free tiles, lazy loading, keyboard/lightbox navigation, quick add-to-group/create-group actions
 
 ### 🔒 Privacy & Security
+
 - **Local-Only Storage** - All data stored locally, no cloud required
 - **User Metadata Protected** - Personal ratings and favorites kept private
 - **No Tracking** - Zero external analytics or telemetry
@@ -57,6 +63,7 @@ A modern, professional-grade local video streaming application with intelligent 
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - Python 3.11+ (recommend 3.13)
 - FFmpeg (for thumbnail generation)
 - Windows, macOS, or Linux
@@ -64,17 +71,20 @@ A modern, professional-grade local video streaming application with intelligent 
 ### Installation
 
 1. **Clone the repository:**
+
 ```bash
 git clone https://github.com/russell-henderson/local-server-video.git
 cd local-video-server
 ```
 
-2. **Install dependencies:**
+1. **Install dependencies:**
+
 ```bash
 pip install -r requirements.txt
 ```
 
-3. **Run the server:**
+1. **Run the server:**
+
 ```bash
 # Development mode (auto-reload)
 .\dev.ps1 dev
@@ -86,12 +96,13 @@ pip install -r requirements.txt
 python main.py
 ```
 
-4. **Open in browser:**
+1. **Open in browser:**
+
 ```
 http://localhost:5000
 ```
 
-5. **Add your videos:**
+1. **Add your videos:**
    - Place video files in the `videos/` folder
    - Server auto-discovers and indexes them
    - Thumbnails generate automatically on demand
@@ -101,12 +112,14 @@ http://localhost:5000
 ### Environment Variables
 
 Configuration is loaded from (highest to lowest priority):
+
 1. Environment variables (`LVS_*` prefix)
 2. `.env` file
 3. `config.json` file
 4. Built-in defaults
 
 **Example `.env` file:**
+
 ```bash
 # Server
 LVS_HOST=0.0.0.0
@@ -128,6 +141,7 @@ LVS_ANALYTICS_ENABLED=true
 ### Configuration File (`config.py`)
 
 Edit `config.py` to customize:
+
 - Server host and port
 - Video and thumbnail directories
 - Database paths
@@ -181,6 +195,7 @@ local-video-server/
 ### Getting Started
 
 1. **Read the architecture guide:**
+
    ```
    docs/IMPLEMENTATION.md - Essential reading for developers
    ```
@@ -229,6 +244,7 @@ sqlite3 video_metadata.db ".tables"
 ### Adding Features
 
 1. **Create feature branch:**
+
    ```bash
    git checkout -b feature/my-feature
    ```
@@ -258,6 +274,7 @@ Start here for different tasks:
 - **[PYTHON_UPDATE.md](docs/PYTHON_UPDATE.md)** - Python files inventory and audit
 
 **Maintenance & Utilities:**
+
 - **[ARCHIVE_INDEX.md](docs/ARCHIVE_INDEX.md)** - Index of archived/deprecated systems
 - **[copilot-instructions.md](.github/copilot-instructions.md)** - Copilot guidelines for this project
 
@@ -290,6 +307,7 @@ Start here for different tasks:
 ## 🐛 Troubleshooting
 
 ### Server won't start
+
 ```bash
 # Check if port is in use
 lsof -i :5000              # macOS/Linux
@@ -300,6 +318,7 @@ python --version            # Should be 3.11+
 ```
 
 ### Missing thumbnails
+
 ```bash
 # Regenerate all thumbnails
 .\dev.ps1 health            # Check thumbnail status
@@ -307,6 +326,7 @@ python --version            # Should be 3.11+
 ```
 
 ### Database issues
+
 ```bash
 # Check database integrity
 sqlite3 video_metadata.db ".tables"
@@ -317,6 +337,7 @@ sqlite3 video_metadata.db "PRAGMA integrity_check;"
 ```
 
 ### Performance problems
+
 ```bash
 # Check performance metrics
 # Visit: http://localhost:5000/admin/performance

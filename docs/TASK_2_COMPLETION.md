@@ -7,12 +7,14 @@ Successfully completed **Task 2: Database and Cache Authority** for Local Video 
 ## What Was Delivered
 
 ### 1. Frontend Wiring (Commit 95891c6)
+
 - **main.py**: Computes `media_hash = RatingsService.get_media_hash(filename)` for each watch request
 - **watch.html**: Passes `media_hash` to template context
 - **rating.html**: Strict binding to `data-media-hash` (no fallback to filename)
 - **rating.js**: Enhanced with better error handling and debug logging
 
 ### 2. Backend Core Modules (Commit f2afda5)
+
 - **db.py**: DatabaseSession context manager with exponential backoff retry logic
   - Connection pooling support
   - Alembic migration configuration
@@ -24,6 +26,7 @@ Successfully completed **Task 2: Database and Cache Authority** for Local Video 
   - WriteThrough class for atomic DB+cache operations
 
 ### 3. Validation & Rate Limiting (Commit fc87991)
+
 - **schemas.py**: Pydantic models for request/response validation
   - RatingInput: Enforces 1-5 range, supports type coercion
   - RatingSummary: Response schema with average, count, user
@@ -39,6 +42,7 @@ Successfully completed **Task 2: Database and Cache Authority** for Local Video 
   - Rate limit errors return 429
 
 ### 4. Database Migrations (Commit fc87991)
+
 - **Alembic infrastructure**:
   - `backend/app/migrations/env.py`: Environment configuration
   - `backend/app/migrations/__init__.py`: Package marker
@@ -50,29 +54,36 @@ Successfully completed **Task 2: Database and Cache Authority** for Local Video 
   - Includes upgrade and downgrade functions
 
 ### 5. Extended Test Suite (Commit 185ef05)
+
 Added 20+ new test cases organized in 4 test classes:
 
 **TestRatingDatabasePersistence** (3 tests):
+
 - Verify rating written to SQLite database
 - Confirm persistence after cache clear
 - Verify update overwrites previous rating
 
 **TestRatingRateLimiting** (3 tests):
+
 - Rate limiting enforced (10 succeed, 11th = 429)
 - Retry-After header included in 429 response
 - Helpful error message in rate limit response
 
 **TestPydanticValidation** (3 tests):
+
 - String rating coerced to integer
 - Float rating handled appropriately
 - Null values rejected with 400
 
 **Existing test suites enhanced**:
+
 - TestRatingWriteAndRead: Original 8 tests (set, get, persist, invalid, missing, range, structure)
 - TestRatingCacheBehavior: Original 2 tests (cache invalidation, JSON fallback)
 
 ### 6. Dependencies Updated (Commit fc87991)
+
 Added to `requirements.txt`:
+
 - pydantic==2.5.0 (validation)
 - alembic==1.12.1 (database migrations)
 - SQLAlchemy==2.0.23 (ORM and database abstraction)
@@ -80,6 +91,7 @@ Added to `requirements.txt`:
 ## Technical Highlights
 
 ### Architecture Flow
+
 ```
 User clicks star on watch.html
   ↓
@@ -103,6 +115,7 @@ Frontend updates aria-checked and is-active classes
 ```
 
 ### Safety Rails Implemented
+
 - **Input validation**: Pydantic ensures only 1-5 values accepted
 - **Rate limiting**: Prevents abuse from single IP (10 req/60s)
 - **Database safety**: Exponential backoff on locked database
@@ -136,7 +149,8 @@ Frontend updates aria-checked and is-active classes
 
 **Branch name**: `chore/move-docs-to-doc`
 
-**Commits on branch**: 
+**Commits on branch**:
+
 - d06076a (Task 1 - directory normalization)
 - 8c9ad6b (Task 2 - service & API foundation)
 - 2a31790 (documentation)
@@ -165,17 +179,19 @@ Frontend updates aria-checked and is-active classes
 ## Files Modified/Created
 
 ### New Files
+
 - backend/app/core/db.py (155 lines)
 - backend/app/core/cache.py (218 lines)
 - backend/app/core/rate_limiter.py (119 lines)
 - backend/app/api/schemas.py (93 lines)
 - backend/app/migrations/env.py (70 lines)
-- backend/app/migrations/__init__.py
-- backend/app/migrations/versions/__init__.py
+- backend/app/migrations/**init**.py
+- backend/app/migrations/versions/**init**.py
 - backend/app/migrations/versions/001_add_ratings.py (42 lines)
 - tests/test_rating_write_and_read.py (500+ lines extended)
 
 ### Modified Files
+
 - main.py: Added media_hash computation
 - templates/watch.html: Pass media_hash to template
 - templates/partials/rating.html: Use data-media_hash binding
@@ -186,6 +202,7 @@ Frontend updates aria-checked and is-active classes
 ## Testing Recommendations
 
 Run locally before merge:
+
 ```powershell
 # Install dependencies
 pip install -r requirements.txt

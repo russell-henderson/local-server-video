@@ -101,7 +101,7 @@ def update_rating(filename, rating):
    # Restart application
    ```
 
-2. **Enable Performance Monitoring**
+1. **Enable Performance Monitoring**
 
    ```python
    from performance_monitor import flask_route_monitor, monitor
@@ -238,7 +238,7 @@ results = load_test_simulation('http://localhost:5000', 100)
    cache.refresh_all()
    ```
 
-2. **High Memory Usage**
+1. **High Memory Usage**
 
    ```python
    # Check cache size
@@ -248,7 +248,7 @@ results = load_test_simulation('http://localhost:5000', 100)
    cache._video_metadata.clear()
    ```
 
-3. **Database Lock Errors**
+2. **Database Lock Errors**
 
    ```python
    # Increase timeout
@@ -256,7 +256,7 @@ results = load_test_simulation('http://localhost:5000', 100)
    # Default timeout is 30 seconds
    ```
 
-4. **Thumbnail Generation Hanging**
+3. **Thumbnail Generation Hanging**
 
    ```python
    # Add timeout to FFmpeg calls

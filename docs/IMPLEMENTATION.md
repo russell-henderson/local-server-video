@@ -13,8 +13,9 @@ See the archived originals for full historical context. Key points:
 ### Architecture Highlights
 
 - Modular Python scripts: main.py, cache_manager.py, database_migration.py, performance_monitor.py.
-- Data files: ideo_metadata.db (SQLite), avorites.json, atings.json, 	ags.json, iews.json.
-- Templates & static assets under 	emplates/ and static/.
+- Data files: ideo_metadata.db (SQLite), avorites.json,
+atings.json,  ags.json, iews.json.
+- Templates & static assets under  emplates/ and static/.
 
 ## UI Implementation Summary
 
@@ -24,7 +25,7 @@ This project follows a unified UI approach with a single shared player, responsi
 - Video cards: hover/tap preview system with adaptive behavior for mobile/VR; touch-friendly hit targets and accessibility considerations.
 - Player controls: consistent, accessible controls (play/pause, volume, scrub, fullscreen, ±10s skip, keyboard bindings).
 
-Key implementation artifacts live in static/ (e.g., optimized-utils.js, ideo-preview-enhanced.js, avorites.js) and 	emplates/_player.html.
+Key implementation artifacts live in static/ (e.g., optimized-utils.js, ideo-preview-enhanced.js, avorites.js) and  emplates/_player.html.
 
 ## Developer Commands & Notes
 

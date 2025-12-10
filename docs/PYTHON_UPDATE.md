@@ -194,8 +194,8 @@ These are **lightweight compatibility stubs** that prevent ImportError but provi
   - Checks: app port, SQLite integrity, Meilisearch, cache usage, video files, FFmpeg, backups, SSL certs, quiet hours, admin privileges
   - Returns JSON report with exit codes (0=ok, 1=warn, 2=fail)
 - **Current Usage:** ⚠️ **Unclear** - Not referenced in `main.py`
-- **Decision Needed:** 
-  - Is this actively used? 
+- **Decision Needed:**
+  - Is this actively used?
   - Should it be moved to `tools/` instead?
   - Does the current app config align with what it checks?
 - **Status:** ❓ **CONDITIONAL KEEP** - Only if actively used for monitoring

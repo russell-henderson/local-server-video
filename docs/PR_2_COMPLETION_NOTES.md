@@ -29,31 +29,36 @@
 ### 2. ✅ Verified Requirements Met
 
 #### Ratings Schema
+
 - ✅ Uses `filename` PRIMARY KEY (appropriate for single-user local system)
 - ✅ FOREIGN KEY to `videos(filename)` with CASCADE delete
 - ✅ CHECK constraint: `rating BETWEEN 1 AND 5`
 - ✅ Alembic migration aligned with runtime schema
 
 #### API Design
+
 - ✅ Hash-first: All routes use `/api/ratings/{media_hash}`
 - ✅ Request payload: `{"value": 1-5}` (not "rating")
 - ✅ Response structure: `{average, count, user: {value}}`
 - ✅ Pydantic validation for 1-5 range
-- ✅ Deterministic media_hash: SHA256(filename)[:16]
+- ✅ Deterministic media_hash: SHA256[filename](:16)
 - ✅ Bidirectional mapping: `media_hash_map` table for filename↔hash lookup
 
 #### Cache & Invalidation
+
 - ✅ 6 granular invalidation methods exist: `invalidate_ratings()`, `invalidate_views()`, etc.
 - ✅ Cache invalidation tested and passing
 - ✅ Write-through cache coordination working
 
 #### Feature Flags
+
 - ✅ `FEATURE_VR_SIMPLIFY` env var (default true)
 - ✅ `FEATURE_PREVIEWS` env var (default true)
 - ✅ `.rating` element never hidden
 - ✅ Support for `LVS_` prefixed environment variables
 
 #### Performance Monitoring
+
 - ✅ Cache hit rate tracking
 - ✅ Database query statistics
 - ✅ Admin dashboard at `/admin/performance`
@@ -62,6 +67,7 @@
 ### 3. Test Results
 
 **All new tests passing:**
+
 ```
 ✅ test_media_hash_roundtrip - PASSED
 ✅ test_cache_invalidation_paths - PASSED

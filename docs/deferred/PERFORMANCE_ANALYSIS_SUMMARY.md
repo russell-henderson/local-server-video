@@ -18,13 +18,13 @@
 - ~84KB+ disk I/O per page load
 - No caching layer
 
-2. **Inefficient Data Processing** (🔴 Critical)
+1. **Inefficient Data Processing** (🔴 Critical)
 
 - Video directory scanning on every request
 - Redundant metadata reconstruction
 - Synchronous thumbnail generation blocking requests
 
-3. **Scalability Limitations** (🟡 Medium)
+1. **Scalability Limitations** (🟡 Medium)
 
 - JSON-based data storage
 - No indexing for queries
@@ -160,7 +160,7 @@ Request → Cache lookup → Bulk operations → Background thumbnails → Respo
      return get_video_list()
   ```
 
-2. **Background Thumbnail Generation** (10 minutes):
+1. **Background Thumbnail Generation** (10 minutes):
 
   ```python
   from concurrent.futures import ThreadPoolExecutor
@@ -170,7 +170,7 @@ Request → Cache lookup → Bulk operations → Background thumbnails → Respo
      executor.submit(generate_thumbnail, video)
   ```
 
-3. **Response Caching Headers** (2 minutes):
+1. **Response Caching Headers** (2 minutes):
 
   ```python
   rv.headers.add('Cache-Control', 'public, max-age=3600')

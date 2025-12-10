@@ -186,4 +186,3 @@ If you want to step through the code:
 ---
 
 If you paste that new `galleryItems.forEach` block in and try a couple of shift-clicks with the console open, you will know very quickly whether the selection logic is doing what you expect.
-

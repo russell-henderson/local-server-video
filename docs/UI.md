@@ -9,7 +9,7 @@ Consolidated UI documentation (design, player, and preview system). Original fil
 
 ## Player & Controls
 
-- Single shared player across pages (	emplates/_player.html).
+- Single shared player across pages ( emplates/_player.html).
 - Controls: play/pause, volume, scrub, fullscreen, skip ±10s, keyboard bindings.
 - Favorites and rating UI updated via centralized optimized-utils.js to sync controls across DOM.
 

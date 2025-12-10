@@ -8,5 +8,6 @@ Date: 2025-12-09
 - Group view refinements: group images show favorite hearts, retaining cover selection and delete controls without altering grouping behavior.
 
 Notes:
+
 - Favorites are stored locally (browser `localStorage`), so they persist per browser/device.
 - Grouping remains virtual; adding to a group removes it from the loose grid but favorites still surface everywhere via the Favorites filter.
