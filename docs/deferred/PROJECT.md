@@ -60,7 +60,7 @@ This project is a local video server designed to manage, serve, and organize a c
 ├── videos/
 │   └── *.mp4
 
-```
+```text
 
 .
 ├── cache_manager.py

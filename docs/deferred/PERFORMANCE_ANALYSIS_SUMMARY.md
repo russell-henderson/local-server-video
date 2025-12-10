@@ -136,14 +136,14 @@ app = flask_route_monitor(app)
 
 #### **Before Optimization:**
 
-```
+```text
 Request → Load 4 JSON files → Process each video → Generate thumbnails → Response
       (84KB+ I/O)        (333+ operations)    (blocking)         (200-500ms)
 ```
 
 #### **After Optimization:**
 
-```
+```text
 Request → Cache lookup → Bulk operations → Background thumbnails → Response
       (memory)       (pre-computed)     (non-blocking)        (50-100ms)
 ```

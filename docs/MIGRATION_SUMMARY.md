@@ -6,7 +6,7 @@
 
 **Updated `.gitignore`** with clearly labeled section:
 
-```
+```gitignore
 # Local JSON backup data (do not commit)
 # These files are backup snapshots only - database is the canonical source
 ratings.json
@@ -120,7 +120,7 @@ git status
 
 ### Final .gitignore Entries
 
-```
+```gitignore
 # Local JSON backup data (do not commit)
 # These files are backup snapshots only - database is the canonical source
 ratings.json

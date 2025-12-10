@@ -92,7 +92,7 @@ Added to `requirements.txt`:
 
 ### Architecture Flow
 
-```
+```text
 User clicks star on watch.html
   ↓
 rating.js captures click event

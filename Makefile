@@ -53,6 +53,8 @@ lint:
 	@python -c "import os; [print(f'✓ {f}') for f in os.listdir('templates') if f.endswith('.html')]"
 	@echo "Checking JavaScript files..."
 	@python -c "import os; [print(f'✓ {f}') for f in os.listdir('static') if f.endswith('.js')]"
+	@echo "Checking Markdown files..."
+	@which markdownlint > /dev/null 2>&1 && markdownlint '**/*.md' && echo "✓ All markdown files are valid" || echo "⚠️  markdownlint not installed (run: npm install -g markdownlint-cli)"
 	@echo "✅ Code quality check complete"
 
 # Run tests with coverage

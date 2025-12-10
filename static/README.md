@@ -5,12 +5,12 @@ A feature-rich, high-performance Flask-based local video server with AI chat int
 ## 📋 Table of Contents
 
 - [Features](#-features)
-- [Quick Start](#-quick-start)
+- [Quick Start](#quick-start)
 - [Installation](#-installation)
 - [Configuration](#️-configuration)
 - [Features & Usage](#-features--usage)
-- [API Endpoints](#-api-endpoints)
-- [Architecture](#-architecture)
+- [API Endpoints](#api-endpoints)
+- [Architecture](#architecture)
 - [Performance](#-performance)
 - [Development](#-development)
 - [Troubleshooting](#-troubleshooting)
@@ -62,11 +62,7 @@ A feature-rich, high-performance Flask-based local video server with AI chat int
 - **Health Checks**: API health endpoints for monitoring
 - **Background Tasks**: Thumbnail regeneration and maintenance tools
 
-```
-
-
-
-
+<!-- Placeholder for future content -->
 
 
 ## 🛠 Installation
@@ -523,4 +519,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-# Enjoy your local video server! 🍿
+Enjoy your local video server! 🍿

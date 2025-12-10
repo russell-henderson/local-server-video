@@ -68,7 +68,7 @@
 
 **All new tests passing:**
 
-```
+```text
 ✅ test_media_hash_roundtrip - PASSED
 ✅ test_cache_invalidation_paths - PASSED
 ✅ test_media_hash_is_deterministic - PASSED

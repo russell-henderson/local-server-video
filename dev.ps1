@@ -74,6 +74,18 @@ function Test-Code {
         Write-Host "✓ $($file.Name)" -ForegroundColor Green
     }
     
+    Write-Host "Checking Markdown files..."
+    if (Get-Command markdownlint -ErrorAction SilentlyContinue) {
+        markdownlint '**/*.md'
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host "✓ All markdown files are valid" -ForegroundColor Green
+        } else {
+            Write-Host "❌ Markdown linting errors found" -ForegroundColor Red
+        }
+    } else {
+        Write-Host "⚠️  markdownlint not installed (run: npm install -g markdownlint-cli)" -ForegroundColor Yellow
+    }
+    
     Write-Host "✅ Code quality check complete" -ForegroundColor Green
 }
 

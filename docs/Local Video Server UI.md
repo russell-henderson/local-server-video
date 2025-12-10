@@ -1,7 +1,12 @@
 
 # Local Video Server UI
 
-A video player can be designed with glassmorphism (frosted glass, transparency, and blur) or neumorphism (soft shadows, embossed look, and subtle depth) or even a combination of both. Both design styles offer unique visual appeal, with glassmorphism creating a modern, layered depth and neumorphism providing a more tactile, three-dimensional feel. You can find examples and tutorials for creating such video players on design platforms like Dribbble and YouTube, and see their implementation in popular operating systems like macOS and Windows 11\.
+A video player can be designed with glassmorphism (frosted glass, transparency, and blur) or 
+neumorphism (soft shadows, embossed look, and subtle depth) or even a combination of both. 
+Both design styles offer unique visual appeal, with glassmorphism creating a modern, layered 
+depth and neumorphism providing a more tactile, three-dimensional feel. You can find examples 
+and tutorials for creating such video players on design platforms like Dribbble and YouTube, 
+and see their implementation in popular operating systems like macOS and Windows 11\.
 
 ## **Glassmorphism Video Player**
 
@@ -12,15 +17,17 @@ Key Features:
 Creates a sense of depth through layers, transparency, and subtle light and shadow effects.
 
 Examples:  
-Prominent in modern operating systems like macOS Big Sur and Windows 11, which use blurred and translucent elements for a sleek look.
+Prominent in modern operating systems like macOS Big Sur and Windows 11, which use blurred 
+and translucent elements for a sleek look.
 How to Create:  
-Achieved by decreasing the opacity of elements, adding a background blur, rounding corners, and using subtle borders and shadows to create the "glass" effect.
+Achieved by decreasing the opacity of elements, adding a background blur, rounding corners, 
+and using subtle borders and shadows to create the "glass" effect.
 
 ![][image1]
 
 ## **Characteristics of Glassmorphism**  
 
-Two main characteristics create glassmorphism’s translucency: opacity and background blur. To achieve a glassmorphic effect, designers can vary the opacity and background blur of components to affect how much background information is visible and distinguishable. Designers can also opt to use strokes and gradients for more depth and contrast if the glassmorphic elements will be placed on both complex and simple backgrounds.
+Two main characteristics create glassmorphism's translucency: opacity and background blur. To achieve a glassmorphic effect, designers can vary the opacity and background blur of components to affect how much background information is visible and distinguishable. Designers can also opt to use strokes and gradients for more depth and contrast if the glassmorphic elements will be placed on both complex and simple backgrounds.
 
 ## **Opacity**
 
@@ -31,30 +38,50 @@ Opacity defines how much you can see through an element. The more opaque an elem
 
 ## **Background Blur**
 
-Background blur distorts objects behind the main component, giving background elements a fuzzy, out-of-focus appearance. Examples of background blur in the physical world are a walk-in shower with a frosted glass door or a conference room with privacy glass. You can still see objects on the other side, but they are blurred to a point where you might be unable to identify them.
+Background blur distorts objects behind the main component, giving background elements a fuzzy, 
+out-of-focus appearance. Examples of background blur in the physical world are a walk-in shower 
+with a frosted glass door or a conference room with privacy glass. You can still see objects on 
+the other side, but they are blurred to a point where you might be unable to identify them.
 
-Background blur provides this same effect for low-opacity digital elements. For instance, a white rectangle with 30% opacity and a 25-pixel blur will distort background elements but still have somewhat distinguishable edges. However, by adjusting the blur to 100 pixels, those same background elements become more out-of-focus and blend together.
+Background blur provides this same effect for low-opacity digital elements. For instance, a white 
+rectangle with 30% opacity and a 25-pixel blur will distort background elements but still have 
+somewhat distinguishable edges. However, by adjusting the blur to 100 pixels, those same background 
+elements become more out-of-focus and blend together.
 
 ![][image3]
 
 ## **Strokes and Gradients**
 
-In addition to opacity and background blur, strokes (borders) and gradients can emphasize depth of glassmorphic elements, especially when these elements are placed on simple or one-color backgrounds.
-A gradient takes two or more colors, color shades, or color opacities and blends them together seamlessly. Gradients can be applied to both fills and strokes of an element. You can add a low-opacity or gradient stroke around a component to create an illusion of thickness. Gradients can also be applied to the fill of the component to mimic the reflection of light on actual glass.
+In addition to opacity and background blur, strokes (borders) and gradients can emphasize depth 
+of glassmorphic elements, especially when these elements are placed on simple or one-color backgrounds.
+A gradient takes two or more colors, color shades, or color opacities and blends them together 
+seamlessly. Gradients can be applied to both fills and strokes of an element. You can add a low-opacity 
+or gradient stroke around a component to create an illusion of thickness. Gradients can also be applied 
+to the fill of the component to mimic the reflection of light on actual glass.
 
 ![][image4]
 
 ## **Designing with Glassmorphism: Best Practices**
 
-When incorporating glass-like materials in your UI, it is essential to understand the accessibility constraints of translucent components. One of the most significant issues with glassmorphism stems from text readability problems, with text either being too light or too dark or backgrounds being too busy. Follow these three best practices when incorporating glass-like materials into your design system
+When incorporating glass-like materials in your UI, it is essential to understand the accessibility 
+constraints of translucent components. One of the most significant issues with glassmorphism stems from 
+text readability problems, with text either being too light or too dark or backgrounds being too busy. 
+Follow these three best practices when incorporating glass-like materials into your design system
 
 ## **Meet Contrast Requirements**
 
-Ensure that text and graphical elements meet contrast requirements. Since glassmorphic components are translucent, textual elements can fall over multiple colors, which can affect readability. For instance, if you are designing a card component over a busy background, your text might only have enough contrast over certain areas and be challenging to read. If you are designing in Figma, I recommend checking out the plugin Contrast by Willowtree, which lets you quickly check the contrast ratios of text and other design elements.
+Ensure that text and graphical elements meet contrast requirements. Since glassmorphic components are 
+translucent, textual elements can fall over multiple colors, which can affect readability. For instance, 
+if you are designing a card component over a busy background, your text might only have enough contrast 
+over certain areas and be challenging to read. If you are designing in Figma, I recommend checking out 
+the plugin Contrast by Willowtree, which lets you quickly check the contrast ratios of text and other 
+design elements.
 
 ## **More Blur Is Better**
 
-More background blur is better, especially with intricate backgrounds (e.g., video, photography, animations). Many UI designs on Behance or Dribble try too hard to keep background elements distinguishable. However, overwhelming backgrounds can make it hard for users to focus on meaningful content and affect text readability.
+More background blur is better, especially with intricate backgrounds (e.g., video, photography, animations). 
+Many UI designs on Behance or Dribble try too hard to keep background elements distinguishable. However, 
+overwhelming backgrounds can make it hard for users to focus on meaningful content and affect text readability.
 
 In instances where components can appear in various contexts, like an overlay on a website or contextual menu on a desktop application, the background blur must account for the many possible backgrounds on which the item may appear. For example, the contextual menu below uses Microsoft’s acrylic material that appears over a complex image.
 

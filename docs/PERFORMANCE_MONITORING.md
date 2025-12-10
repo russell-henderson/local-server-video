@@ -7,7 +7,7 @@
 - Controlled by `ServerConfig.enable_perf_log` (env `LVS_ENABLE_PERF_LOG`, default `true`).
 - Example log line:
 
-  ```
+  ```text
   [PERF] ts=2025-11-24T12:34:56 method=GET path=/watch/foo.mp4 status=200 duration_ms=42.17
   ```
 

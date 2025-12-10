@@ -98,7 +98,7 @@ python main.py
 
 1. **Open in browser:**
 
-```
+```text
 http://localhost:5000
 ```
 
@@ -151,7 +151,7 @@ Edit `config.py` to customize:
 
 ## 📁 Project Structure
 
-```
+```text
 local-video-server/
 ├── main.py                    # Flask app with all routes
 ├── config.py                  # Configuration management
@@ -196,7 +196,7 @@ local-video-server/
 
 1. **Read the architecture guide:**
 
-   ```
+   ```text
    docs/IMPLEMENTATION.md - Essential reading for developers
    ```
 
@@ -216,7 +216,7 @@ local-video-server/
 
 ```bash
 # Windows PowerShell:
-.\dev.ps1 lint          # Check syntax and style
+.\dev.ps1 lint          # Check syntax and style (Python, HTML, JS, Markdown)
 .\dev.ps1 test          # Run test suite
 .\dev.ps1 health        # System health check
 .\dev.ps1 clean         # Clean cache/logs
@@ -225,6 +225,9 @@ local-video-server/
 .\dev.ps1 reindex       # Force video reindexing
 .\dev.ps1 backup        # Backup databases
 ```
+
+**Note**: Markdown linting requires markdownlint-cli. Install with: `npm install -g markdownlint-cli`
+See [docs/MARKDOWN_LINTING.md](docs/MARKDOWN_LINTING.md) for details.
 
 ### Testing
 
@@ -390,6 +393,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Made with ❤️ for video enthusiasts and developers**
-
 *Transform your local video collection into a professional streaming experience!*
+
+Made with ❤️ for video enthusiasts and developers
