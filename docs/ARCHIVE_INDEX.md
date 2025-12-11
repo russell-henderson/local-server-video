@@ -176,3 +176,21 @@ These are one off legacy feature docs or meta docs that are kept for context but
   - `IMPLEMENTATION.md`
   - `UI.md`
   - `API.md`
+
+---
+
+## 8. Admin dashboard working checklist (future archive)
+
+This is a live checklist during development and should be archived once the dashboard ships.
+
+### 8.1 File
+
+- `TODO_ADMIN_DASH.md`  
+  - Status: working until dashboard release  
+  - Archive path: move to `docs/archive/TODO_ADMIN_DASH.md` after launch (placeholder file already exists)  
+  - Notes: stop updating once archived; keep `docs/ADMIN_DASHBOARD.md` and `docs/API.md` as the enduring specs
+
+### 8.2 How to use
+
+- Keep it updated only while the dashboard is in development.
+- After release, move it to the archive path above and remove it from active task tracking.

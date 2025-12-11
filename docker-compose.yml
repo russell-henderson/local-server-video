@@ -4,8 +4,6 @@ services:
   video-server:
     build: .
     container_name: local-video-server
-    ports:
-      - "5000:5000"
     volumes:
       - ./videos:/app/videos
       - ./images:/app/images
@@ -17,6 +15,19 @@ services:
       - LVS_HOST=0.0.0.0
       - LVS_PORT=5000
       - LVS_DEBUG=false
+    restart: unless-stopped
+
+  nginx-proxy:
+    image: nginx:alpine
+    container_name: lvs-nginx-proxy
+    depends_on:
+      - video-server
+    ports:
+      - "5000:80"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./static:/usr/share/nginx/html/static:ro
+      - ./images:/usr/share/nginx/html/images:ro
     restart: unless-stopped
 
   admin-dashboard:

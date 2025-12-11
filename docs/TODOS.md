@@ -27,7 +27,7 @@ Short, concrete items that you plan to work on next.
 
 ### 2.1 Documentation
 
-- [ ] Confirm `DOCS_INVENTORY.md` matches actual files
+- [x] Confirm `DOCS_INVENTORY.md` matches actual files
 - [ ] Keep `PERFORMANCE.md` in sync with real changes
 - [ ] Keep `IMPLEMENTATION.md` in sync with real changes
 

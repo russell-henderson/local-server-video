@@ -21,7 +21,9 @@
   </button>
 
   <!-- Rating -->
-  {% include 'partials/rating.html' %}
+  {% with current_rating=ratings.get(filename, 0), filename=filename, media_hash=media_hash %}
+    {% include 'partials/rating.html' %}
+  {% endwith %}
 
   <!-- View count -->
   <div id="video-view-count" class="view-count me-3 mb-2 mb-sm-0">

@@ -78,16 +78,9 @@
     </button>
 
     <!-- Compact rating widget placed in player controls so it remains visible in fullscreen/VR -->
-    <div class="rating player-rating" data-filename="{{ filename }}" role="group" aria-label="Rate this video">
-      {% set current_rating = ratings.get(filename, 0) if (ratings is defined) else 0 %}
-      {% for i in range(1,6) %}
-        <i class="{{ 'fas' if i<=current_rating else 'far' }} fa-star"
-           data-value="{{ i }}"
-           role="button"
-           tabindex="0"
-           aria-label="Rate {{ i }} star{% if i != 1 %}s{% endif %}"></i>
-      {% endfor %}
-    </div>
+    {% with current_rating=ratings.get(filename, 0) if (ratings is defined) else 0, filename=filename, media_hash=media_hash %}
+      {% include 'partials/rating.html' %}
+    {% endwith %}
 
     <button data-action="fullscreen" aria-label="Fullscreen" title="Fullscreen (F)">
       ⛶

@@ -3,6 +3,17 @@
  * Shared video player controller with ±10s skip, keyboard shortcuts, and position saving
  */
 
+const detectInputMode = () => {
+  const isTouch = matchMedia('(pointer: coarse)').matches;
+  const hasHover = matchMedia('(hover: hover)').matches;
+  const isQuest = /OculusBrowser|Quest|Oculus/i.test(navigator.userAgent);
+
+  if (isQuest) return 'vr';
+  if (isTouch && !hasHover) return 'touch-no-hover';
+  if (isTouch) return 'touch';
+  return 'pointer';
+};
+
 class VideoPlayer {
   constructor(root) {
     this.root = root;
@@ -32,6 +43,7 @@ class VideoPlayer {
     this.speedSteps = [0.75, 1.0, 1.25, 1.5, 2.0];
     this.loopStart = null;
     this.loopEnd = null;
+    this.inputMode = detectInputMode();
     
     this.init();
   }
@@ -41,6 +53,7 @@ class VideoPlayer {
     this.setupKeyboardShortcuts();
     this.loadSavedPosition();
     this.handleStartTime();
+    this.configureForInputMode();
   }
   
   bindEvents() {
@@ -361,6 +374,18 @@ class VideoPlayer {
     const end = this.loopEnd;
     if (this.video.currentTime >= end - 0.05) {
       this.video.currentTime = this.loopStart;
+    }
+  }
+
+  configureForInputMode() {
+    // Quest or touch-without-hover: keep controls visible and avoid hover-only UX
+    if (this.inputMode === 'vr' || this.inputMode === 'touch-no-hover') {
+      this.root.classList.add('controls-visible', 'controls-persistent');
+    }
+
+    // Hide seek preview text in VR to reduce noise
+    if (this.inputMode === 'vr' && this.previewEl) {
+      this.previewEl.style.display = 'none';
     }
   }
 }

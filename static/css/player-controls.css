@@ -14,19 +14,20 @@
 
 .player .player-controls {
   position: absolute;
-  left: 8px;
-  right: 8px;
-  bottom: 8px;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
   display: flex;
-  gap: 8px;
+  gap: 10px;
   align-items: center;
-  background: rgba(0,0,0,0.35);
-  padding: 6px 8px;
-  border-radius: 6px;
+  background: rgba(0,0,0,0.5);
+  padding: 10px 12px;
+  border-radius: 12px;
   transition: opacity 180ms ease, transform 180ms ease;
   opacity: 0;
   transform: translateY(6px);
   pointer-events: none;
+  backdrop-filter: blur(4px);
 }
 
 /* Compact rating inside player controls */
@@ -43,9 +44,44 @@
   line-height: 1;
 }
 
+/* VR-friendly sizing */
+.player .player-controls button,
+.player .player-controls input[type="range"] {
+  min-height: 44px;
+}
+
+.player .player-controls button {
+  min-width: 44px;
+  padding: 0.35rem 0.75rem;
+  border-radius: 10px;
+  font-size: 1rem;
+}
+
+.player .time-display {
+  font-size: 1rem;
+  color: #e5e7eb;
+  min-width: 120px;
+}
+
+.player input[type="range"][data-role="seek"] {
+  flex: 1 1 180px;
+  height: 8px;
+}
+
+.player input[type="range"][data-role="volume"] {
+  width: 120px;
+  height: 8px;
+}
+
+.player .rating .star {
+  min-width: 40px;
+  min-height: 40px;
+}
+
 /* Reveal controls when hovering the player */
 .player:hover .player-controls,
-.player.controls-visible .player-controls {
+.player.controls-visible .player-controls,
+.player.controls-persistent .player-controls {
   opacity: 1;
   transform: translateY(0);
   pointer-events: auto;

@@ -478,7 +478,7 @@ def random_video():
 def tags_page():
     """Optimized tags page with cached data"""
     sorted_tags = cache.get_all_unique_tags()
-    return render_template('tags.html', tags=sorted_tags)
+    return render_template('tags.html', tags=sorted_tags, tag_count=len(sorted_tags))
 
 
 @app.route('/tag/<tag>')

@@ -4,15 +4,20 @@
 
 {% block content %}
 <section class="tags-hero text-center mb-4">
+  <p class="eyebrow text-uppercase mb-1">Discovery</p>
   <h1 class="mb-2">Browse Tags</h1>
-  <p class="text-muted mb-0">Jump straight into categories you care about.</p>
+  <div class="d-flex justify-content-center align-items-center gap-3">
+    <p class="subtle-text mb-0">Jump straight into categories you care about.</p>
+    <span class="pill pill-info">Tags · {{ tag_count }}</span>
+  </div>
 </section>
 
 <div class="tag-grid">
   {% for tag in tags %}
     <a class="tag-chip"
        href="{{ url_for('tag_videos', tag=tag.lstrip('#')) }}">
-      <span class="hash">#</span>{{ tag.lstrip('#') }}
+      <span class="hash">#</span>
+      <span class="tag-label">{{ tag.lstrip('#') }}</span>
     </a>
   {% endfor %}
 </div>
@@ -20,8 +25,4 @@
 <div class="text-center mt-4">
   <a class="btn btn-primary" href="{{ url_for('index') }}">Back to Home</a>
 </div>
-{% endblock %}
-
-{% block extra_scripts %}
-  <script src="{{ url_for('static', filename='dark.js') }}" defer></script>
 {% endblock %}

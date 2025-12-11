@@ -22,8 +22,8 @@ Purpose: Track every documentation file that affects Local Video Server so we ca
 | ID | Path | File name | Type | Scope | Notes |
 |---|---|---|---|---|---|
 | 1 | ./ | README.md | Core | High level | Keep - core doc |
-| 2 | ./ | chatgpt_prompt.md | Working | High level | Active working doc |
-| 3 | ./ | project_structure.txt | Working | Ops | Active working doc |
+| 2 | docs/ | ARCHITECTURE.md | Core | High level | Keep - core doc |
+| 3 | docs/ | project_structure.txt | Working | Ops | Active working doc |
 | 4 | ./ | LATEST.md | Core | Ops | Keep - core doc |
 | 5 | ./ | TODOv4.md | Working | High level | Long form roadmap / strategy; use docs/TODOS.md for current actionable tasks |
 | 6 | docs/ | DOCS_INVENTORY.md | Core | Ops | Keep - core doc |
@@ -94,6 +94,11 @@ Purpose: Track every documentation file that affects Local Video Server so we ca
 | 71 | docs/ | ADMIN_DASHBOARD_FRONTEND.md | Working | Feature | Frontend implementation guide for admin dashboard UI |
 | 72 | docs/ | ADMIN_DASHBOARD_MIGRATION.md | Working | Feature | Step by step guide to add the admin dashboard to existing deployments |
 | 73 | docs/ | ADMIN_DASHBOARD_TESTING.md | Working | Feature | Testing strategy and checklists for admin dashboard backend and UI |
+| 74 | docs/ | ADMIN_DASHBOARD.md | Working | Feature | Single source of truth for admin dashboard UI spec |
+| 75 | ./ | TODO_ADMIN_DASH.md | Working | Feature | Admin dashboard implementation checklist and status |
+| 76 | ./ | ADMIN_DASH_UPGRADE.md | Working | Design | Aspirational Next.js/Tailwind admin dashboard concept |
+| 77 | docs/ | API.md | Core | Feature | Keep - HTTP API surface |
+| 78 | docs/archive/ | TODO_ADMIN_DASH.md | Legacy | Feature | Placeholder archive copy to hold the checklist after dashboard launch |
 
 ## Redundancy groups
 
@@ -223,3 +228,14 @@ These do not have strong redundancy but should be handled consistently.
   - Plan: keep as is for now, archive when no longer useful  
 
 Planned outcome: these files are either archived or mapped into core docs as part of specific features, with no redundant new copies created.
+
+---
+
+### Group 8: Admin dashboard docs
+
+- **Target working spec**: `docs/ADMIN_DASHBOARD.md` is the UI source of truth; `docs/API.md` defines the HTTP contracts it relies on.
+- **Companion working guides**: keep `docs/ADMIN_DASHBOARD_IMPL_NOTES.md`, `docs/ADMIN_DASHBOARD_BACKEND.md`, `docs/ADMIN_DASHBOARD_FRONTEND.md`, `docs/ADMIN_DASHBOARD_MIGRATION.md`, `docs/ADMIN_DASHBOARD_TESTING.md`, and `docs/ADMIN_API_SPEC.md` in sync with the spec and with `IMPLEMENTATION.md` as features ship.
+- **Implementation tracker**: `TODO_ADMIN_DASH.md` stays as the live checklist until the dashboard is complete, then move it to `docs/archive/` and stop updating it.
+- **Concept-only doc**: `ADMIN_DASH_UPGRADE.md` is an aspirational Next.js/Tailwind redesign; keep it separate from the Flask dashboard spec and treat as reference only.
+
+Planned outcome: admin dashboard work stays consolidated in the spec and its companions; checklists and concept docs remain reference material without spawning new redundant specs.

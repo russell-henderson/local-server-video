@@ -1,55 +1,54 @@
-<nav class="navbar navbar-expand-lg">
-  <a class="navbar-brand font-weight-bold ps-3" href="{{ url_for('index') }}">
-    LOCAL
-  </a>
-
-  <button class="navbar-toggler" type="button"
-          data-bs-toggle="collapse" data-bs-target="#navbarNav"
-          aria-controls="navbarNav" aria-expanded="false"
-          aria-label="Toggle navigation">
-    <span class="navbar-toggler-icon"></span>
-  </button>
-
-  <div class="collapse navbar-collapse" id="navbarNav">
-    <ul class="navbar-nav me-auto">
-      <li class="nav-item">
-        <a class="nav-link" href="{{ url_for('index') }}">Home</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="{{ url_for('random_video') }}">Random</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="{{ url_for('tags_page') }}">Tags</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="{{ url_for('favorites_page') }}">Favorites</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="{{ url_for('best_of') }}">Best of</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="{{ url_for('gallery') }}">Gallery</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="{{ url_for('links') }}">Links</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="{{ url_for('admin.performance_page') }}">Dashboard</a>
-      </li>
-    </ul>
-
-    <div class="d-flex align-items-center gap-2">
-      <a class="btn btn-outline-primary px-3"
-         href="{{ url_for('random_video') }}"
-         title="Surprise me">
-        <i class="fas fa-random me-1"></i>
-        Random
+<nav id="main-nav" class="navbar navbar-expand-lg nav-shell">
+  <div class="container-fluid">
+    <div class="d-flex align-items-center nav-brand-block">
+      <a class="navbar-brand brand-mark" href="{{ url_for('index') }}">
+        LOCAL
       </a>
-      <button id="toggle-dark-mode"
-              class="btn btn-outline-secondary"
-              title="Dark Mode (Always On)">
-        <i class="fas fa-moon"></i>
-      </button>
+      <span class="nav-kicker">Video Server</span>
+    </div>
+
+    <button class="navbar-toggler" type="button"
+            data-bs-toggle="collapse" data-bs-target="#navbarNav"
+            aria-controls="navbarNav" aria-expanded="false"
+            aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav me-auto nav-links">
+        <li class="nav-item">
+          <a class="nav-link nav-pill" href="{{ url_for('index') }}"><i class="fas fa-home me-1"></i> Home</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link nav-pill" href="{{ url_for('random_video') }}"><i class="fas fa-shuffle me-1"></i> Random</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link nav-pill" href="{{ url_for('tags_page') }}"><i class="fas fa-tags me-1"></i> Tags</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link nav-pill" href="{{ url_for('favorites_page') }}"><i class="fas fa-heart me-1"></i> Favorites</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link nav-pill" href="{{ url_for('best_of') }}"><i class="fas fa-star me-1"></i> Best of</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link nav-pill" href="{{ url_for('gallery') }}"><i class="fas fa-images me-1"></i> Gallery</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link nav-pill" href="{{ url_for('links') }}"><i class="fas fa-link me-1"></i> Links</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link nav-pill" href="{{ url_for('admin.performance_page') }}"><i class="fas fa-gauge-high me-1"></i> Dashboard</a>
+        </li>
+      </ul>
+
+      <div class="d-flex align-items-center gap-2 nav-actions">
+        <span class="pill badge-dark">Always dark</span>
+        <a class="btn random-btn" href="{{ url_for('random_video') }}" title="Play a random video">
+          <i class="fas fa-shuffle me-1"></i>
+          Random
+        </a>
+      </div>
     </div>
   </div>
 </nav>

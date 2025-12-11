@@ -11,8 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     console.groupEnd();
   
     if (!nav || !btn){
-      console.error('dark.js: toggle button or navbar not found – check IDs');
-      return;
+      return; // Dark mode is always-on; no toggle button present.
     }
   
     /* restore previous choice */

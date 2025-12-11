@@ -8,47 +8,65 @@
 {% endblock %}
 
 {% block content %}
-<h1 class="mb-4 text-center">Videos</h1>
+<section class="video-hero card mb-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+    <div>
+      <p class="eyebrow text-uppercase mb-1">Library</p>
+      <div class="d-flex align-items-center gap-2 mb-1">
+        <h1 class="hero-title mb-0">Videos</h1>
+        <span class="pill pill-muted">Total {{ total_videos }}</span>
+      </div>
+      <div class="hero-meta subtle-text">
+        <span>Sorted · {{ current_sort|capitalize }}{% if current_order == 'asc' %} ↑{% else %} ↓{% endif %}</span>
+        <span class="dot-sep">•</span>
+        <span>Page {{ current_page }} / {{ total_pages }}</span>
+      </div>
+    </div>
 
-<!-- Sorting links -->
-<div class="sorting-links mb-4 text-center">
-  <span>Sort by:</span>
-  {% set next_order = 'asc' if current_order == 'desc' else 'desc' %}
-  
-  <a href="{{ url_for('index', sort='rating', order=next_order if current_sort == 'rating' else 'desc', page=1, per_page=per_page) }}"
-     class="{% if current_sort == 'rating' %}active{% endif %}">Rating</a>
-
-  <a href="{{ url_for('index', sort='title', order=next_order if current_sort == 'title' else 'asc', page=1, per_page=per_page) }}"
-     class="{% if current_sort == 'title' %}active{% endif %}">Title</a>
-
-  <a href="{{ url_for('index', sort='views', order=next_order if current_sort == 'views' else 'desc', page=1, per_page=per_page) }}"
-     class="{% if current_sort == 'views' %}active{% endif %}">Views</a>
-  
-  <a href="{{ url_for('index', sort='date', order=next_order if current_sort == 'date' else 'desc', page=1, per_page=per_page) }}"
-     class="{% if current_sort == 'date' %}active{% endif %}">Date Added</a>
-</div>
-
-<!-- Pagination controls -->
-<div class="d-flex justify-content-center align-items-center mb-3 gap-3">
-  <span>Page {{ current_page }} of {{ total_pages }}</span>
-  <div class="btn-group" role="group" aria-label="Pagination">
-    {% if current_page > 1 %}
-      <a class="btn btn-outline-secondary btn-sm"
-         href="{{ url_for('index', page=current_page-1, per_page=per_page, sort=current_sort, order=current_order) }}">&larr; Prev</a>
-    {% endif %}
-    {% if current_page < total_pages %}
-      <a class="btn btn-outline-secondary btn-sm"
-         href="{{ url_for('index', page=current_page+1, per_page=per_page, sort=current_sort, order=current_order) }}">Next &rarr;</a>
-    {% endif %}
+    <!-- Sorting controls -->
+    <div class="sorting-shelf">
+      <span class="sort-label">Sort</span>
+      {% set next_order = 'asc' if current_order == 'desc' else 'desc' %}
+      <a class="sort-chip {% if current_sort == 'rating' %}active{% endif %}"
+         href="{{ url_for('index', sort='rating', order=next_order if current_sort == 'rating' else 'desc', page=1, per_page=per_page) }}">
+        <i class="fas fa-star me-1"></i> Rating
+      </a>
+      <a class="sort-chip {% if current_sort == 'title' %}active{% endif %}"
+         href="{{ url_for('index', sort='title', order=next_order if current_sort == 'title' else 'asc', page=1, per_page=per_page) }}">
+        <i class="fas fa-font me-1"></i> Title
+      </a>
+      <a class="sort-chip {% if current_sort == 'views' %}active{% endif %}"
+         href="{{ url_for('index', sort='views', order=next_order if current_sort == 'views' else 'desc', page=1, per_page=per_page) }}">
+        <i class="fas fa-eye me-1"></i> Views
+      </a>
+      <a class="sort-chip {% if current_sort == 'date' %}active{% endif %}"
+         href="{{ url_for('index', sort='date', order=next_order if current_sort == 'date' else 'desc', page=1, per_page=per_page) }}">
+        <i class="fas fa-clock me-1"></i> Date Added
+      </a>
+    </div>
   </div>
-</div>
+
+  <!-- Pagination controls -->
+  <div class="d-flex align-items-center gap-3 mt-3 pagination-compact">
+    <span class="subtle-text">Page {{ current_page }} of {{ total_pages }}</span>
+    <div class="btn-group" role="group" aria-label="Pagination">
+      {% if current_page > 1 %}
+        <a class="btn btn-outline-secondary btn-sm"
+           href="{{ url_for('index', page=current_page-1, per_page=per_page, sort=current_sort, order=current_order) }}">&larr; Prev</a>
+      {% endif %}
+      {% if current_page < total_pages %}
+        <a class="btn btn-outline-secondary btn-sm"
+           href="{{ url_for('index', page=current_page+1, per_page=per_page, sort=current_sort, order=current_order) }}">Next &rarr;</a>
+      {% endif %}
+    </div>
+  </div>
+</section>
 
 <!-- Video grid -->
-<div class="row">
+<div class="video-grid mb-5">
   {% for video in videos %}
-  <div class="col-sm-6 col-md-4 col-lg-3 mb-4">
-    <div class="card h-100" data-role="video-card" data-preview-delay="500">
-      <a href="{{ url_for('watch_video', filename=video.filename) }}">
+    <article class="card video-card h-100" data-role="video-card" data-preview-delay="500">
+      <a href="{{ url_for('watch_video', filename=video.filename) }}" class="video-thumb-link">
         <div class="video-preview-container">
           {% set thumb_stem = video.filename.rsplit('.',1)[0] %}
           {% set thumbnail = 'thumbnails/' ~ thumb_stem ~ '.jpg' %}
@@ -66,8 +84,8 @@
         </div>
       </a>
 
-      <div class="card-body p-2">
-        <div class="d-flex justify-content-between align-items-center mb-1">
+      <div class="card-body p-3">
+        <div class="d-flex justify-content-between align-items-center mb-2">
           <h5 class="card-title text-truncate mb-0">{{ video.filename }}</h5>
 
           <!-- Favorite Toggle Button -->
@@ -80,62 +98,35 @@
         </div>
 
         <!-- Rating widget -->
-        <div class="rating" data-filename="{{ video.filename }}" role="group" aria-label="Rate this video">
-          {% for i in range(1,6) %}
-            <i class="{{ 'fas' if i<=video.rating else 'far' }} fa-star touch-target"
-               data-value="{{ i }}"
-               role="button"
-               tabindex="0"
-               aria-label="Rate {{ i }} star{% if i != 1 %}s{% endif %}"></i>
-          {% endfor %}
-        </div>
+        {% with current_rating=video.rating, filename=video.filename, media_hash=video.media_hash or video.filename %}
+          {% include 'partials/rating.html' %}
+        {% endwith %}
 
         <!-- Live view count -->
-        <p class="view-count"
+        <p class="view-count mb-0"
            id="view-count-{{ video.filename|replace('.', '-') }}">
            Views: {{ video.views }}
         </p>
       </div>
-    </div>
-  </div>
+    </article>
   {% endfor %}
 </div>
+
+<button class="back-to-top" type="button" aria-label="Back to top">
+  <i class="fas fa-arrow-up"></i>
+</button>
 {% endblock %}
 
 {% block extra_scripts %}
   <script src="{{ url_for('static', filename='video-preview-enhanced.js') }}" defer></script>
   <script src="{{ url_for('static', filename='optimized-utils.js') }}" defer></script>
-  <script src="{{ url_for('static', filename='dark.js') }}" defer></script>
+  <script type="module" src="{{ url_for('static', filename='js/rating.js') }}"></script>
 
   <script>
     /* Rating widget + live view count updates */
     document.addEventListener('DOMContentLoaded', () => {
       // Video preview is now handled by video-preview-enhanced.js
       
-      // Rating functionality
-      document.querySelectorAll('.rating i').forEach(star => {
-        star.addEventListener('click', () => {
-          const rating = star.dataset.value;
-          const container = star.parentElement;
-          const filename = container.dataset.filename;
-
-          fetch('/rate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ filename, rating })
-          })
-          .then(r => r.json())
-          .then(data => {
-            if (data.success) {
-              container.querySelectorAll('i').forEach((s, idx) => {
-                s.className = (idx + 1) <= rating ? 'fas fa-star' : 'far fa-star';
-              });
-            }
-          })
-          .catch(console.error);
-        });
-      });
-
       // Live view counts
       fetch('/get_views')
         .then(r => r.json())
@@ -147,6 +138,22 @@
           }
         })
         .catch(console.error);
+    });
+  </script>
+  <script>
+    // Back to top visibility + click handling
+    document.addEventListener('DOMContentLoaded', () => {
+      const backToTop = document.querySelector('.back-to-top');
+      if (!backToTop) return;
+
+      const toggleVisibility = () => {
+        const show = window.scrollY > 240;
+        backToTop.classList.toggle('visible', show);
+      };
+
+      window.addEventListener('scroll', toggleVisibility, { passive: true });
+      backToTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+      toggleVisibility();
     });
   </script>
 {% endblock %}

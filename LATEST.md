@@ -1,12 +1,9 @@
 # Latest Changes (Past 24h)
 
-Date: 2025-12-09
+Date: 2025-12-10
 
-- Gallery favorites unified across all images: heart icons now appear on loose images and those inside groups, and the Favorites filter aggregates every favorited item.
-- Gallery tiles simplified: removed filename overlays for a cleaner grid while keeping selection mode and group actions intact.
-- Favorites filtering made robust: selection ranges, lightbox navigation, and toggle states now track the active filtered list correctly.
-- Group view refinements: group images show favorite hearts, retaining cover selection and delete controls without altering grouping behavior.
-
-Notes:
-- Favorites are stored locally (browser `localStorage`), so they persist per browser/device.
-- Grouping remains virtual; adding to a group removes it from the loose grid but favorites still surface everywhere via the Favorites filter.
+- Front-end polish: simplified library hero meta line, enlarged video cards/grids, refreshed tags page (count badge + pill chips), and restyled navbar/random CTA.
+- Ratings unified: shared rating partial used across library, player, and watch; synced via one JS module so ratings stay consistent everywhere.
+- Player VR-friendliness: larger hit targets, thicker seek/volume bars, persistent controls on Quest/touch without hover, and VR-only preview text suppression.
+- Nginx proxy added: serves static/images with caching + gzip and proxies dynamic routes to Flask for faster loads in Docker deployments.
+- Assets housekeeping: moved root UI PNGs into `archive/images/`.
