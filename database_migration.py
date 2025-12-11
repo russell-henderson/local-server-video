@@ -135,6 +135,22 @@ class VideoDatabase:
                     BEGIN
                         UPDATE gallery_groups SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
                     END;
+
+                -- Perceptual hash cache for media (videos/images)
+                CREATE TABLE IF NOT EXISTS phash_cache (
+                    filename TEXT NOT NULL,
+                    kind TEXT NOT NULL, -- 'video' or 'image'
+                    phash TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    PRIMARY KEY (filename, kind)
+                );
+                CREATE INDEX IF NOT EXISTS idx_phash_kind ON phash_cache(kind);
+                CREATE TRIGGER IF NOT EXISTS update_phash_cache_timestamp
+                    AFTER UPDATE ON phash_cache
+                    BEGIN
+                        UPDATE phash_cache SET updated_at = CURRENT_TIMESTAMP WHERE filename = NEW.filename AND kind = NEW.kind;
+                    END;
             """)
             conn.commit()
     
@@ -689,10 +705,23 @@ class VideoDatabase:
         """
         import re
         # Generate URL-safe slug from name
-        slug = re.sub(r'[^\w\s-]', '', name.lower())
-        slug = re.sub(r'[\s_]+', '-', slug).strip('-')
+        base_slug = re.sub(r'[^\w\s-]', '', name.lower())
+        base_slug = re.sub(r'[\s_]+', '-', base_slug).strip('-') or 'group'
+        slug = base_slug
         
         with self.get_connection() as conn:
+            # Ensure slug uniqueness by suffixing when needed
+            suffix = 2
+            while True:
+                exists = conn.execute(
+                    "SELECT 1 FROM gallery_groups WHERE slug = ?",
+                    (slug,)
+                ).fetchone()
+                if not exists:
+                    break
+                slug = f"{base_slug}-{suffix}"
+                suffix += 1
+
             cursor = conn.execute(
                 """INSERT INTO gallery_groups (name, slug, cover_image)
                    VALUES (?, ?, ?)""",
@@ -728,6 +757,53 @@ class VideoDatabase:
             )
             row = cursor.fetchone()
             return dict(row) if row else None
+
+    def get_gallery_group_by_id(self, group_id: int) -> Optional[Dict]:
+        """Get a gallery group by ID"""
+        with self.get_connection() as conn:
+            cursor = conn.execute(
+                """SELECT id, name, slug, cover_image,
+                   (SELECT COUNT(*) FROM gallery_group_items 
+                    WHERE group_id = gallery_groups.id) as image_count,
+                   created_at, updated_at
+                   FROM gallery_groups
+                   WHERE id = ?""",
+                (group_id,)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    # --- Perceptual hash cache helpers ---
+    def upsert_phash(self, filename: str, kind: str, phash: str) -> None:
+        """Insert or update a perceptual hash for a media item."""
+        with self.get_connection() as conn:
+            conn.execute(
+                """INSERT INTO phash_cache (filename, kind, phash)
+                   VALUES (?, ?, ?)
+                   ON CONFLICT(filename, kind) DO UPDATE SET
+                       phash = excluded.phash,
+                       updated_at = CURRENT_TIMESTAMP""",
+                (filename, kind, phash)
+            )
+            conn.commit()
+
+    def get_phash(self, filename: str, kind: str) -> Optional[str]:
+        """Fetch perceptual hash for a media item."""
+        with self.get_connection() as conn:
+            row = conn.execute(
+                "SELECT phash FROM phash_cache WHERE filename = ? AND kind = ?",
+                (filename, kind)
+            ).fetchone()
+            return row["phash"] if row else None
+
+    def get_all_phashes(self, kind: str) -> List[Dict]:
+        """Get all phashes for a given media kind."""
+        with self.get_connection() as conn:
+            rows = conn.execute(
+                "SELECT filename, phash FROM phash_cache WHERE kind = ?",
+                (kind,)
+            ).fetchall()
+            return [dict(r) for r in rows]
 
     def add_images_to_group(self, group_id: int,
                             image_paths: List[str]) -> None:

@@ -15,6 +15,11 @@ from flask import (
     abort, url_for, redirect, jsonify, g
 )
 
+try:
+    from PIL import Image
+except ImportError:
+    Image = None
+
 from cache_manager import cache
 from thumbnail_manager import (
     generate_async as generate_thumbnail_async,
@@ -75,9 +80,89 @@ INDEX_MAX_PER_PAGE = 120
 
 # Guarantee required folders exist
 THUMBNAIL_DIR.mkdir(parents=True, exist_ok=True)
+GALLERY_DIR = Path("images") / "gallery"
 
 # Thread pool for misc background jobs (already used by thumbnail_manager)
 executor = ThreadPoolExecutor(max_workers=2)
+
+
+# --- Perceptual hash utilities -------------------------------------------------
+
+def _require_pillow():
+    if Image is None:
+        raise RuntimeError("Pillow is required for pHash generation; install via requirements.")
+
+
+def compute_phash(image_path: Path) -> str:
+    """Compute a simple 64-bit average hash for an image."""
+    _require_pillow()
+    with Image.open(image_path) as img:
+        img = img.convert("L").resize((8, 8))
+        pixels = list(img.getdata())
+        avg = sum(pixels) / len(pixels)
+        bits = "".join("1" if p >= avg else "0" for p in pixels)
+        phash_int = int(bits, 2)
+        return f"{phash_int:016x}"
+
+
+def hamming_distance_hex(a: str, b: str) -> int:
+    return bin(int(a, 16) ^ int(b, 16)).count("1")
+
+
+def ensure_phash_for_media(db, filename: str, kind: str) -> str:
+    """Return phash for media; compute and cache if missing."""
+    existing = db.get_phash(filename, kind)
+    if existing:
+        return existing
+
+    if kind == "video":
+        stem = Path(filename).stem
+        thumb_path = THUMBNAIL_DIR / f"{stem}.jpg"
+        if not thumb_path.exists():
+            raise FileNotFoundError(f"Thumbnail not found for {filename}")
+        phash = compute_phash(thumb_path)
+    elif kind == "image":
+        img_path = GALLERY_DIR / filename
+        if not img_path.exists():
+            raise FileNotFoundError(f"Image not found: {filename}")
+        phash = compute_phash(img_path)
+    else:
+        raise ValueError("Unknown media kind")
+
+    db.upsert_phash(filename, kind, phash)
+    return phash
+
+
+def build_phash_index(db, kind: str):
+    """If no phashes exist for kind, build initial index for all files."""
+    existing = db.get_all_phashes(kind)
+    if existing:
+        return
+
+    if kind == "image":
+        if not GALLERY_DIR.exists():
+            return
+        for img in GALLERY_DIR.iterdir():
+            if img.is_file() and img.suffix.lower() in {".jpg", ".jpeg", ".png", ".gif", ".webp"}:
+                try:
+                    phash = compute_phash(img)
+                    db.upsert_phash(img.name, "image", phash)
+                except Exception:
+                    continue
+    elif kind == "video":
+        try:
+            filenames = cache.get_video_list()
+        except Exception:
+            filenames = []
+        for fname in filenames:
+            stem = Path(fname).stem
+            thumb_path = THUMBNAIL_DIR / f"{stem}.jpg"
+            if thumb_path.exists():
+                try:
+                    phash = compute_phash(thumb_path)
+                    db.upsert_phash(fname, "video", phash)
+                except Exception:
+                    continue
 
 
 # ────────────────────────────────────────────────────────────────────────────
@@ -304,9 +389,9 @@ def stream_video(filename: str):
         data = fh.read(length)
 
     rv = Response(data, 206, mimetype=mime_type, direct_passthrough=True)
-    rv.headers.add("Content-Range", f"bytes {byte1}-{byte2}/{size}")
-    rv.headers.add("Accept-Ranges", "bytes")
-    rv.headers.add("Content-Length", str(length))
+    rv.headers["Content-Range"] = f"bytes {byte1}-{byte2}/{size}"
+    rv.headers["Accept-Ranges"] = "bytes"
+    rv.headers["Content-Length"] = str(length)
     return rv
 
 
@@ -658,14 +743,108 @@ def api_gallery_groups():
     try:
         group_id = db.create_gallery_group(name, cover_image)
         db.add_images_to_group(group_id, images)
-        
-        # Get the created group
-        group = db.get_gallery_group_by_slug(
-            name.lower().replace(' ', '-')
-        )
+
+        # Get the created group by ID (handles unique slug suffixes)
+        group = db.get_gallery_group_by_id(group_id)
         return jsonify(group), 201
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+@app.route("/api/similar/<kind>/<path:filename>")
+def api_similar(kind: str, filename: str):
+    """Find perceptually similar media (video thumbnails or gallery images)."""
+    kind = kind.lower()
+    if kind not in {"video", "image"}:
+        return jsonify({"error": "kind must be 'video' or 'image'"}), 400
+
+    limit = max(1, min(50, int(request.args.get("limit", 10))))
+    max_distance = max(0, min(64, int(request.args.get("max_distance", 12))))
+
+    from database_migration import VideoDatabase
+    db = VideoDatabase()
+
+    try:
+        build_phash_index(db, kind)
+        target_phash = ensure_phash_for_media(db, filename, kind)
+    except FileNotFoundError as e:
+        return jsonify({"error": str(e)}), 404
+    except Exception as e:
+        return jsonify({"error": f"Failed to compute pHash: {e}"}), 500
+
+    candidates = db.get_all_phashes(kind)
+    results = []
+    for row in candidates:
+        other = row["filename"]
+        if other == filename:
+            continue
+        dist = hamming_distance_hex(target_phash, row["phash"])
+        if dist <= max_distance:
+            results.append({"filename": other, "distance": dist})
+
+    results.sort(key=lambda r: r["distance"])
+    return jsonify({
+        "filename": filename,
+        "phash": target_phash,
+        "kind": kind,
+        "matches": results[:limit],
+    })
+
+
+@app.route("/api/gallery/groups/similar", methods=["POST"])
+def api_gallery_group_similar():
+    """
+    Create a gallery group from similar images.
+
+    Body: { "filename": "<image name>", "name": "<optional group name>", "max_distance": 10, "limit": 12 }
+    """
+    data = request.get_json() or {}
+    filename = data.get("filename", "").strip()
+    if not filename:
+        return jsonify({"error": "filename required"}), 400
+
+    name = data.get("name") or f"Similar to {Path(filename).stem}"
+    max_distance = max(0, min(64, int(data.get("max_distance", 10))))
+    limit = max(1, min(50, int(data.get("limit", 12))))
+
+    from database_migration import VideoDatabase
+    db = VideoDatabase()
+
+    try:
+        build_phash_index(db, "image")
+        target_phash = ensure_phash_for_media(db, filename, "image")
+    except FileNotFoundError as e:
+        return jsonify({"error": str(e)}), 404
+    except Exception as e:
+        return jsonify({"error": f"Failed to compute pHash: {e}"}), 500
+
+    candidates = db.get_all_phashes("image")
+    matches = []
+    for row in candidates:
+        other = row["filename"]
+        if other == filename:
+            continue
+        dist = hamming_distance_hex(target_phash, row["phash"])
+        if dist <= max_distance:
+            matches.append({"filename": other, "distance": dist})
+
+    matches.sort(key=lambda r: r["distance"])
+    selected = [m["filename"] for m in matches[:limit]]
+
+    if not selected:
+        return jsonify({"error": "No similar images within threshold"}), 400
+
+    try:
+        group_id = db.create_gallery_group(name, cover_image=filename)
+        db.add_images_to_group(group_id, [filename] + selected)
+        group = db.get_gallery_group_by_id(group_id)
+        return jsonify({
+            "group": group,
+            "added": [filename] + selected,
+            "matches_considered": len(matches),
+        }), 201
+    except Exception as e:
+        return jsonify({"error": f"Failed to create similar group: {e}"}), 500
 
 
 @app.route('/api/gallery/groups/<int:group_id>/images',

@@ -8,3 +8,4 @@ alembic==1.12.1
 SQLAlchemy==2.0.23
 pytest==7.4.2
 pytest-flask==1.2.0
+Pillow==11.0.0

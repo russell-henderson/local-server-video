@@ -151,7 +151,14 @@
     opacity: 0.5;
     cursor: not-allowed;
   }
-  
+
+  .inline-helper {
+    display: block;
+    color: #9fb3d9;
+    font-size: 0.8rem;
+    margin-top: 4px;
+  }
+
   .action-btn.clear {
     background: #dc3545;
   }
@@ -568,6 +575,15 @@
     </div>
     
     <div class="action-section">
+      <h3>Group Similar</h3>
+      <div class="action-inputs">
+        <input type="text" id="similarGroupName" placeholder="Optional name...">
+        <button class="action-btn" id="groupSimilarBtn" disabled>Find & Group</button>
+      </div>
+      <span class="inline-helper">Uses pHash to cluster images close to the first selected.</span>
+    </div>
+
+    <div class="action-section">
       <h3>Selection</h3>
       <button class="action-btn clear" id="clearSelectionBtn" disabled>Clear Selection</button>
     </div>
@@ -637,6 +653,8 @@ const createGroupBtn = document.getElementById('createGroupBtn');
 const existingGroupSelect = document.getElementById('existingGroupSelect');
 const addToGroupBtn = document.getElementById('addToGroupBtn');
 const clearSelectionBtn = document.getElementById('clearSelectionBtn');
+const groupSimilarBtn = document.getElementById('groupSimilarBtn');
+const similarGroupName = document.getElementById('similarGroupName');
 const lightbox = document.getElementById('lightbox');
 const lightboxImage = document.getElementById('lightboxImage');
 const lightboxClose = document.getElementById('lightboxClose');
@@ -898,6 +916,7 @@ function updateSelectionUI() {
   createGroupBtn.disabled = !hasSelection || !newGroupName.value.trim();
   addToGroupBtn.disabled = !hasSelection || !existingGroupSelect.value;
   clearSelectionBtn.disabled = !hasSelection;
+  groupSimilarBtn.disabled = !hasSelection;
   existingGroupSelect.disabled = !hasSelection;
   
   // Update visual state of gallery items
@@ -978,6 +997,46 @@ async function createGroup() {
   }
 }
 
+// Group similar based on first selected image using pHash endpoint
+async function groupSimilarFromSelection() {
+  const selection = Array.from(selectedImages);
+  if (selection.length === 0) return;
+  const seed = selection[0];
+  const name = similarGroupName.value.trim();
+  groupSimilarBtn.disabled = true;
+  groupSimilarBtn.textContent = 'Finding...';
+  try {
+    const resp = await fetch('/api/gallery/groups/similar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        filename: seed,
+        name,
+        max_distance: 10,
+        limit: 12
+      })
+    });
+    const data = await resp.json();
+    if (!resp.ok) {
+      alert(data.error || 'Failed to group similar images');
+      return;
+    }
+    alert(`Created group "${data.group?.name || 'Similar'}" with ${data.added?.length || 0} images`);
+    await loadGroups();
+    if (data.added) {
+      data.added.forEach(img => selectedImages.delete(img));
+    }
+    renderImages();
+    updateSelectionUI();
+  } catch (err) {
+    console.error('Group similar failed', err);
+    alert('Failed to group similar images');
+  } finally {
+    groupSimilarBtn.disabled = false;
+    groupSimilarBtn.textContent = 'Find & Group';
+  }
+}
+
 // Add images to existing group
 async function addToGroup() {
   const groupId = parseInt(existingGroupSelect.value);
@@ -1034,6 +1093,7 @@ function setupEventListeners() {
   createGroupBtn.onclick = createGroup;
   addToGroupBtn.onclick = addToGroup;
   clearSelectionBtn.onclick = clearSelection;
+  groupSimilarBtn.onclick = groupSimilarFromSelection;
   lightboxClose.onclick = closeLightbox;
   lightboxAddToGroupBtn.onclick = addCurrentToGroupFromLightbox;
   lightboxCreateGroupBtn.onclick = createGroupFromLightbox;
