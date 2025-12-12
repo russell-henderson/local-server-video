@@ -2,15 +2,17 @@ version: '3.8'
 
 services:
   video-server:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: local-video-server
     volumes:
       - ./videos:/app/videos
       - ./images:/app/images
       - ./static/thumbnails:/app/static/thumbnails
       - ./logs:/app/logs
-      - ./video_metadata.db:/app/video_metadata.db
-      - ./video_search.db:/app/video_search.db
+      - ./data/video_metadata.db:/app/video_metadata.db
+      - ./data/video_search.db:/app/video_search.db
     environment:
       - LVS_HOST=0.0.0.0
       - LVS_PORT=5000
@@ -47,4 +49,4 @@ services:
       - ./logs:/app/logs:ro
       - ./videos:/app/videos:ro
       - ./images:/app/images:ro
-      - ./video_metadata.db:/app/video_metadata.db:ro
+      - ./data/video_metadata.db:/app/video_metadata.db:ro

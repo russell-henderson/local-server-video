@@ -1,33 +1,52 @@
-**Replace `.dockerignore` with:**
-```
+# Git and editor junk
+.git
+.gitignore
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+
+# Python build artifacts
 __pycache__
 *.pyc
 *.pyo
 *.pyd
-.Python
-*.db
-*.log
-.git
-.github
-.vscode
-.pytest_cache
-node_modules
-venv
 .env
+.venv
+venv
 
-# IMPORTANT: Don't copy videos/images into the image
-videos/
-videos/*
-images/
-images/*
-static/thumbnails/
-static/thumbnails/*
-logs/
-logs/*
+# Node stuff for admin dashboard
+admin-dashboard/node_modules
+admin-dashboard/.next
+admin-dashboard/.turbo
+admin-dashboard/.swc
 
-# Don't copy databases
-*.db
+# Logs and caches
+logs
+*.log
+cache
+tmp
 
-# Don't copy archives
-*.zip
-*.tar.gz
+# Static media that should not go into images
+videos
+images
+static
+*.mp4
+*.mkv
+*.avi
+*.mov
+*.webm
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.webp
+
+# Databases
+video_metadata.db
+video_search.db
+
+# OS trash
+ehthumbs.db
+desktop.ini
+$RECYCLE.BIN
