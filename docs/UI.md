@@ -6,17 +6,29 @@ Consolidated UI documentation (design, player, and preview system). Original fil
 
 - Hybrid approach: glassmorphism for panels, neumorphism for controls where appropriate.
 - Accessibility: WCAG AA contrast, keyboard navigation, clear focus states, reduced motion respect.
+- Touch Targets: All interactive elements meet 44px minimum for mobile/VR accessibility.
+- Cross-Device: No hover dependencies; interactions work on touch, pointer, and VR controllers.
 
 ## Player & Controls
 
 - Single shared player across pages (templates/_player.html).
-- Controls: play/pause, volume, scrub, fullscreen, skip ±10s, keyboard bindings.
+- Controls: play/pause, volume, scrub, fullscreen, skip ±10s, speed control, loop, picture-in-picture, keyboard bindings.
 - Favorites and rating UI updated via centralized optimized-utils.js to sync controls across DOM.
 
 ## Preview System
 
 - Adaptive preview strategies: hover based on desktop, tap or long press for touch and VR, disabled for low memory or slow connections.
 - Key files: static/video-preview-enhanced.js, static/video-preview-debug.js, static/device-detection.js (stubbed compatibility file exists).
+
+## New Pages
+
+- **Favorites Page** (`/favorites`): Dedicated view for favorited videos with sorting, pagination, and responsive grid.
+- **Popular Page** (`/popular`): Videos sorted by view count, with pagination and consistent UI.
+
+## PWA Features
+
+- Basic service worker (`static/sw.js`) for caching static assets.
+- Registered in base template for improved mobile performance and offline access to core UI.
 
 ---
 

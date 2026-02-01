@@ -11,10 +11,10 @@ A modern, professional-grade local video streaming application with intelligent 
 ## ✨ Features
 
 ### 📺 Video Streaming
-- **Unified Video Player** - Consistent player across all pages
+- **Unified Video Player** - Consistent player across all pages with picture-in-picture support
 - **Range-Based Streaming** - Efficient HTTP range requests for large files
 - **Resume Playback** - Automatic position saving and resume prompts
-- **Keyboard Controls** - J/L (±10s), K/Space (play/pause), F (fullscreen), M (mute), ↑/↓ (volume)
+- **Keyboard Controls** - J/L (±10s), K/Space (play/pause), F (fullscreen), P (picture-in-picture), M (mute), ↑/↓ (volume)
 - **URL Time Parameters** - Start at specific time with `?t=SECONDS`
 - **Multiple Format Support** - MP4, MKV, WebM, MOV, AVI and more
 
@@ -24,10 +24,12 @@ A modern, professional-grade local video streaming application with intelligent 
 - **Touch-Friendly Controls** - 44px+ minimum touch targets for accessibility
 - **Theme Customization** - Switch between multiple visual themes
 - **High Contrast Mode** - Enhanced accessibility for vision impaired users
+- **PWA Features** - Service worker caching for improved mobile performance
 
 ### 🎥 Video Management
-- **5-Star Rating System** - Rate and track video quality
-- **Favorites** - Quick-save your favorite videos
+- **5-Star Rating System** - Rate and track video quality with touch-optimized stars
+- **Favorites Page** - Dedicated view for favorited videos with sorting and pagination
+- **Popular Videos** - Trending content sorted by view count
 - **Custom Tags** - Organize videos with flexible tagging system
 - **View Analytics** - Track watch counts and engagement
 - **Smart Search** - Find videos by name, tags, and metadata

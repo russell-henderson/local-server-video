@@ -14,7 +14,7 @@ class ServerConfig:
     """Server configuration with validation and defaults"""
     
     # Server settings
-    host: str = "127.0.0.1"
+    host: str = "0.0.0.0"
     port: int = 5000
     debug: bool = False
     

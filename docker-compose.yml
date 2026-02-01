@@ -17,6 +17,8 @@ services:
       - LVS_HOST=0.0.0.0
       - LVS_PORT=5000
       - LVS_DEBUG=false
+    ports:
+      - "5000:5000"
     restart: unless-stopped
 
   nginx-proxy:
@@ -25,7 +27,7 @@ services:
     depends_on:
       - video-server
     ports:
-      - "5000:80"
+      - "8080:80"
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
       - ./static:/usr/share/nginx/html/static:ro

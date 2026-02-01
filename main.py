@@ -355,6 +355,111 @@ def watch_video(filename: str):
     )
 
 
+@app.route("/favorites")
+@performance_monitor("route_favorites")
+def favorites():
+    """Favorites page - list favorited videos with sorting and pagination."""
+    sort_param = request.args.get("sort", "date")
+    order = request.args.get("order", "desc")
+    reverse = order == "desc"
+    try:
+        page = int(request.args.get("page", "1"))
+    except (TypeError, ValueError):
+        page = 1
+    try:
+        per_page = int(request.args.get("per_page", str(INDEX_DEFAULT_PER_PAGE)))
+    except (TypeError, ValueError):
+        per_page = INDEX_DEFAULT_PER_PAGE
+
+    page = max(1, page)
+    per_page = max(1, min(per_page, INDEX_MAX_PER_PAGE))
+    offset = (page - 1) * per_page
+
+    # Get all video data, then filter by favorites
+    all_video_data = cache.get_all_video_data(sort_param, reverse)
+    favorites_list = cache.get_favorites()
+    video_data = [v for v in all_video_data if v["filename"] in favorites_list]
+
+    total_videos = len(video_data)
+    if offset >= total_videos and total_videos:
+        page = max(1, (total_videos - 1) // per_page + 1)
+        offset = (page - 1) * per_page
+
+    paginated_data = video_data[offset:offset + per_page]
+    total_pages = max(1, (total_videos + per_page - 1) // per_page)
+
+    # Background thumbnail jobs
+    ensure_thumbnails_exist([v["filename"] for v in paginated_data])
+
+    # Load config for feature flags
+    config = get_config()
+
+    return render_template(
+        "favorites.html",
+        videos=paginated_data,
+        current_sort=sort_param,
+        current_order=order,
+        current_page=page,
+        total_pages=total_pages,
+        per_page=per_page,
+        total_videos=total_videos,
+        favorites_list=favorites_list,
+        feature_vr_simplify=config.feature_vr_simplify,
+        feature_previews=config.feature_previews,
+    )
+
+
+@app.route("/popular")
+@performance_monitor("route_popular")
+def popular_page():
+    """Popular page - list videos sorted by view count."""
+    sort_param = "views"
+    order = "desc"
+    reverse = True
+    try:
+        page = int(request.args.get("page", "1"))
+    except (TypeError, ValueError):
+        page = 1
+    try:
+        per_page = int(request.args.get("per_page", str(INDEX_DEFAULT_PER_PAGE)))
+    except (TypeError, ValueError):
+        per_page = INDEX_DEFAULT_PER_PAGE
+
+    page = max(1, page)
+    per_page = max(1, min(per_page, INDEX_MAX_PER_PAGE))
+    offset = (page - 1) * per_page
+
+    total_videos = len(cache.get_video_list())
+    if offset >= total_videos and total_videos:
+        page = max(1, (total_videos - 1) // per_page + 1)
+        offset = (page - 1) * per_page
+
+    # Metadata via cache_manager, sorted by views desc
+    video_data = cache.get_all_video_data(sort_param, reverse, limit=per_page, offset=offset)
+    total_pages = max(1, (total_videos + per_page - 1) // per_page)
+    favorites_list = cache.get_favorites()
+
+    # Background thumbnail jobs
+    ensure_thumbnails_exist([v["filename"] for v in video_data])
+
+    # Load config for feature flags
+    config = get_config()
+
+    return render_template(
+        "popular.html",
+        videos=video_data,
+        current_sort=sort_param,
+        current_order=order,
+        current_page=page,
+        total_pages=total_pages,
+        per_page=per_page,
+        total_videos=total_videos,
+        favorites_list=favorites_list,
+        feature_vr_simplify=config.feature_vr_simplify,
+        feature_previews=config.feature_previews,
+    )
+
+
 @app.route("/video/<path:filename>")
 def stream_video(filename: str):
     """Byte-range streaming endpoint with basic Range support."""
@@ -521,30 +626,55 @@ def toggle_favorite():
 @app.route("/favorites")
 @performance_monitor("route_favorites")
 def favorites_page():
-    """Optimized favorites page with cached data"""
-    favorites = cache.get_favorites()
+    """Favorites page - list favorited videos with sorting and pagination."""
+    sort_param = request.args.get("sort", "date")
+    order = request.args.get("order", "desc")
+    reverse = order == "desc"
+    try:
+        page = int(request.args.get("page", "1"))
+    except (TypeError, ValueError):
+        page = 1
+    try:
+        per_page = int(request.args.get("per_page", str(INDEX_DEFAULT_PER_PAGE)))
+    except (TypeError, ValueError):
+        per_page = INDEX_DEFAULT_PER_PAGE
 
-    # Get metadata for favorite videos efficiently
-    if cache.use_database and cache.db:
-        # Database can do this efficiently
-        video_data = []
-        for video in favorites:
-            metadata = cache.db.get_video_by_filename(video)
-            if metadata:  # Only include if video still exists
-                video_data.append(metadata)
-    else:
-        # Use cache for JSON fallback
-        video_data = []
-        all_video_data = cache.get_all_video_data()
-        favorite_set = set(favorites)
-        for video in all_video_data:
-            if video['filename'] in favorite_set:
-                video_data.append(video)
+    page = max(1, page)
+    per_page = max(1, min(per_page, INDEX_MAX_PER_PAGE))
+    offset = (page - 1) * per_page
 
-    # Ensure thumbnails exist
-    ensure_thumbnails_exist([v['filename'] for v in video_data])
+    # Get all video data, then filter by favorites
+    all_video_data = cache.get_all_video_data(sort_param, reverse)
+    favorites_list = cache.get_favorites()
+    video_data = [v for v in all_video_data if v["filename"] in favorites_list]
 
-    return render_template("favorites.html", videos=video_data)
+    total_videos = len(video_data)
+    if offset >= total_videos and total_videos:
+        page = max(1, (total_videos - 1) // per_page + 1)
+        offset = (page - 1) * per_page
+
+    paginated_data = video_data[offset:offset + per_page]
+    total_pages = max(1, (total_videos + per_page - 1) // per_page)
+
+    # Background thumbnail jobs
+    ensure_thumbnails_exist([v["filename"] for v in paginated_data])
+
+    # Load config for feature flags
+    config = get_config()
+
+    return render_template(
+        "favorites.html",
+        videos=paginated_data,
+        current_sort=sort_param,
+        current_order=order,
+        current_page=page,
+        total_pages=total_pages,
+        per_page=per_page,
+        total_videos=total_videos,
+        favorites_list=favorites_list,
+        feature_vr_simplify=config.feature_vr_simplify,
+        feature_previews=config.feature_previews,
+    )
 
 
 @app.route('/random')
@@ -1147,4 +1277,6 @@ if __name__ == '__main__':
     with app.app_context():
         startup_tasks()
 
-    app.run(host='0.0.0.0', port=5000, debug=True, threaded=True)
+    # Load configuration for server settings
+    config = get_config()
+    app.run(host=config.host, port=config.port, debug=config.debug, threaded=True)

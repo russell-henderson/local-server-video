@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## 2026-02-01
+
+### Cross-Device Enhancements
+- **Touch Targets**: Enlarged rating stars and favorite buttons to 44px minimum for mobile/VR accessibility.
+- **Interaction Styles**: Replaced hover-dependent styles with :active/:focus for touch compatibility.
+- **Favorites Page**: Added dedicated `/favorites` route with sorting, pagination, and responsive UI.
+- **Popular Page**: Added `/popular` route displaying videos sorted by view count.
+- **Video Player**: Added Picture-in-Picture support with keyboard shortcut (P).
+- **PWA Features**: Implemented service worker for caching static assets, improving mobile performance.
+
 ## 2025-12-09
 
 ### Gallery UX and Favorites

@@ -22,9 +22,11 @@
 ### Data Flow
 
 1. **Video List** (`index`) → `cache.get_all_video_data()` → SQLite/JSON → Frontend (sorted by date/views/rating)
-2. **Watch Page** → `cache.get_ratings()`, `get_views()`, `get_tags()`, `get_favorites()` (bulk loads) → Single template render
-3. **Metadata Write** (ratings, views, tags) → `POST /api/*` → DB write → Cache invalidate → Re-fetch next read
-4. **File Discovery** → `file_watcher` detects changes → calls `generate_thumbnail_async()` → Queueing deduped via `thumbnail_manager`
+2. **Favorites Page** (`favorites`) → Filter `cache.get_all_video_data()` by `cache.get_favorites()` → Paginated frontend
+3. **Popular Page** (`popular`) → `cache.get_all_video_data(sort='views', reverse=True)` → Paginated frontend
+4. **Watch Page** → `cache.get_ratings()`, `get_views()`, `get_tags()`, `get_favorites()` (bulk loads) → Single template render
+5. **Metadata Write** (ratings, views, tags) → `POST /api/*` → DB write → Cache invalidate → Re-fetch next read
+6. **File Discovery** → `file_watcher` detects changes → calls `generate_thumbnail_async()` → Queueing deduped via `thumbnail_manager`
 
 ### Key Design Decisions
 
@@ -33,6 +35,7 @@
 - **SQLite + JSON Fallback**: If DB fails, reads JSON files (`ratings.json`, etc.). Writes still go to DB if available.
 - **Background Thumbnail Generation**: Non-blocking; new files trigger `generate_thumbnail_async()` queued by filename dedup.
 - **Thread Safety**: `cache_manager` and `database_migration` use `threading.RLock()` for concurrent access.
+- **Cross-Device Accessibility**: 44px+ touch targets, no hover dependencies, PWA caching for mobile performance.
 
 ---
 
@@ -128,6 +131,7 @@ repo/
 ├── thumbnail_manager.py         # Async thumbnail generation
 ├── static/
 │   ├── styles.css               # **Single CSS entry point** (no duplicates)
+│   ├── sw.js                    # Service worker for PWA caching
 │   ├── js/
 │   │   ├── player.js            # Video player class
 │   │   ├── ratings.js           # Rating star interactions
@@ -138,6 +142,8 @@ repo/
 ├── templates/
 │   ├── watch.html               # **Single watch page** (includes _player.html)
 │   ├── index.html               # Video list & grid
+│   ├── favorites.html           # Favorites page with sorting/pagination
+│   ├── popular.html             # Popular videos by view count
 │   ├── _base.html               # Base layout
 │   ├── _navbar.html             # Navigation
 │   ├── _player.html             # Reusable player component
@@ -181,10 +187,11 @@ repo/
 ## VR/Cross-Platform Specifics
 
 - **No Hover Interactions**: All controls must work with pointer events, click, and keyboard.
-- **Touch Targets ≥ 44px**: Rating stars, buttons, links.
+- **Touch Targets ≥ 44px**: Rating stars, buttons, links with padding and min-size.
 - **Rating Visibility**: Always render the rating partial on `watch.html`; do not hide in VR-only containers.
 - **User Agent Testing**: Add Playwright tests with Quest 2 user agent (e.g., `Mozilla/5.0 ... OculusBrowser`).
 - **Theme Support**: App supports Dark/Light, Glassmorphic/Neomorphic/Hybrid themes; all must work on VR.
+- **PWA Features**: Service worker caches static assets for offline access on mobile devices.
 
 ---
 

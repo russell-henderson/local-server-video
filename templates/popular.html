@@ -1,6 +1,6 @@
 {% extends "_base.html" %}
 
-{% block title %}Favorites — Local Video Server{% endblock %}
+{% block title %}Popular — Local Video Server{% endblock %}
 
 {% block extra_head %}
   <!-- Performance metrics -->
@@ -11,37 +11,22 @@
 <section class="video-hero card mb-4">
   <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
     <div>
-      <p class="eyebrow text-uppercase mb-1">Favorites</p>
+      <p class="eyebrow text-uppercase mb-1">Popular</p>
       <div class="d-flex align-items-center gap-2 mb-1">
-        <h1 class="hero-title mb-0">My Favorites</h1>
+        <h1 class="hero-title mb-0">Most Viewed</h1>
         <span class="pill pill-muted">Total {{ total_videos }}</span>
       </div>
       <div class="hero-meta subtle-text">
-        <span>Sorted · {{ current_sort|capitalize }}{% if current_order == 'asc' %} ↑{% else %} ↓{% endif %}</span>
+        <span>Sorted by Views ↓</span>
         <span class="dot-sep">•</span>
         <span>Page {{ current_page }} / {{ total_pages }}</span>
       </div>
     </div>
 
-    <!-- Sorting controls -->
+    <!-- Back to main library link -->
     <div class="sorting-shelf">
-      <span class="sort-label">Sort</span>
-      {% set next_order = 'asc' if current_order == 'desc' else 'desc' %}
-      <a class="sort-chip {% if current_sort == 'rating' %}active{% endif %}"
-         href="{{ url_for('favorites', sort='rating', order=next_order if current_sort == 'rating' else 'desc', page=1, per_page=per_page) }}">
-        <i class="fas fa-star me-1"></i> Rating
-      </a>
-      <a class="sort-chip {% if current_sort == 'title' %}active{% endif %}"
-         href="{{ url_for('favorites', sort='title', order=next_order if current_sort == 'title' else 'asc', page=1, per_page=per_page) }}">
-        <i class="fas fa-font me-1"></i> Title
-      </a>
-      <a class="sort-chip {% if current_sort == 'views' %}active{% endif %}"
-         href="{{ url_for('favorites', sort='views', order=next_order if current_sort == 'views' else 'desc', page=1, per_page=per_page) }}">
-        <i class="fas fa-eye me-1"></i> Views
-      </a>
-      <a class="sort-chip {% if current_sort == 'date' %}active{% endif %}"
-         href="{{ url_for('favorites', sort='date', order=next_order if current_sort == 'date' else 'desc', page=1, per_page=per_page) }}">
-        <i class="fas fa-clock me-1"></i> Date Added
+      <a class="sort-chip active" href="{{ url_for('index') }}">
+        <i class="fas fa-arrow-left me-1"></i> Back to Library
       </a>
     </div>
   </div>
@@ -52,11 +37,11 @@
     <div class="btn-group" role="group" aria-label="Pagination">
       {% if current_page > 1 %}
         <a class="btn btn-outline-secondary btn-sm"
-           href="{{ url_for('favorites', page=current_page-1, per_page=per_page, sort=current_sort, order=current_order) }}">&larr; Prev</a>
+           href="{{ url_for('popular_page', page=current_page-1, per_page=per_page) }}">&larr; Prev</a>
       {% endif %}
       {% if current_page < total_pages %}
         <a class="btn btn-outline-secondary btn-sm"
-           href="{{ url_for('favorites', page=current_page+1, per_page=per_page, sort=current_sort, order=current_order) }}">Next &rarr;</a>
+           href="{{ url_for('popular_page', page=current_page+1, per_page=per_page) }}">Next &rarr;</a>
       {% endif %}
     </div>
   </div>
@@ -111,14 +96,6 @@
     </article>
   {% endfor %}
 </div>
-
-{% if not videos %}
-<div class="alert alert-info text-center">
-  <h4>No favorites yet!</h4>
-  <p>Click the ♥ button on any video to add it to your favorites.</p>
-  <a href="{{ url_for('index') }}" class="btn btn-primary">Browse Videos</a>
-</div>
-{% endif %}
 
 <button class="back-to-top" type="button" aria-label="Back to top">
   <i class="fas fa-arrow-up"></i>

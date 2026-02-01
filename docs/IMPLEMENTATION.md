@@ -46,7 +46,7 @@ High level flow inside `create_app()`:
 3. Initialize `VideoDatabase` and migrate schema if needed.
 4. Initialize cache and thumbnail manager.
 5. Register blueprints for:
-   - Gallery and watch views.
+   - Gallery, watch, favorites, and popular views.
    - Ratings API.
    - Admin and performance views.
 6. Optionally start background tasks like file watching.

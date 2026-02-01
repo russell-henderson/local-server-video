@@ -415,8 +415,21 @@ body {
   border: 0;
 }
 
+.rating .star {
+  padding: 0.5rem;
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .rating .star:hover,
-.rating i:hover {
+.rating .star:active,
+.rating .star:focus,
+.rating i:hover,
+.rating i:active,
+.rating i:focus {
   color: #ffb300;
 }
 
@@ -530,8 +543,13 @@ body {
   background: transparent;
   border: none;
   cursor: pointer;
-  padding: 0.5rem;
+  padding: 0.75rem;
   font-size: 1.5rem;
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 a {

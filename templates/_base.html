@@ -43,6 +43,17 @@
     <!-- Tags handling -->
     <script src="{{ url_for('static', filename='js/tags.js') }}" defer></script>
     
+    <!-- Service Worker for PWA features -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/static/sw.js')
+            .then(registration => console.log('SW registered'))
+            .catch(error => console.log('SW registration failed'));
+        });
+      }
+    </script>
+    
     {% block extra_scripts %}{% endblock %}
 </body>
 </html>
