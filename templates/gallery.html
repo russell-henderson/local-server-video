@@ -843,9 +843,9 @@ function renderImages() {
     
     const favBtn = document.createElement('button');
     favBtn.className = 'image-fav-btn';
-    favBtn.innerHTML = '<i class="fas fa-heart"></i>';
+    favBtn.innerHTML = '<span class="icon favorite-icon"></span>';
     if (favoriteImages.has(image)) {
-      favBtn.classList.add('active');
+      favBtn.querySelector('.icon').classList.add('is-on');
     }
     favBtn.onclick = (e) => {
       e.stopPropagation();
@@ -895,12 +895,13 @@ function saveFavoriteImages() {
 }
 
 function toggleFavoriteImage(image, btn) {
+  const span = btn.querySelector('.icon');
   if (favoriteImages.has(image)) {
     favoriteImages.delete(image);
-    btn.classList.remove('active');
+    span.classList.remove('is-on');
   } else {
     favoriteImages.add(image);
-    btn.classList.add('active');
+    span.classList.add('is-on');
   }
   saveFavoriteImages();
   if (showFavoritesOnly) {
@@ -1142,8 +1143,8 @@ function toggleFavoritesOnly() {
   lastSelectedIndex = null;
   favoritesToggle.classList.toggle('active', showFavoritesOnly);
   favoritesToggle.innerHTML = showFavoritesOnly
-    ? '<i class="fas fa-heart"></i> Favorites (On)'
-    : '<i class="fas fa-heart"></i> Favorites';
+    ? '<span class="icon favorite-icon is-on"></span> Favorites (On)'
+    : '<span class="icon favorite-icon"></span> Favorites';
   renderImages();
 }
 

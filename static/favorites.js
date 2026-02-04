@@ -5,9 +5,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // so templates that expect data.is_favorite get updated when backend returns.
     window.updateFavoriteButtons = function(filename, isFavorite) {
       document.querySelectorAll(`[data-filename="${filename}"].favorite-btn`).forEach(btn => {
-        const icon = btn.querySelector('i');
+        const icon = btn.querySelector('.icon');
         if (!icon) return;
-        icon.className = isFavorite ? 'fas fa-heart text-danger' : 'far fa-heart text-danger';
+        if (isFavorite) {
+          icon.classList.add('is-on');
+        } else {
+          icon.classList.remove('is-on');
+        }
       });
     };
     return;
@@ -25,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
       .then(res => res.json())
       .then(data => {
         if (data && data.success) {
-          const icon = btn.querySelector('i');
+          const icon = btn.querySelector('.icon');
           if (!icon) return;
 
           // Support both response shapes: { is_favorite: bool } or { favorites: [...] }
@@ -37,10 +41,14 @@ document.addEventListener('DOMContentLoaded', () => {
           }
 
           // Update heart icon state
-          icon.className = isFavorited ? 'fas fa-heart text-danger' : 'far fa-heart text-danger';
+          if (isFavorited) {
+            icon.classList.add('is-on');
+          } else {
+            icon.classList.remove('is-on');
+          }
 
           // Optional: Remove card if unfavorited from /favorites page
-          if (window.location.pathname === '/favorites' && icon.classList.contains('far')) {
+          if (window.location.pathname === '/favorites' && !isFavorited) {
             const card = btn.closest('.col-sm-6, .col-md-4, .col-lg-3');
             if (card) card.remove();
           }

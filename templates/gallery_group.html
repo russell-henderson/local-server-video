@@ -325,9 +325,9 @@ function renderImages() {
     
     const favBtn = document.createElement('button');
     favBtn.className = 'image-fav-btn';
-    favBtn.innerHTML = '<i class="fas fa-heart"></i>';
+    favBtn.innerHTML = '<span class="icon favorite-icon"></span>';
     if (favoriteImages.has(item.image_path)) {
-      favBtn.classList.add('active');
+      favBtn.querySelector('.icon').classList.add('is-on');
     }
     favBtn.onclick = (e) => {
       e.stopPropagation();
@@ -373,12 +373,13 @@ function saveFavoriteImages() {
 }
 
 function toggleFavoriteImage(imagePath, btn) {
+  const span = btn.querySelector('.icon');
   if (favoriteImages.has(imagePath)) {
     favoriteImages.delete(imagePath);
-    btn.classList.remove('active');
+    span.classList.remove('is-on');
   } else {
     favoriteImages.add(imagePath);
-    btn.classList.add('active');
+    span.classList.add('is-on');
   }
   saveFavoriteImages();
 }

@@ -79,7 +79,7 @@
     <!-- Fullscreen button -->
     <!-- Favorite toggle (also included here so it remains visible when the video element is moved into an immersive/VR container) -->
     <button class="btn btn-sm favorite-btn player-favorite-btn" data-filename="{{ filename }}" title="Toggle Favorite" aria-label="{% if filename in favorites_list %}Remove from favorites{% else %}Add to favorites{% endif %}">
-      <i class="fa{% if filename in favorites_list %}s{% else %}r{% endif %} fa-heart text-danger"></i>
+      <span class="icon favorite-icon{% if filename in favorites_list %} is-on{% endif %}"></span>
     </button>
 
     <!-- Compact rating widget placed in player controls so it remains visible in fullscreen/VR -->

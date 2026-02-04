@@ -43,19 +43,14 @@
                     data-filename="{{ video.filename }}"
                     title="Toggle Favorite"
                     aria-label="{% if video.filename in favorites_list %}Remove from favorites{% else %}Add to favorites{% endif %}">
-              <i class="fa{% if video.filename in favorites_list %}s{% else %}r{% endif %} fa-heart text-danger"></i>
+              <span class="icon favorite-icon{% if video.filename in favorites_list %} is-on{% endif %}"></span>
             </button>
           </div>
 
           <!-- Rating widget -->
-          <div class="rating" data-filename="{{ video.filename }}" role="group" aria-label="Rate this video">
-            {% for i in range(1,6) %}
-              <i class="{{ 'fas' if i<=video.rating else 'far' }} fa-star"
-                 data-value="{{ i }}"
-                 role="button"
-                 tabindex="0"
-                 aria-label="Rate {{ i }} star{% if i != 1 %}s{% endif %}"></i>
-            {% endfor %}
+          {% with current_rating=video.rating, filename=video.filename, media_hash=video.filename %}
+            {% include 'partials/rating.html' %}
+          {% endwith %}
           </div>
 
           <!-- Live view count -->

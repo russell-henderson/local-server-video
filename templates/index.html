@@ -93,7 +93,7 @@
                   data-filename="{{ video.filename }}"
                   title="Toggle Favorite"
                   aria-label="{% if video.filename in favorites_list %}Remove from favorites{% else %}Add to favorites{% endif %}">
-            <i class="fa{% if video.filename in favorites_list %}s{% else %}r{% endif %} fa-heart text-danger"></i>
+            <span class="icon favorite-icon{% if video.filename in favorites_list %} is-on{% endif %}"></span>
           </button>
         </div>
 

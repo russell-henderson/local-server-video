@@ -1,0 +1,7 @@
+{% macro favorite_icon(is_on=False) -%}
+<span class="icon favorite-icon{% if is_on %} is-on{% endif %}"></span>
+{%- endmacro %}
+
+{% macro star_icon(is_on=False) -%}
+<span class="icon star-icon{% if is_on %} is-on{% endif %}"></span>
+{%- endmacro %}

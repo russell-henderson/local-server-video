@@ -6,16 +6,20 @@
     // Update all rating widgets that reference the filename
     document.querySelectorAll('.rating').forEach(container => {
       if (container.dataset.filename !== filename) return;
-      const stars = Array.from(container.querySelectorAll('i'));
+      const stars = Array.from(container.querySelectorAll('.star .icon'));
       stars.forEach((s, idx) => {
-        s.className = (idx + 1) <= rating ? 'fas fa-star' : 'far fa-star';
+        if ((idx + 1) <= rating) {
+          s.classList.add('is-on');
+        } else {
+          s.classList.remove('is-on');
+        }
       });
     });
   }
 
   // Click delegation for rating stars
   document.addEventListener('click', (e) => {
-    const star = e.target.closest && e.target.closest('.rating i');
+    const star = e.target.closest && e.target.closest('.rating .star');
     if (!star) return;
     const rating = parseInt(star.dataset.value, 10);
     const container = star.closest('.rating');
@@ -41,7 +45,7 @@
     if (e.key !== 'Enter' && e.key !== ' ') return;
     const active = document.activeElement;
     if (!active) return;
-    const star = active.closest && active.closest('.rating i');
+    const star = active.closest && active.closest('.rating .star');
     if (!star) return;
     // emulate click
     star.click();

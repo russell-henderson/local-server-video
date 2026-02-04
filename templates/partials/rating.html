@@ -13,7 +13,7 @@
             role="radio"
             class="star {% if i <= current %}is-active{% endif %}"
             aria-label="{{ i }} star{% if i != 1 %}s{% endif %}">
-      <i class="fa{% if i <= current %}s{% else %}r{% endif %} fa-star"></i>
+      <span class="icon star-icon{% if i <= current %} is-on{% endif %}"></span>
     </button>
   {% endfor %}
 </div>

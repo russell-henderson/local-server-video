@@ -560,6 +560,41 @@ a:hover {
   filter: brightness(85%);
 }
 
+/* ─── Icons ─── */
+.icon {
+  font-size: 1.5em;
+  line-height: 1;
+  display: inline-block;
+}
+
+.icon.is-on {
+  /* For Unicode, the symbol itself indicates state */
+}
+
+.favorite-icon {
+  color: #dc3545; /* Bootstrap danger color */
+}
+
+.favorite-icon::before {
+  content: "♡";
+}
+
+.favorite-icon.is-on::before {
+  content: "♥";
+}
+
+.star-icon {
+  color: #ffc107; /* Bootstrap warning color */
+}
+
+.star-icon::before {
+  content: "☆";
+}
+
+.star-icon.is-on::before {
+  content: "★";
+}
+
 /* ─── Sorting Links ─── */
 .sorting-links a {
   margin: 0 0.5rem;

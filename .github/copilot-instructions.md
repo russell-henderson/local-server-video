@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-**Local Video Server** is a Flask-based streaming application for managing a personal video library with responsive themes, cross-platform support (desktop/mobile/VR), and performance optimization. Source of truth for current work: `TODO.md` (top-to-bottom priority order).
+**Local Video Server** is a Flask-based application for managing a personal video library and image gallery with responsive themes, cross-platform support (desktop/mobile/VR), performance optimization, and a Next.js admin dashboard for performance monitoring. Source of truth for current work: `docs/TODO.md` (top-to-bottom priority order).
 
 ---
 
@@ -12,12 +12,13 @@
 
 | Module | Purpose | Key Patterns |
 |--------|---------|--------------|
-| `main.py` | Flask app, video routes, thumbnail orchestration | Route handlers w/ `@performance_monitor` decorator; cache-driven metadata pulls |
-| `cache_manager.py` | In-memory + SQLite cache for videos, ratings, views, tags, favorites | Dual-backend (JSON fallback); TTL-based refresh; thread-safe with locks |
+| `main.py` | Flask app, video routes, gallery routes, thumbnail orchestration | Route handlers w/ `@performance_monitor` decorator; cache-driven metadata pulls |
+| `cache_manager.py` | In-memory + SQLite cache for videos, images, ratings, views, tags, favorites | Dual-backend (JSON fallback); TTL-based refresh; thread-safe with locks |
 | `database_migration.py` | SQLite schema & migrations | Uses `sqlite3.Row` for dict-like access; foreign keys on `videos.filename`; soft deletes via CASCADE |
 | `file_watcher.py` | Debounced directory monitoring w/ batch processing | Watchdog observer; background thread; dedup via checksum |
 | `config.py` | Dataclass-based config w/ cascade (env vars → `.env` → `config.json` → defaults) | `ServerConfig` validation; `ConfigManager` singleton |
 | `performance_monitor.py` | Optional route latency tracking & optional perf reporting | Non-fatal import; can disable monitoring if unavailable |
+| `admin-dashboard/` | Next.js app for admin performance dashboard | Separate app; fetches `/admin/performance.json` from Flask backend |
 
 ### Data Flow
 
@@ -25,8 +26,10 @@
 2. **Favorites Page** (`favorites`) → Filter `cache.get_all_video_data()` by `cache.get_favorites()` → Paginated frontend
 3. **Popular Page** (`popular`) → `cache.get_all_video_data(sort='views', reverse=True)` → Paginated frontend
 4. **Watch Page** → `cache.get_ratings()`, `get_views()`, `get_tags()`, `get_favorites()` (bulk loads) → Single template render
-5. **Metadata Write** (ratings, views, tags) → `POST /api/*` → DB write → Cache invalidate → Re-fetch next read
-6. **File Discovery** → `file_watcher` detects changes → calls `generate_thumbnail_async()` → Queueing deduped via `thumbnail_manager`
+5. **Gallery Page** (`gallery`) → `cache.get_all_image_data()` → SQLite/JSON → Frontend (grouped by virtual groups)
+6. **Metadata Write** (ratings, views, tags, favorites) → `POST /api/*` → DB write → Cache invalidate → Re-fetch next read
+7. **File Discovery** → `file_watcher` detects changes → calls `generate_thumbnail_async()` → Queueing deduped via `thumbnail_manager`
+8. **Admin Dashboard** → Fetches `/admin/performance.json` → Displays metrics with charts
 
 ### Key Design Decisions
 
@@ -36,6 +39,8 @@
 - **Background Thumbnail Generation**: Non-blocking; new files trigger `generate_thumbnail_async()` queued by filename dedup.
 - **Thread Safety**: `cache_manager` and `database_migration` use `threading.RLock()` for concurrent access.
 - **Cross-Device Accessibility**: 44px+ touch targets, no hover dependencies, PWA caching for mobile performance.
+- **Image Gallery**: Supports loose images and virtual groups; favorites work across both; selection mode for bulk operations.
+- **Admin Dashboard**: Separate Next.js app for performance monitoring; uses Recharts for visualizations.
 
 ---
 
@@ -54,6 +59,15 @@
 .\dev.ps1 install
 ```
 
+### Starting the Admin Dashboard
+
+```bash
+cd admin-dashboard
+npm install
+npm run dev  # Runs on http://localhost:3000
+npm run build && npm start  # Production
+```
+
 ### Running Quality Checks
 
 ```powershell
@@ -61,6 +75,9 @@
 .\dev.ps1 test          # Placeholder; extend with real test suite
 .\dev.ps1 health        # healthcheck.py + performance_monitor.py --report
 .\dev.ps1 clean         # Remove .pyc, __pycache__, large logs
+
+# Admin dashboard linting
+cd admin-dashboard && npm run lint
 ```
 
 ### Database & Cache Maintenance
@@ -107,14 +124,23 @@ When writing (ratings, tags, views, favorites):
 ### Template Patterns
 
 - **Single Watch Page**: `templates/watch.html` includes `_player.html` (reusable player partial).
+- **Gallery Page**: `templates/gallery.html` with selection mode, groups grid, images grid.
 - **Rating Interaction**: `<div class="rating" data-filename="...">` → `static/js/ratings.js` (pointer + click + keyboard support; VR-safe).
 - **Video Cards**: Responsive grid; thumbnail lazy-load with fallback GIF; `data-role="video-card"` for JS targeting.
+- **Gallery Items**: `data-filename` for selection; shift-click for ranges.
 
 ### JavaScript Conventions
 
 - **Player**: `static/js/player.js` → `class VideoPlayer { ... }` wraps `<video>` + controls; keyboard shortcuts (k/space=play, j/l=skip±10s, f=fullscreen).
 - **Ratings/Tags**: Module functions (not classes); use `data-filename` to find context; emit fetch requests on DOM changes.
+- **Gallery Selection**: `static/js/gallery.js` → Handles selection mode, shift-click ranges, bulk actions.
 - **Dark Mode**: Enabled by default; toggle adds/removes `dark-mode` class on `document.documentElement` + `body`.
+
+### Admin Dashboard Patterns
+
+- **Data Fetching**: Fetch from `/admin/performance.json`; use React hooks for live updates.
+- **Charts**: Use Recharts for metrics visualization.
+- **Layout**: Tailwind CSS for responsive design.
 
 ---
 
@@ -122,13 +148,19 @@ When writing (ratings, tags, views, favorites):
 
 ```
 repo/
-├── main.py                      # Flask app
+├── main.py                      # Flask app (videos + gallery)
 ├── cache_manager.py             # Metadata cache (DB + JSON)
 ├── database_migration.py        # SQLite schema & queries
 ├── file_watcher.py              # Directory monitoring
 ├── config.py                    # Configuration (env → .env → config.json → defaults)
 ├── performance_monitor.py       # Optional route profiling
 ├── thumbnail_manager.py         # Async thumbnail generation
+├── admin-dashboard/             # Next.js admin performance dashboard
+│   ├── src/                     # React components
+│   ├── package.json             # Node dependencies
+│   └── ...
+├── images/                      # User image files for gallery
+├── videos/                      # User video files
 ├── static/
 │   ├── styles.css               # **Single CSS entry point** (no duplicates)
 │   ├── sw.js                    # Service worker for PWA caching
@@ -136,6 +168,7 @@ repo/
 │   │   ├── player.js            # Video player class
 │   │   ├── ratings.js           # Rating star interactions
 │   │   ├── tags.js              # Tag management
+│   │   ├── gallery.js           # Gallery selection logic
 │   │   ├── ui.js                # Dark mode toggle
 │   └── css/
 │       └── player-controls.css  # Player-specific styles
@@ -144,20 +177,21 @@ repo/
 │   ├── index.html               # Video list & grid
 │   ├── favorites.html           # Favorites page with sorting/pagination
 │   ├── popular.html             # Popular videos by view count
+│   ├── gallery.html             # Image gallery with groups
 │   ├── _base.html               # Base layout
 │   ├── _navbar.html             # Navigation
 │   ├── _player.html             # Reusable player component
 │   └── partials/
 │       └── rating.html          # Rating star partial (included in watch.html)
 ├── docs/                        # Current, active documentation
+│   ├── ADMIN_DASHBOARD.md       # Admin dashboard spec
 │   ├── IMPLEMENTATION.md        # Architecture + dev workflow
 │   ├── PERFORMANCE.md           # Optimization notes
 │   ├── UI.md                    # UI patterns & player behavior
-│   └── TODOS.md                 # High-level roadmap
+│   └── TODO.md                  # **Single source of truth for current work**
 ├── archive/                     # Deprecated systems, cost analyses, old designs
 ├── .github/
 │   └── copilot-instructions.md  # This file
-├── TODO.md                      # **Single source of truth for current work**
 └── dev.ps1                      # PowerShell command wrapper
 ```
 
@@ -169,12 +203,12 @@ repo/
 
 ---
 
-## Task Workflow (from TODO.md)
+## Task Workflow (from docs/TODO.md)
 
-1. **Read `TODO.md` top-to-bottom** — tasks are ordered by dependency & priority.
+1. **Read `docs/TODO.md` top-to-bottom** — tasks are ordered by dependency & priority.
 2. **Pick the highest unchecked task** whose dependencies are met.
 3. **Implement the smallest correct change set** — avoid scope creep.
-4. **Update TODO.md** when done:
+4. **Update docs/TODO.md** when done:
    - Change `- [ ]` to `- [x]`
    - Add a note: `Completed in PR_number (commit abc123).`
 5. **Open a PR** with:
@@ -209,6 +243,7 @@ repo/
 LVS_PORT=5001
 LVS_DEBUG=true
 LVS_VIDEO_DIRECTORY=~/my-videos
+LVS_IMAGE_DIRECTORY=~/my-images
 ```
 
 Config is loaded once at startup via `config_manager.load_config()`. To reload: `config_manager.reload_config()`.
@@ -232,7 +267,7 @@ Run with:
 ## When Uncertain
 
 1. **Propose the smallest, reversible change** — don't refactor unrelated code.
-2. **Check `TODO.md` Acceptance criteria** — implement *exactly* as specified.
+2. **Check `docs/TODO.md` Acceptance criteria** — implement *exactly* as specified.
 3. **Prefer existing patterns** — if the codebase uses a style, follow it (e.g., `data-*` attributes for targeting, `@performance_monitor` for routes).
 4. **Document edge cases** — add a comment explaining *why* a workaround is needed (e.g., "SQLite UNIQUE constraint prevents duplicate ratings").
 5. **Test on multiple platforms** — desktop, mobile, VR if the change affects UI.
@@ -244,14 +279,20 @@ Run with:
 - **Do not remove files** unless the task explicitly instructs it OR a replacement exists.
 - **Do not change API contracts** without updating tests & docs.
 - **Preserve `.github/copilot-instructions.md`** — update it when architectural patterns change.
-- **Always check `TODO.md` first** — it is the single source of truth for priorities.
+- **Always check `docs/TODO.md` first** — it is the single source of truth for priorities.
 
 ---
 
 ## First Actions for New Issues
 
-1. Read `TODO.md` from the top.
+1. Read `docs/TODO.md` from the top.
 2. Check acceptance criteria for the relevant task.
 3. Review the files in "Architecture Essentials" to understand the current implementation.
 4. Run `.\dev.ps1 dev` to start the server locally; test your changes in real-time.
 5. Use `.\dev.ps1 lint` and `.\dev.ps1 test` before committing.
+
+
+
+---
+
+
