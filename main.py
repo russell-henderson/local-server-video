@@ -246,6 +246,81 @@ def ensure_thumbnails_exist(video_list: list[str]) -> None:
         generate_thumbnail_async(vid)
 
 
+# --- Sidecar tag aggregation (sidecar-first) ---
+
+_SIDECAR_TAG_CACHE = {"ts": 0.0, "tags": [], "by_tag": {}}
+_SIDECAR_TAG_TTL_SECONDS = 10.0
+
+_VIDEO_EXTS = (".mp4", ".mkv", ".mov", ".webm", ".avi", ".m4v")
+
+
+def _videos_dir() -> Path:
+    # In docker-compose, ./videos is mounted to /app/videos
+    # app.root_path is /app
+    return Path(app.root_path) / "videos"
+
+
+def _iter_sidecars(vdir: Path):
+    # sidecars are <video>.<ext>.json, e.g. movie.mp4.json
+    for ext in _VIDEO_EXTS:
+        yield from vdir.glob(f"*{ext}.json")
+
+
+def _read_tags_from_sidecar(p: Path) -> list[str]:
+    try:
+        data = json.loads(p.read_text(encoding="utf-8", errors="ignore"))
+        tags = data.get("tags", [])
+        if isinstance(tags, list):
+            return [
+                t.strip()
+                for t in tags
+                if isinstance(t, str) and t.strip()
+            ]
+    except Exception:
+        pass
+    return []
+
+
+def _normalize_tag(t: str) -> str:
+    return t.strip().lstrip("#").strip()
+
+
+def get_sidecar_tags_snapshot(force: bool = False):
+    """
+    Returns:
+      tags_sorted: list[str]
+      by_tag: dict[str, list[str]]  # tag -> filenames (video filename, without .json)
+    """
+    now = time.time()
+    if not force and (now - _SIDECAR_TAG_CACHE["ts"] < _SIDECAR_TAG_TTL_SECONDS):
+        return _SIDECAR_TAG_CACHE["tags"], _SIDECAR_TAG_CACHE["by_tag"]
+
+    vdir = _videos_dir()
+    tags_set = set()
+    by_tag: dict[str, list[str]] = {}
+
+    if vdir.exists():
+        for sc in _iter_sidecars(vdir):
+            # convert "<name>.mp4.json" -> "<name>.mp4"
+            video_filename = sc.name[:-5]  # strip trailing ".json"
+            tags = _read_tags_from_sidecar(sc)
+            for raw in tags:
+                tag = _normalize_tag(raw)
+                if not tag:
+                    continue
+                tags_set.add(tag)
+                by_tag.setdefault(tag, []).append(video_filename)
+
+    tags_sorted = sorted(tags_set, key=lambda x: x.lower())
+    for k in list(by_tag.keys()):
+        by_tag[k] = sorted(set(by_tag[k]), key=lambda x: x.lower())
+
+    _SIDECAR_TAG_CACHE["ts"] = now
+    _SIDECAR_TAG_CACHE["tags"] = tags_sorted
+    _SIDECAR_TAG_CACHE["by_tag"] = by_tag
+    return tags_sorted, by_tag
+
+
 # ────────────────────────────────────────────────────────────────────────────
 # Optimised routes
 # ────────────────────────────────────────────────────────────────────────────
@@ -691,8 +766,8 @@ def random_video():
 @app.route('/tags')
 @performance_monitor("route_tags")
 def tags_page():
-    """Optimized tags page with cached data"""
-    sorted_tags = cache.get_all_unique_tags()
+    """Tags page (sidecar-first)"""
+    sorted_tags, _ = get_sidecar_tags_snapshot()
     return render_template('tags.html', tags=sorted_tags, tag_count=len(sorted_tags))
 
 
@@ -702,8 +777,43 @@ def tag_videos(tag):
     """Optimized tag filtering with cached data"""
     normalized_tag = tag.lstrip("#")
 
-    # Use optimized tag filtering
-    filtered_videos = cache.get_videos_by_tag_optimized(normalized_tag)
+    _, by_tag = get_sidecar_tags_snapshot()
+    filenames = by_tag.get(normalized_tag, [])
+
+    if filenames:
+        filtered_videos = []
+        ratings = cache.get_ratings()
+        views = cache.get_views()
+        try:
+            all_video_data = cache.get_all_video_data()
+            video_map = {v.get("filename"): v for v in all_video_data if v.get("filename")}
+        except Exception:
+            video_map = {}
+
+        for fn in filenames:
+            v = video_map.get(fn)
+            if v:
+                filtered_videos.append(v)
+                continue
+
+            try:
+                v = cache.get_video_data(fn)
+            except Exception:
+                v = None
+
+            if v:
+                filtered_videos.append(v)
+            else:
+                filtered_videos.append(
+                    {
+                        "filename": fn,
+                        "rating": ratings.get(fn, 0),
+                        "views": views.get(fn, 0),
+                    }
+                )
+    else:
+        # Fallback to cached DB/JSON tags
+        filtered_videos = cache.get_videos_by_tag_optimized(normalized_tag)
 
     # Ensure thumbnails exist
     ensure_thumbnails_exist([v['filename'] for v in filtered_videos])
