@@ -415,21 +415,8 @@ body {
   border: 0;
 }
 
-.rating .star {
-  padding: 0.5rem;
-  min-width: 44px;
-  min-height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 .rating .star:hover,
-.rating .star:active,
-.rating .star:focus,
-.rating i:hover,
-.rating i:active,
-.rating i:focus {
+.rating i:hover {
   color: #ffb300;
 }
 
@@ -543,13 +530,8 @@ body {
   background: transparent;
   border: none;
   cursor: pointer;
-  padding: 0.75rem;
+  padding: 0.5rem;
   font-size: 1.5rem;
-  min-width: 44px;
-  min-height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 a {
@@ -558,41 +540,6 @@ a {
 
 a:hover {
   filter: brightness(85%);
-}
-
-/* ─── Icons ─── */
-.icon {
-  font-size: 1.5em;
-  line-height: 1;
-  display: inline-block;
-}
-
-.icon.is-on {
-  /* For Unicode, the symbol itself indicates state */
-}
-
-.favorite-icon {
-  color: #dc3545; /* Bootstrap danger color */
-}
-
-.favorite-icon::before {
-  content: "♡";
-}
-
-.favorite-icon.is-on::before {
-  content: "♥";
-}
-
-.star-icon {
-  color: #ffc107; /* Bootstrap warning color */
-}
-
-.star-icon::before {
-  content: "☆";
-}
-
-.star-icon.is-on::before {
-  content: "★";
 }
 
 /* ─── Sorting Links ─── */

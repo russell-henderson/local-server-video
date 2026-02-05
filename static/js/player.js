@@ -30,7 +30,6 @@ class VideoPlayer {
     this.speedDownBtn = root.querySelector('[data-action="speed-down"]');
     this.speedUpBtn = root.querySelector('[data-action="speed-up"]');
     this.loopBtn = root.querySelector('[data-action="loop"]');
-    this.pipBtn = root.querySelector('[data-action="pip"]');
     
     this.seekBar = root.querySelector('[data-role="seek"]');
     this.volumeBar = root.querySelector('[data-role="volume"]');
@@ -75,7 +74,6 @@ class VideoPlayer {
     if (this.speedDownBtn) this.speedDownBtn.addEventListener('click', () => this.adjustSpeed(-1));
     if (this.speedUpBtn) this.speedUpBtn.addEventListener('click', () => this.adjustSpeed(1));
     if (this.loopBtn) this.loopBtn.addEventListener('click', () => this.toggleLoop());
-    if (this.pipBtn) this.pipBtn.addEventListener('click', () => this.togglePictureInPicture());
     
     this.seekBar.addEventListener('input', () => this.seek());
     this.seekBar.addEventListener('pointermove', (e) => this.updatePreviewFromEvent(e));
@@ -116,10 +114,6 @@ class VideoPlayer {
         case 'b':
           e.preventDefault();
           this.toggleLoop();
-          break;
-        case 'p':
-          e.preventDefault();
-          this.togglePictureInPicture();
           break;
         case '[':
           e.preventDefault();
@@ -332,15 +326,6 @@ class VideoPlayer {
     this.loopEnd = null;
     this.video.loop = false;
     this.updateLoopButton('off');
-  }
-
-  togglePictureInPicture() {
-    if (!document.pictureInPictureEnabled) return;
-    if (document.pictureInPictureElement) {
-      document.exitPictureInPicture();
-    } else {
-      this.video.requestPictureInPicture();
-    }
   }
 
   updatePreviewFromEvent(evt) {
