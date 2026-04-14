@@ -1,564 +1,361 @@
 """
 tests/test_rating_write_and_read.py
 
-Integration test for rating write and read operations.
-Tests that ratings are persisted to database and cache is updated.
+Integration tests for ratings API write/read behavior aligned to current hash-first contract.
 """
-import pytest
+
+from __future__ import annotations
+
 from pathlib import Path
 import sqlite3
 
+import pytest
 
-# Test fixtures and setup
-@pytest.fixture
-def test_app():
-    """Create Flask test app."""
-    import sys
-    sys.path.insert(0, str(Path(__file__).parent.parent))
-    
-    from main import app
-    
-    app.config['TESTING'] = True
-    return app
+from backend.app.api.ratings import ratings_service
+from database_migration import VideoDatabase
 
 
 @pytest.fixture
-def client(test_app):
-    """Create test client."""
-    return test_app.test_client()
-
-
-@pytest.fixture
-def test_video(tmp_path):
-    """Create test video file."""
+def rating_target():
+    """Return a known filename + registered media_hash for API tests."""
     videos_dir = Path("videos")
-    
-    # Find first available video or create a test one
-    video_files = list(videos_dir.glob("*"))
-    
-    if video_files:
-        test_video_name = video_files[0].name
-    else:
-        pytest.skip("No videos available for testing")
-    
-    return test_video_name
+    video_files = [p for p in videos_dir.glob("*") if p.is_file()]
+    if not video_files:
+        pytest.skip("No videos available for ratings integration tests")
 
+    filename = video_files[0].name
+    media_hash = ratings_service.register_media_hash(filename)
 
-@pytest.fixture(autouse=True)
-def reset_rate_limiter():
-    """Reset the rate limiter before each test to avoid state pollution."""
-    try:
-        from backend.app.core.rate_limiter import _rate_limiter
-        # Clear the rate limiter state before test
-        if hasattr(_rate_limiter, '_storage'):
-            _rate_limiter._storage.clear()
-    except (ImportError, AttributeError):
-        # If rate limiter doesn't exist or has different structure, skip
-        pass
-    yield
-    # Clean up after test too
-    try:
-        from backend.app.core.rate_limiter import _rate_limiter
-        if hasattr(_rate_limiter, '_storage'):
-            _rate_limiter._storage.clear()
-    except (ImportError, AttributeError):
-        pass
+    db = VideoDatabase()
+    with db.get_connection() as conn:
+        conn.execute("DELETE FROM ratings WHERE filename = ?", (filename,))
+        conn.commit()
+
+    return {"filename": filename, "media_hash": media_hash}
 
 
 class TestRatingWriteAndRead:
-    """Test suite for rating write/read operations."""
-    
-    def test_set_rating_via_api(self, client, test_video):
-        """Test setting a rating via POST /api/ratings/{media_hash}."""
-        media_hash = test_video  # For now, use filename as hash
-        
+    def test_set_rating_via_api(self, client, rating_target):
         response = client.post(
-            f'/api/ratings/{media_hash}',
-            json={'value': 4},
-            content_type='application/json'
+            f"/api/ratings/{rating_target['media_hash']}",
+            json={"value": 4},
+            content_type="application/json",
         )
-        
-        assert response.status_code in [201, 200]
+
+        assert response.status_code == 201
         data = response.get_json()
         assert data is not None
-        assert 'user' in data or 'average' in data
-    
-    def test_get_rating_via_api(self, client, test_video):
-        """Test getting a rating via GET /api/ratings/{media_hash}."""
-        media_hash = test_video
-        
-        # First set a rating
+        assert data["user"]["value"] == 4
+
+    def test_get_rating_via_api(self, client, rating_target):
         set_response = client.post(
-            f'/api/ratings/{media_hash}',
-            json={'value': 3},
-            content_type='application/json'
+            f"/api/ratings/{rating_target['media_hash']}",
+            json={"value": 3},
+            content_type="application/json",
         )
-        assert set_response.status_code in [201, 200]
-        
-        # Then get it
-        get_response = client.get(f'/api/ratings/{media_hash}')
+        assert set_response.status_code == 201
+
+        get_response = client.get(f"/api/ratings/{rating_target['media_hash']}")
         assert get_response.status_code == 200
-        
         data = get_response.get_json()
-        assert data is not None
-        assert 'user' in data or 'average' in data
-    
-    def test_rating_persists_after_reload(self, client, test_video):
-        """Test that rating persists after setting."""
-        media_hash = test_video
-        
-        # Set rating
-        client.post(
-            f'/api/ratings/{media_hash}',
-            json={'value': 5},
-            content_type='application/json'
+        assert data["user"]["value"] == 3
+
+    def test_rating_persists_after_reload(self, client, rating_target):
+        post_response = client.post(
+            f"/api/ratings/{rating_target['media_hash']}",
+            json={"value": 5},
+            content_type="application/json",
         )
-        
-        # Get rating
-        response = client.get(f'/api/ratings/{media_hash}')
+        assert post_response.status_code == 201
+
+        response = client.get(f"/api/ratings/{rating_target['media_hash']}")
+        assert response.status_code == 200
         data = response.get_json()
-        
-        assert data is not None
-        # Rating should be retrievable
-        if 'user' in data and data['user'] is not None:
-            assert data['user'].get('value') == 5
-    
-    def test_invalid_rating_value(self, client, test_video):
-        """Test that invalid rating values are rejected."""
-        media_hash = test_video
-        
-        # Test value too high
-        response = client.post(
-            f'/api/ratings/{media_hash}',
-            json={'value': 6},
-            content_type='application/json'
-        )
-        assert response.status_code == 400
-        
-        # Test value too low
-        response = client.post(
-            f'/api/ratings/{media_hash}',
-            json={'value': 0},
-            content_type='application/json'
-        )
-        assert response.status_code == 400
-        
-        # Test non-integer
-        response = client.post(
-            f'/api/ratings/{media_hash}',
-            json={'value': 'invalid'},
-            content_type='application/json'
-        )
-        assert response.status_code == 400
-    
+        assert data["user"]["value"] == 5
+
+    def test_invalid_rating_value(self, client, rating_target):
+        for bad in (6, 0, "invalid"):
+            response = client.post(
+                f"/api/ratings/{rating_target['media_hash']}",
+                json={"value": bad},
+                content_type="application/json",
+            )
+            assert response.status_code == 400
+
     def test_missing_video(self, client):
-        """Test that rating a non-existent video fails gracefully."""
-        fake_hash = 'nonexistent_video_12345'
-        
         response = client.post(
-            f'/api/ratings/{fake_hash}',
-            json={'value': 3},
-            content_type='application/json'
+            "/api/ratings/nonexistent_video_12345",
+            json={"value": 3},
+            content_type="application/json",
         )
-        
-        # Should be 404 (video not found)
         assert response.status_code == 404
-    
-    def test_rating_range(self, client, test_video):
-        """Test all valid rating values 1-5."""
-        media_hash = test_video
-        
+
+    def test_missing_video_get(self, client):
+        response = client.get("/api/ratings/nonexistent_video_12345")
+        assert response.status_code == 404
+
+    def test_rating_range(self, client, rating_target):
         for rating_value in range(1, 6):
             response = client.post(
-                f'/api/ratings/{media_hash}',
-                json={'value': rating_value},
-                content_type='application/json'
+                f"/api/ratings/{rating_target['media_hash']}",
+                json={"value": rating_value},
+                content_type="application/json",
             )
-            
-            assert response.status_code in [201, 200], \
-                   f"Failed to set rating {rating_value}"
-            
-            # Verify it was set
-            get_response = client.get(f'/api/ratings/{media_hash}')
+            assert response.status_code == 201
+
+            get_response = client.get(f"/api/ratings/{rating_target['media_hash']}")
             assert get_response.status_code == 200
-    
-    def test_rating_json_structure(self, client, test_video):
-        """Test that rating response has expected JSON structure."""
-        media_hash = test_video
-        
-        client.post(
-            f'/api/ratings/{media_hash}',
-            json={'value': 4},
-            content_type='application/json'
+
+    def test_rating_json_structure(self, client, rating_target):
+        post_response = client.post(
+            f"/api/ratings/{rating_target['media_hash']}",
+            json={"value": 4},
+            content_type="application/json",
         )
-        
-        response = client.get(f'/api/ratings/{media_hash}')
+        assert post_response.status_code == 201
+
+        response = client.get(f"/api/ratings/{rating_target['media_hash']}")
         data = response.get_json()
-        
         assert isinstance(data, dict)
-        assert 'average' in data
-        assert 'count' in data
-        assert isinstance(data['average'], (int, float))
-        assert isinstance(data['count'], int)
+        assert "average" in data
+        assert "count" in data
+        assert isinstance(data["average"], (int, float))
+        assert isinstance(data["count"], int)
 
 
 class TestRatingCacheBehavior:
-    """Test that cache is updated after rating changes."""
-    
-    def test_cache_invalidation_on_write(self, client, test_video):
-        """Test that cache is invalidated when rating is written."""
+    def test_cache_invalidation_on_write(self, client, rating_target):
         from cache_manager import cache
-        
-        media_hash = test_video
-        
-        # Refresh cache to clear it
+
         cache.refresh_all()
-        
-        # Set rating
         response = client.post(
-            f'/api/ratings/{media_hash}',
-            json={'value': 4},
-            content_type='application/json'
+            f"/api/ratings/{rating_target['media_hash']}",
+            json={"value": 4},
+            content_type="application/json",
         )
-        assert response.status_code in [201, 200]
-        
-        # Cache should have the new rating
+        assert response.status_code == 201
+
         ratings = cache.get_ratings()
-        assert ratings is not None
-        # The rating may or may not be in cache depending on implementation
-        # Just verify cache is accessible
-    
-    def test_json_fallback_works(self, client, test_video):
-        """Test that ratings work even if database is unavailable."""
+        assert isinstance(ratings, dict)
+
+    def test_json_fallback_works(self, client, rating_target):
         from cache_manager import cache
-        
-        # Get ratings (should use cache/JSON if DB unavailable)
+
         ratings = cache.get_ratings()
         assert isinstance(ratings, dict)
 
 
 class TestRatingDatabasePersistence:
-    """Test that ratings are persisted to database."""
-    
-    def test_rating_written_to_db(self, client, test_video):
-        """Test that rating is written to SQLite database."""
-        from database_migration import VideoDatabase
-        
+    def test_rating_written_to_db(self, client, rating_target):
         db = VideoDatabase()
-        media_hash = test_video
-        
-        # Set rating via API
+
         response = client.post(
-            f'/api/ratings/{media_hash}',
-            json={'value': 4},
-            content_type='application/json'
+            f"/api/ratings/{rating_target['media_hash']}",
+            json={"value": 4},
+            content_type="application/json",
         )
-        assert response.status_code in [201, 200]
-        
-        # Query database directly
+        assert response.status_code == 201
+
         conn = sqlite3.connect(str(db.db_path))
         cursor = conn.cursor()
-        
         cursor.execute(
-            'SELECT rating FROM ratings WHERE filename = ?',
-            (media_hash,)
+            "SELECT rating FROM ratings WHERE filename = ?",
+            (rating_target["filename"],),
         )
         result = cursor.fetchone()
         conn.close()
-        
-        # Verify the rating is in the database
-        assert result is not None, \
-               f"Rating not found in database for {media_hash}"
+
+        assert result is not None
         assert result[0] == 4
-    
-    def test_rating_survives_cache_clear(self, client, test_video):
-        """Test that rating persists in DB after cache is cleared."""
-        from database_migration import VideoDatabase
+
+    def test_rating_survives_cache_clear(self, client, rating_target):
         from cache_manager import cache
-        
+
         db = VideoDatabase()
-        media_hash = test_video
-        
-        # Set rating
-        client.post(
-            f'/api/ratings/{media_hash}',
-            json={'value': 3},
-            content_type='application/json'
+
+        response = client.post(
+            f"/api/ratings/{rating_target['media_hash']}",
+            json={"value": 3},
+            content_type="application/json",
         )
-        
-        # Refresh cache to clear it
+        assert response.status_code == 201
+
         cache.refresh_all()
-        
-        # Query database directly
+
         conn = sqlite3.connect(str(db.db_path))
         cursor = conn.cursor()
         cursor.execute(
-            'SELECT rating FROM ratings WHERE filename = ?',
-            (media_hash,)
+            "SELECT rating FROM ratings WHERE filename = ?",
+            (rating_target["filename"],),
         )
         result = cursor.fetchone()
         conn.close()
-        
-        # Rating should still be in database
+
         assert result is not None
         assert result[0] == 3
-    
-    def test_rating_update_overwrites_previous(self, client, test_video):
-        """Test that updating a rating overwrites the previous one."""
-        from database_migration import VideoDatabase
-        
+
+    def test_rating_update_overwrites_previous(self, client, rating_target):
         db = VideoDatabase()
-        media_hash = test_video
-        
-        # Set initial rating
-        client.post(
-            f'/api/ratings/{media_hash}',
-            json={'value': 2},
-            content_type='application/json'
+
+        first = client.post(
+            f"/api/ratings/{rating_target['media_hash']}",
+            json={"value": 2},
+            content_type="application/json",
         )
-        
-        # Update rating
-        client.post(
-            f'/api/ratings/{media_hash}',
-            json={'value': 5},
-            content_type='application/json'
+        second = client.post(
+            f"/api/ratings/{rating_target['media_hash']}",
+            json={"value": 5},
+            content_type="application/json",
         )
-        
-        # Query database
+        assert first.status_code == 201
+        assert second.status_code == 201
+
         conn = sqlite3.connect(str(db.db_path))
         cursor = conn.cursor()
-        
-        # Count ratings (should be 1 entry, not 2)
         cursor.execute(
-            'SELECT COUNT(*) FROM ratings WHERE filename = ?',
-            (media_hash,)
+            "SELECT COUNT(*) FROM ratings WHERE filename = ?",
+            (rating_target["filename"],),
         )
         count = cursor.fetchone()[0]
-        
-        # Get latest value
         cursor.execute(
-            'SELECT value FROM ratings WHERE filename = ? '
-            'ORDER BY updated_at DESC LIMIT 1',
-            (media_hash,)
+            "SELECT rating FROM ratings WHERE filename = ?",
+            (rating_target["filename"],),
         )
         result = cursor.fetchone()
         conn.close()
-        
-        assert count == 1, \
-               "Should have exactly 1 rating entry after update"
-        assert result[0] == 5, \
-               "Latest rating should be 5"
+
+        assert count == 1
+        assert result[0] == 5
 
 
 class TestRatingRateLimiting:
-    """Test IP-based rate limiting on rating POST endpoint."""
-    
-    def test_rate_limiting_enforced(self, client, test_video):
-        """Test that rate limiting is enforced."""
-        media_hash = test_video
-        
-        # Make 10 requests (should all succeed)
-        for i in range(10):
+    def test_rate_limiting_enforced(self, client, rating_target):
+        for i in range(5):
             response = client.post(
-                f'/api/ratings/{media_hash}',
-                json={'value': i % 5 + 1},
-                content_type='application/json'
+                f"/api/ratings/{rating_target['media_hash']}",
+                json={"value": i % 5 + 1},
+                content_type="application/json",
             )
-            assert response.status_code in [200, 201], \
-                   f"Request {i+1} failed with {response.status_code}"
-        
-        # 11th request should be rate limited
+            assert response.status_code == 201
+
         response = client.post(
-            f'/api/ratings/{media_hash}',
-            json={'value': 3},
-            content_type='application/json'
+            f"/api/ratings/{rating_target['media_hash']}",
+            json={"value": 3},
+            content_type="application/json",
         )
-        assert response.status_code == 429, \
-               "Rate limit should kick in after 10 requests"
-    
-    def test_rate_limit_includes_retry_after(self, client, test_video):
-        """Test that rate limit response includes Retry-After header."""
-        media_hash = test_video
-        
-        # Exhaust rate limit
-        for _ in range(10):
-            client.post(
-                f'/api/ratings/{media_hash}',
-                json={'value': 3},
-                content_type='application/json'
-            )
-        
-        # Next request should include Retry-After
-        response = client.post(
-            f'/api/ratings/{media_hash}',
-            json={'value': 3},
-            content_type='application/json'
-        )
-        
         assert response.status_code == 429
-        assert 'Retry-After' in response.headers, \
-               "429 response should include Retry-After header"
-    
-    def test_rate_limit_error_message(self, client, test_video):
-        """Test that rate limit error includes helpful message."""
-        media_hash = test_video
-        
-        # Exhaust rate limit
-        for _ in range(10):
+
+    def test_rate_limit_includes_retry_after(self, client, rating_target):
+        for _ in range(5):
             client.post(
-                f'/api/ratings/{media_hash}',
-                json={'value': 3},
-                content_type='application/json'
+                f"/api/ratings/{rating_target['media_hash']}",
+                json={"value": 3},
+                content_type="application/json",
             )
-        
-        # Next request should include helpful error
+
         response = client.post(
-            f'/api/ratings/{media_hash}',
-            json={'value': 3},
-            content_type='application/json'
+            f"/api/ratings/{rating_target['media_hash']}",
+            json={"value": 3},
+            content_type="application/json",
         )
-        
+
+        assert response.status_code == 429
+        assert "Retry-After" in response.headers
+
+    def test_rate_limit_error_message(self, client, rating_target):
+        for _ in range(5):
+            client.post(
+                f"/api/ratings/{rating_target['media_hash']}",
+                json={"value": 3},
+                content_type="application/json",
+            )
+
+        response = client.post(
+            f"/api/ratings/{rating_target['media_hash']}",
+            json={"value": 3},
+            content_type="application/json",
+        )
+
         data = response.get_json()
-        assert 'error' in data
-        assert 'Rate limit exceeded' in data['error']
+        assert response.status_code == 429
+        assert "error" in data
+        assert "Rate limit exceeded" in data["error"]
 
 
 class TestPydanticValidation:
-    """Test Pydantic schema validation."""
-    
-    def test_string_rating_coerced_to_int(self, client, test_video):
-        """Test that string rating values are coerced to int."""
-        media_hash = test_video
-        
+    def test_string_rating_coerced_to_int(self, client, rating_target):
         response = client.post(
-            f'/api/ratings/{media_hash}',
-            json={'value': '4'},  # string instead of int
-            content_type='application/json'
+            f"/api/ratings/{rating_target['media_hash']}",
+            json={"value": "4"},
+            content_type="application/json",
         )
-        
-        # Pydantic should coerce the string to int
-        assert response.status_code in [200, 201]
-    
-    def test_float_rating_coerced_to_int(self, client, test_video):
-        """Test that float rating values are coerced to int."""
-        media_hash = test_video
-        
+        assert response.status_code == 201
+
+    def test_float_rating_coerced_to_int(self, client, rating_target):
         response = client.post(
-            f'/api/ratings/{media_hash}',
-            json={'value': 4.5},  # float instead of int
-            content_type='application/json'
+            f"/api/ratings/{rating_target['media_hash']}",
+            json={"value": 4.5},
+            content_type="application/json",
         )
-        
-        # Pydantic should coerce/validate
-        # May succeed (4) or fail (4.5) depending on validation
-        assert response.status_code in [200, 201, 400]
-    
-    def test_null_rating_rejected(self, client, test_video):
-        """Test that null rating values are rejected."""
-        media_hash = test_video
-        
+        assert response.status_code in [201, 400]
+
+    def test_null_rating_rejected(self, client, rating_target):
         response = client.post(
-            f'/api/ratings/{media_hash}',
-            json={'value': None},
-            content_type='application/json'
+            f"/api/ratings/{rating_target['media_hash']}",
+            json={"value": None},
+            content_type="application/json",
         )
-        
-        assert response.status_code == 400, \
-               "Null rating value should be rejected"
+        assert response.status_code == 400
 
 
 class TestMediaHashResolution:
-    """Test suite for media_hash bidirectional mapping."""
-    
-    def test_media_hash_roundtrip(self, test_video):
-        """Test filename -> media_hash -> filename roundtrip."""
-        import sys
-        from pathlib import Path
-        sys.path.insert(0, str(Path(__file__).parent.parent))
-        
+    def test_media_hash_roundtrip(self, rating_target):
         from backend.services.ratings_service import RatingsService
-        from database_migration import VideoDatabase
-        from cache_manager import VideoCache
-        
-        db = VideoDatabase()
-        cache = VideoCache()
-        service = RatingsService(cache, db)
-        
-        # Test forward: filename -> media_hash
-        media_hash = service.get_media_hash(test_video)
-        assert media_hash, "media_hash should not be empty"
-        assert isinstance(media_hash, str), "media_hash should be string"
-        assert len(media_hash) == 16, "media_hash should be 16 chars"
-        
-        # Register the mapping
-        service.register_media_hash(test_video)
-        
-        # Test reverse: media_hash -> filename
-        resolved_filename = service.get_filename_by_hash(media_hash)
-        assert resolved_filename == test_video, \
-            f"Resolved filename {resolved_filename} != {test_video}"
-    
+
+        media_hash = RatingsService.get_media_hash(rating_target["filename"])
+        assert media_hash
+        assert isinstance(media_hash, str)
+        assert len(media_hash) == 16
+
+        resolved_filename = ratings_service.get_filename_by_hash(media_hash)
+        assert resolved_filename == rating_target["filename"]
+
     def test_cache_invalidation_paths(self):
-        """Test that each cache invalidation method exists and works."""
-        import sys
-        from pathlib import Path
-        sys.path.insert(0, str(Path(__file__).parent.parent))
-        
         from cache_manager import VideoCache
-        
+
         cache = VideoCache()
-        
-        # All these methods should exist and be callable
         methods = [
-            'invalidate_ratings',
-            'invalidate_views',
-            'invalidate_tags',
-            'invalidate_favorites',
-            'invalidate_video_list',
-            'invalidate_metadata'
+            "invalidate_ratings",
+            "invalidate_views",
+            "invalidate_tags",
+            "invalidate_favorites",
+            "invalidate_video_list",
+            "invalidate_metadata",
         ]
-        
+
         for method_name in methods:
-            assert hasattr(cache, method_name), \
-                f"Cache should have {method_name} method"
+            assert hasattr(cache, method_name)
             method = getattr(cache, method_name)
-            assert callable(method), \
-                f"cache.{method_name} should be callable"
-            
-            # Call each method (should not raise)
-            try:
-                method()
-            except Exception as e:
-                pytest.fail(f"cache.{method_name}() raised {e}")
+            assert callable(method)
+            method()
 
 
 class TestRateLimiterFixture:
-    """Test that rate limiter fixture isolates state."""
-    
-    def test_rate_limit_reset_isolation_first(self, client, test_video):
-        """First test in rate limiter isolation series."""
-        # Make a request to increment rate limiter
+    def test_rate_limit_reset_isolation_first(self, client, rating_target):
         response = client.post(
-            f'/api/ratings/{test_video}',
-            json={'value': 1},
-            content_type='application/json'
+            f"/api/ratings/{rating_target['media_hash']}",
+            json={"value": 1},
+            content_type="application/json",
         )
-        assert response.status_code in [200, 201, 429]
-    
-    def test_rate_limit_reset_isolation_second(self, client, test_video):
-        """
-        Second test - if fixture works, state is reset.
-        If not, limiter is already at count >= 1 from first test.
-        """
-        # This should succeed with fresh state (fixture reset it)
+        assert response.status_code in [201, 429]
+
+    def test_rate_limit_reset_isolation_second(self, client, rating_target):
         response = client.post(
-            f'/api/ratings/{test_video}',
-            json={'value': 2},
-            content_type='application/json'
+            f"/api/ratings/{rating_target['media_hash']}",
+            json={"value": 2},
+            content_type="application/json",
         )
-        # Should not be 429 if fixture properly reset state
-        assert response.status_code in [200, 201, 429], \
-            "Rate limiter should reset between tests"
+        assert response.status_code in [201, 429]
 
 
 if __name__ == "__main__":

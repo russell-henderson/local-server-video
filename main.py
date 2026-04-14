@@ -6,7 +6,7 @@ import re
 import time
 import mimetypes
 import random
-from datetime import datetime
+from datetime import datetime, timezone
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -216,7 +216,7 @@ def _perf_log_after_request(response):
         return response
 
     duration_ms = (time.perf_counter() - start) * 1000
-    ts = datetime.utcnow().isoformat()
+    ts = datetime.now(timezone.utc).isoformat()
     app.logger.info(
         "[PERF] ts=%s method=%s path=%s status=%s duration_ms=%.2f",
         ts,
@@ -283,6 +283,54 @@ def _read_tags_from_sidecar(p: Path) -> list[str]:
 
 def _normalize_tag(t: str) -> str:
     return t.strip().lstrip("#").strip()
+
+
+def _merge_tag_names(sidecar_tags: list[str], db_tags: list[str]) -> list[str]:
+    """Case-insensitive union of sidecar + DB tags with stable normalized output."""
+    merged: dict[str, str] = {}
+    for source in (sidecar_tags, db_tags):
+        for raw in source:
+            tag = _normalize_tag(raw)
+            if not tag:
+                continue
+            key = tag.lower()
+            if key not in merged:
+                merged[key] = tag
+    return sorted(merged.values(), key=lambda x: x.lower())
+
+
+def _merge_popular_tags(
+    db_popular_tags: list[dict[str, int | str]],
+    sidecar_tags: list[str],
+    limit: int,
+) -> list[dict[str, int | str]]:
+    """
+    Merge DB popular tags and sidecar tags.
+    Sidecar-only tags are included with count=0 to avoid disappearing from reads.
+    """
+    merged: dict[str, dict[str, int | str]] = {}
+
+    for row in db_popular_tags:
+        normalized = _normalize_tag(str(row.get("tag", "")))
+        if not normalized:
+            continue
+        key = normalized.lower()
+        merged[key] = {
+            "tag": normalized,
+            "count": int(row.get("count", 0) or 0),
+        }
+
+    for raw_tag in sidecar_tags:
+        normalized = _normalize_tag(raw_tag)
+        if not normalized:
+            continue
+        key = normalized.lower()
+        if key not in merged:
+            merged[key] = {"tag": normalized, "count": 0}
+
+    items = list(merged.values())
+    items.sort(key=lambda x: (-int(x["count"]), str(x["tag"]).lower()))
+    return items[:limit]
 
 
 def get_sidecar_tags_snapshot(force: bool = False):
@@ -672,10 +720,12 @@ def delete_tag():
 
 @app.route('/api/tags/popular')
 def popular_tags_api():
-    """Expose most-used tags for autocomplete."""
+    """Expose merged popular tags for autocomplete."""
     limit = request.args.get('limit', default=50, type=int)
     limit = max(1, min(limit or 50, 200))
-    tags = cache.get_popular_tags(limit)
+    db_popular_tags = cache.get_popular_tags(limit)
+    sidecar_tags, _ = get_sidecar_tags_snapshot()
+    tags = _merge_popular_tags(db_popular_tags, sidecar_tags, limit)
     return jsonify({"tags": tags})
 
 
@@ -766,9 +816,11 @@ def random_video():
 @app.route('/tags')
 @performance_monitor("route_tags")
 def tags_page():
-    """Tags page (sidecar-first)"""
-    sorted_tags, _ = get_sidecar_tags_snapshot()
-    return render_template('tags.html', tags=sorted_tags, tag_count=len(sorted_tags))
+    """Tags page (merged read path: sidecar + DB)."""
+    sidecar_tags, _ = get_sidecar_tags_snapshot()
+    db_tags = cache.get_all_unique_tags()
+    merged_tags = _merge_tag_names(sidecar_tags, db_tags)
+    return render_template('tags.html', tags=merged_tags, tag_count=len(merged_tags))
 
 
 @app.route('/tag/<tag>')
@@ -779,41 +831,47 @@ def tag_videos(tag):
 
     _, by_tag = get_sidecar_tags_snapshot()
     filenames = by_tag.get(normalized_tag, [])
+    if not filenames:
+        # Case-insensitive fallback key lookup.
+        by_tag_ci = {k.lower(): v for k, v in by_tag.items()}
+        filenames = by_tag_ci.get(normalized_tag.lower(), [])
 
-    if filenames:
-        filtered_videos = []
-        ratings = cache.get_ratings()
-        views = cache.get_views()
-        try:
-            all_video_data = cache.get_all_video_data()
-            video_map = {v.get("filename"): v for v in all_video_data if v.get("filename")}
-        except Exception:
-            video_map = {}
+    # Always include DB/JSON-backed matches in the merged read path.
+    db_filtered_videos = cache.get_videos_by_tag_optimized(normalized_tag)
+    db_video_map = {v.get("filename"): v for v in db_filtered_videos if v.get("filename")}
 
-        for fn in filenames:
-            v = video_map.get(fn)
-            if v:
-                filtered_videos.append(v)
-                continue
+    filtered_videos = []
+    seen_filenames: set[str] = set()
+    ratings = cache.get_ratings()
+    views = cache.get_views()
+    try:
+        all_video_data = cache.get_all_video_data()
+        all_video_map = {v.get("filename"): v for v in all_video_data if v.get("filename")}
+    except Exception:
+        all_video_map = {}
 
-            try:
-                v = cache.get_video_data(fn)
-            except Exception:
-                v = None
+    # Preserve existing sidecar-first ordering, then append DB-only entries.
+    for fn in filenames:
+        if fn in seen_filenames:
+            continue
 
-            if v:
-                filtered_videos.append(v)
-            else:
-                filtered_videos.append(
-                    {
-                        "filename": fn,
-                        "rating": ratings.get(fn, 0),
-                        "views": views.get(fn, 0),
-                    }
-                )
-    else:
-        # Fallback to cached DB/JSON tags
-        filtered_videos = cache.get_videos_by_tag_optimized(normalized_tag)
+        v = db_video_map.get(fn) or all_video_map.get(fn)
+        if not v:
+            v = {
+                "filename": fn,
+                "rating": ratings.get(fn, 0),
+                "views": views.get(fn, 0),
+            }
+
+        filtered_videos.append(v)
+        seen_filenames.add(fn)
+
+    for v in db_filtered_videos:
+        fn = v.get("filename")
+        if not fn or fn in seen_filenames:
+            continue
+        filtered_videos.append(v)
+        seen_filenames.add(fn)
 
     # Ensure thumbnails exist
     ensure_thumbnails_exist([v['filename'] for v in filtered_videos])

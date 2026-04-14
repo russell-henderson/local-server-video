@@ -13,7 +13,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-import psutil
+try:
+    import psutil  # type: ignore
+    _PSUTIL_AVAILABLE = True
+except Exception:
+    psutil = None  # type: ignore
+    _PSUTIL_AVAILABLE = False
 
 from backend.app.admin.performance import DEFAULT_WINDOW_SECONDS, get_metrics
 
@@ -159,14 +164,18 @@ def performance_monitor(func_name: Optional[str] = None):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             name = func_name or f"{func.__module__}.{func.__name__}"
-            process = psutil.Process(os.getpid())
-            memory_before = process.memory_info().rss / 1024 / 1024  # MB
+            process = psutil.Process(os.getpid()) if _PSUTIL_AVAILABLE else None
+            memory_before = (
+                (process.memory_info().rss / 1024 / 1024) if process else 0.0
+            )  # MB
             start_time = time.time()
             try:
                 return func(*args, **kwargs)
             finally:
                 duration = time.time() - start_time
-                memory_after = process.memory_info().rss / 1024 / 1024  # MB
+                memory_after = (
+                    (process.memory_info().rss / 1024 / 1024) if process else 0.0
+                )  # MB
 
                 monitor.record_metric(
                     PerformanceMetric(
@@ -564,18 +573,26 @@ def get_performance_snapshot(
 
 def get_system_stats() -> Dict[str, float]:
     """Get current system performance statistics."""
-    process = psutil.Process(os.getpid())
+    if not _PSUTIL_AVAILABLE:
+        return {
+            "cpu_percent": 0.0,
+            "memory_mb": 0.0,
+            "memory_percent": 0.0,
+            "disk_io_read_mb": 0.0,
+            "disk_io_write_mb": 0.0,
+            "open_files": 0,
+            "threads": 0,
+        }
+
+    process = psutil.Process(os.getpid())  # type: ignore[union-attr]
+    disk_io = psutil.disk_io_counters()  # type: ignore[union-attr]
 
     return {
-        "cpu_percent": psutil.cpu_percent(interval=0.1),
+        "cpu_percent": psutil.cpu_percent(interval=0.1),  # type: ignore[union-attr]
         "memory_mb": process.memory_info().rss / 1024 / 1024,
         "memory_percent": process.memory_percent(),
-        "disk_io_read_mb": psutil.disk_io_counters().read_bytes / 1024 / 1024
-        if psutil.disk_io_counters()
-        else 0,
-        "disk_io_write_mb": psutil.disk_io_counters().write_bytes / 1024 / 1024
-        if psutil.disk_io_counters()
-        else 0,
+        "disk_io_read_mb": (disk_io.read_bytes / 1024 / 1024) if disk_io else 0,
+        "disk_io_write_mb": (disk_io.write_bytes / 1024 / 1024) if disk_io else 0,
         "open_files": len(process.open_files()),
         "threads": process.num_threads(),
     }

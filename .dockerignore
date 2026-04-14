@@ -1,52 +1,42 @@
-# Git and editor junk
+# Git
 .git
 .gitignore
-.vscode
-.idea
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+.python-version
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Test and coverage artifacts
+.tmp/
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# Local backups and logs
+backups/
+*.log
+
+# Editor / OS junk
+.vscode/
+.idea/
 .DS_Store
 Thumbs.db
 
-# Python build artifacts
-__pycache__
-*.pyc
-*.pyo
-*.pyd
-.env
-.venv
-venv
-
-# Node stuff for admin dashboard
-admin-dashboard/node_modules
-admin-dashboard/.next
-admin-dashboard/.turbo
-admin-dashboard/.swc
-
-# Logs and caches
-logs
-*.log
-cache
-tmp
-
-# Static media that should not go into images
-videos
-images
-static
-*.mp4
-*.mkv
-*.avi
-*.mov
-*.webm
-*.jpg
-*.jpeg
-*.png
-*.gif
-*.webp
-
-# Databases
-video_metadata.db
-video_search.db
-
-# OS trash
-ehthumbs.db
-desktop.ini
-$RECYCLE.BIN
+# Node junk inside dashboard if present
+**/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*

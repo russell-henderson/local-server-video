@@ -1,69 +1,180 @@
-# 🎬 Local Video Server
-
-A modern, professional-grade local video streaming application with intelligent caching, responsive design, and cross-platform support. Built with Flask (Python backend) and vanilla JavaScript for maximum performance and simplicity.
-
-![Python](https://img.shields.io/badge/Python-3.13+-green?style=for-the-badge&logo=python)
-![Flask](https://img.shields.io/badge/Flask-Web%20Framework-red?style=for-the-badge&logo=flask)
-![JavaScript](https://img.shields.io/badge/JavaScript-Vanilla-yellow?style=for-the-badge&logo=javascript)
-![SQLite](https://img.shields.io/badge/SQLite-Database-blue?style=for-the-badge&logo=sqlite)
-![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
-
-## ✨ Features
-
-### 📺 Video Streaming
-- **Unified Video Player** - Consistent player across all pages with picture-in-picture support
 # Local Video Server
 
-This repository contains a Flask-based local video and image server for managing a personal media library. It provides thumbnailing, metadata caching, ratings/favorites, a responsive UI (desktop/mobile/VR), and a Next.js admin dashboard for performance insights.
+Last updated: April 14, 2026
 
-Key components:
+Local-first media server with SQLite-backed metadata, hash-based ratings API, merged tag reads (DB + sidecar), and an optional admin dashboard.
 
-- `main.py`: Flask application and route handlers.
-- `cache_manager.py`: In-memory + SQLite metadata cache with JSON fallback.
-- `database_migration.py`: SQLite schema and migration helpers.
-- `file_watcher.py`: Debounced directory monitoring and discovery.
-- `thumbnail_manager.py`: Async thumbnail generation and deduping (FFmpeg-backed).
-- `config.py`: Dataclass-based configuration cascade (env → .env → config.json → defaults).
-- `performance_monitor.py`: Optional route latency profiling decorator.
-- `admin-dashboard/`: Next.js admin UI for metrics and dashboards.
-- `static/` and `templates/`: Frontend assets and Jinja2 templates.
-- `docs/`: Project documentation and TODOs (start at `docs/TODO.md`).
+## What This Project Does
+- Serves local video files with byte-range streaming
+- Tracks ratings, views, tags, and favorites
+- Uses SQLite as metadata authority with JSON fallback paths
+- Exposes admin/performance surfaces for diagnostics
+- Includes an optional Next.js admin dashboard
 
-Quick start (Windows PowerShell):
+## Documentation Map
+Authoritative implementation reference:
+- `docs/SOURCE_OF_TRUTH.md`
 
-```powershell
-# Install
-pip install -r requirements.txt
+High-value docs:
+- `doc/BACKEND_DETAILED.md`
+- `doc/PROJECT_ANALYSIS_REPORT.md`
+- `doc/SUGGESTED_CHANGES.md`
+- `doc/LATEST.md`
 
-# Development (auto-reload)
-.\dev.ps1 dev
+Legacy and deep-dive documentation remains under `docs/`.
 
-# Production
-.\dev.ps1 prod
+## Repository Layout
+- `main.py`: Flask app entrypoint and web routes
+- `backend/`: API blueprints, schemas, service-layer logic, admin telemetry helpers
+- `cache_manager.py`: metadata cache orchestration and fallback behavior
+- `database_migration.py`: SQLite schema, helpers, and migration utilities
+- `templates/`: server-rendered HTML pages
+- `static/`: frontend JS/CSS assets and generated thumbnails
+- `admin-dashboard/`: Next.js dashboard app
+- `tests/`: pytest suite
+- `doc/`: project status/phase artifacts moved from root
+- `docs/`: canonical + historical technical docs
 
-# Admin dashboard (local)
-cd admin-dashboard
-npm install
-npm run dev
+## Runtime Topology
+### Local runtime
+- Start app: `python main.py`
+- Default bind: `127.0.0.1:5000` (configurable)
+
+### Docker Compose runtime
+Defined in `docker-compose.yml`:
+- `video-server`: Flask service (`5000:5000`)
+- `nginx-proxy`: reverse/static proxy (`8080:80`)
+- `admin-dashboard`: Next.js dashboard (`3000:3000`)
+
+## Metadata and Data Authority
+### Primary authority
+- SQLite (`video_metadata.db`) via:
+  - `database_migration.py` (`VideoDatabase`)
+  - `cache_manager.py` (`VideoCache`)
+
+### Fallback behavior
+- JSON files (`ratings.json`, `views.json`, `tags.json`, `favorites.json`) are fallback/backup paths when DB is unavailable
+- Runtime intent is DB-first for normal operations
+
+## Ratings API Contract (Current)
+Base route: `/api/ratings/<path:media_hash>`
+
+### GET
+- Known hash: `200`
+- Unknown/unresolved hash: `404`
+
+### POST
+- Valid known hash and valid payload: `201`
+- Invalid payload (`value` missing/type/range): `400`
+- Unknown/unresolved hash: `404`
+- Rate limit exceeded: `429`
+
+### Payload shape
+Request:
+```json
+{ "value": 4 }
 ```
 
-Configuration:
+Response summary:
+```json
+{
+  "average": 4.0,
+  "count": 1,
+  "user": { "value": 4 }
+}
+```
 
-- Set environment variables using the `LVS_` prefix, or edit `.env` / `config.json`.
-- Important variables: `LVS_PORT`, `LVS_VIDEO_DIRECTORY`, `LVS_THUMBNAIL_DIRECTORY`, `LVS_CACHE_TIMEOUT`.
+## Tags Behavior (Current)
+- Read paths are merged from sidecar + DB (additive, deduped): `/tags`, `/tag/<tag>`, `/api/tags/popular`
+- Tag writes remain DB-path behavior
 
-Notes for contributors:
+## Admin and Performance Surfaces
+- `/admin/performance`
+- `/admin/performance/json`
+- `/api/admin/performance/routes`
+- `/api/admin/performance/workers`
+- `/api/admin/performance/active`
+- `/admin/cache/status`
+- `/admin/cache/refresh`
 
-- Follow patterns in `docs/IMPLEMENTATION.md` and `docs/TODO.md`.
-- Use `@performance_monitor("route_name")` on new routes.
-- Bulk-load metadata from `cache_manager` rather than per-file calls.
+## Optional Dependencies
+`psutil` is optional:
+- Installed: richer system metrics
+- Missing: graceful fallback with stable output keys and numeric defaults
 
-Useful commands:
+## Configuration
+Use `env.example` as the reference and copy to `.env` if needed.
 
-- Linting & tests: `.\dev.ps1 lint`, `.\dev.ps1 test`
-- Reindex videos: `.\dev.ps1 reindex`
-- Backup DBs: `.\dev.ps1 backup`
+Key variables include:
+- `LVS_HOST`, `LVS_PORT`, `LVS_DEBUG`
+- `LVS_VIDEO_DIRECTORY`, `LVS_THUMBNAIL_DIRECTORY`
+- `LVS_CACHE_TIMEOUT`, `LVS_MAX_CACHE_SIZE`
+- `LVS_ENABLE_ANALYTICS`, `LVS_ENABLE_PERF_LOG`
 
-License: MIT — see the `LICENSE` file.
+## Local Development Commands
+### PowerShell helper
+- `./dev.ps1 help`
+- `./dev.ps1 dev`
+- `./dev.ps1 test`
 
-For full, detailed documentation see the `docs/` folder. If you want, I can expand this concise README into the more detailed version currently present in the repository.
+### Makefile helper
+- `make help`
+- `make dev`
+- `make test`
+
+## Testing
+### Current verified baseline
+Targeted regression slice:
+```powershell
+python -m pytest -q --color=no tests/test_ratings_api_contract_phase2.py tests/test_admin_performance_routes.py tests/test_basic.py tests/test_routes.py tests/test_rate_limiting.py tests/test_cors_support.py tests/test_tag_merge_phase5.py
+```
+
+Legacy ratings alignment suite:
+```powershell
+python -m pytest -q --color=no tests/test_rating_write_and_read.py tests/test_api_hash_invariants.py tests/test_rating_mapping.py
+```
+
+Full suite:
+```powershell
+python -m pytest -q --color=no
+```
+
+Current full-suite status after stabilization:
+- Passes, with Playwright/browser tests skipped when browser dependencies are not installed.
+
+## Optional Playwright Lane
+`tests/test_watch_page_smoke.py` is treated as optional unless Playwright dependencies are installed.
+
+To enable locally, install:
+- `pytest-playwright`
+- browser binaries for Playwright
+
+Then run the file directly:
+```powershell
+python -m pytest -q --color=no tests/test_watch_page_smoke.py
+```
+
+## Troubleshooting
+### Ratings POST returns 404
+- Cause: unknown or unresolved `media_hash`
+- Fix: ensure filename has been mapped to hash through the normal app flow/service registration
+
+### Unexpected 429 on ratings POST
+- Cause: request rate limit exceeded
+- Fix: wait for limiter window reset or reduce burst traffic
+
+### Missing system metrics detail
+- Cause: `psutil` not installed
+- Behavior is expected; app falls back gracefully
+
+### No videos detected
+- Verify video files exist in configured `videos/` path
+- Verify volume mounts when using Docker
+
+## Stability Notes
+- Runtime/API/schema/Docker/proxy behavior was preserved during stabilization phases
+- Legacy test drift was corrected in test files only
+- Root markdown phase/status docs were relocated to `doc/` (except `README.md`)
+
+## License
+MIT - see `LICENSE`.

@@ -140,7 +140,7 @@ class RatingsService:
         
         filename = self.get_filename_by_hash(media_hash)
         if not filename:
-            raise ValueError(f"No video found for hash: {media_hash}")
+            raise FileNotFoundError(f"No video found for hash: {media_hash}")
         
         # Check if file exists
         video_path = Path("videos") / filename

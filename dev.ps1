@@ -79,7 +79,7 @@ function Test-Code {
 
 function Test-Suite {
     Write-Host "🧪 Running test suite..." -ForegroundColor Green
-    python -c "import unittest; import sys; sys.exit(0)"  # Placeholder until tests exist
+    python -m pytest -q tests
     Write-Host "✅ All tests passed" -ForegroundColor Green
 }
 

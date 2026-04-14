@@ -58,7 +58,7 @@ lint:
 # Run tests with coverage
 test:
 	@echo "🧪 Running test suite..."
-	@python -c "import unittest; import sys; sys.exit(0)"  # Placeholder until tests exist
+	@python -m pytest -q tests
 	@echo "✅ All tests passed"
 
 # Force reindex all videos

@@ -5,7 +5,7 @@ Pydantic models for request/response validation.
 """
 
 from typing import Optional
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class RatingInput(BaseModel):
@@ -28,11 +28,9 @@ class RatingInput(BaseModel):
             raise ValueError('Rating value must be between 1 and 5')
         return v
 
-    class Config:
-        """Pydantic configuration."""
-        json_schema_extra = {
-            "example": {"value": 4}
-        }
+    model_config = ConfigDict(
+        json_schema_extra={"example": {"value": 4}}
+    )
 
 
 class RatingUser(BaseModel):
@@ -65,15 +63,15 @@ class RatingSummary(BaseModel):
         description="Current user's rating"
     )
 
-    class Config:
-        """Pydantic configuration."""
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "average": 4.5,
                 "count": 2,
                 "user": {"value": 5}
             }
         }
+    )
 
 
 class ErrorResponse(BaseModel):
@@ -85,11 +83,11 @@ class ErrorResponse(BaseModel):
         description="Additional error details"
     )
 
-    class Config:
-        """Pydantic configuration."""
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "error": "Rating must be between 1 and 5",
                 "detail": None
             }
         }
+    )

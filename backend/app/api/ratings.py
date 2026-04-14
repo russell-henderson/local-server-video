@@ -108,6 +108,10 @@ def get_rating(media_hash: str):
     }
     """
     try:
+        if not ratings_service.get_filename_by_hash(media_hash):
+            response = jsonify({"error": f"No video found for hash: {media_hash}"})
+            response.status_code = 404
+            return add_cors_headers(response)
         summary = ratings_service.get_rating_summary(media_hash)
         response = jsonify(summary)
         return add_cors_headers(response)
