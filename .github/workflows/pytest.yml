@@ -50,6 +50,5 @@ jobs:
         with:
           name: pytest
           path: results/junit.xml
-          reporter: junit-xml
-          summary: true
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          reporter: java-junit
+          token: ${{ secrets.GITHUB_TOKEN }}

@@ -26,6 +26,9 @@ def test_favorites_and_views_json_backend(tmp_path, monkeypatch):
     # Create temporary videos dir and JSON files
     videos_dir = setup_temp_videos_dir(tmp_path)
 
+    # Skip the automatic cache refresh on construction so we can set video_dir first
+    monkeypatch.setenv('LVS_SKIP_INIT_REFRESH', '1')
+
     # Monkeypatch file paths used by VideoCache
     cache = VideoCache(cache_ttl=1, use_database=False)
     cache.video_dir = videos_dir
