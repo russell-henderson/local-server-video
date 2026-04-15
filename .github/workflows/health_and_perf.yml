@@ -29,14 +29,21 @@ jobs:
           nohup python main.py > server.log 2>&1 &
           echo $! > server.pid
           # Poll until the server is ready (up to 30 seconds)
+          ready=0
           for i in $(seq 1 30); do
             if curl -sf http://127.0.0.1:5000/ > /dev/null 2>&1; then
               echo "Server is ready after ${i}s"
+              ready=1
               break
             fi
             echo "Waiting for server... (${i}s elapsed)"
             sleep 1
           done
+          if [ $ready -eq 0 ]; then
+            echo "Server failed to start within 30 seconds"
+            cat server.log
+            exit 1
+          fi
 
       - name: Run database health check
         run: python scripts/db_health_check.py
