@@ -7,6 +7,8 @@ Uses media_hash identifiers with bidirectional filename lookup.
 """
 from typing import Dict, Optional, Tuple, Any
 import hashlib
+import logging
+import time
 from pathlib import Path
 
 
@@ -23,6 +25,11 @@ class RatingsService:
         """
         self.cache = cache
         self.database = database
+        self._logger = logging.getLogger(__name__)
+        # Lazy hash index to avoid repeated full scans on hash misses.
+        self._hash_index: Dict[str, str] = {}
+        self._hash_index_last_refresh = 0.0
+        self._hash_index_ttl_seconds = 300.0
     
     @staticmethod
     def get_media_hash(filename: str) -> str:
@@ -50,22 +57,52 @@ class RatingsService:
         if not self.database:
             return None
 
+        # Primary lookup through persisted mapping table.
         filename = self.database.get_filename_by_hash(media_hash)
         if filename:
             return filename
 
-        # Non-destructive fallback: rebuild missing mapping on demand using
-        # deterministic filename hash logic used by watch pages.
-        try:
-            all_filenames = self.database.get_all_filenames()
-            for candidate in all_filenames:
-                if self.get_media_hash(candidate) == media_hash:
-                    self.database.register_media_hash(media_hash, candidate)
-                    return candidate
-        except Exception:
-            return None
+        # Fallback: consult a lazily refreshed in-memory hash index so misses
+        # do not trigger a full database filename scan every time.
+        candidate = self._lookup_filename_from_hash_index(media_hash)
+        if candidate:
+            self.database.register_media_hash(media_hash, candidate)
+            return candidate
 
         return None
+
+    def _lookup_filename_from_hash_index(self, media_hash: str) -> Optional[str]:
+        """
+        Resolve media hash from an in-memory filename hash index.
+        Rebuilds index only when stale to avoid repeated full-table scans.
+        """
+        now = time.time()
+        if (
+            not self._hash_index
+            or (now - self._hash_index_last_refresh) > self._hash_index_ttl_seconds
+        ):
+            self._refresh_hash_index()
+        return self._hash_index.get(media_hash)
+
+    def _refresh_hash_index(self) -> None:
+        """Rebuild hash index from known filenames."""
+        if not self.database:
+            self._hash_index = {}
+            self._hash_index_last_refresh = time.time()
+            return
+
+        if not hasattr(self.database, "get_all_filenames"):
+            self._logger.error(
+                "Ratings database is missing required method get_all_filenames"
+            )
+            raise AttributeError("Database missing get_all_filenames")
+
+        all_filenames = self.database.get_all_filenames()
+        self._hash_index = {
+            self.get_media_hash(filename): filename
+            for filename in all_filenames
+        }
+        self._hash_index_last_refresh = time.time()
     
     def register_media_hash(self, filename: str) -> str:
         """
