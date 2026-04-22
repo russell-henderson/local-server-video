@@ -24,66 +24,29 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Ensure database exists (create empty schema)
-        run: |
-          python - <<'PY'
-          import sqlite3
-          from pathlib import Path
-
-          db = Path("video_metadata.db")
-          if db.exists():
-            print(f"[INFO] Using existing {db}")
-          else:
-            print(f"[INFO] Creating {db}")
-            conn = sqlite3.connect(db)
-            conn.executescript("""
-            CREATE TABLE IF NOT EXISTS videos (
-              id INTEGER PRIMARY KEY,
-              filename TEXT UNIQUE,
-              added_date TEXT,
-              duration REAL DEFAULT 0
-            );
-            CREATE TABLE IF NOT EXISTS ratings (
-              id INTEGER PRIMARY KEY,
-              filename TEXT,
-              rating INTEGER,
-              created_at TEXT
-            );
-            CREATE TABLE IF NOT EXISTS views (
-              id INTEGER PRIMARY KEY,
-              filename TEXT,
-              count INTEGER DEFAULT 0,
-              last_viewed TEXT
-            );
-            CREATE TABLE IF NOT EXISTS video_tags (
-              id INTEGER PRIMARY KEY,
-              filename TEXT,
-              tag TEXT
-            );
-            CREATE TABLE IF NOT EXISTS favorites (
-              id INTEGER PRIMARY KEY,
-              filename TEXT,
-              created_at TEXT
-            );
-            CREATE INDEX IF NOT EXISTS idx_videos_added_date ON videos(added_date);
-            CREATE INDEX IF NOT EXISTS idx_ratings_rating ON ratings(rating);
-            CREATE INDEX IF NOT EXISTS idx_views_count ON views(count);
-            CREATE INDEX IF NOT EXISTS idx_views_last_viewed ON views(last_viewed);
-            CREATE INDEX IF NOT EXISTS idx_tags_tag ON video_tags(tag);
-            CREATE INDEX IF NOT EXISTS idx_tags_filename ON video_tags(filename);
-            """)
-            conn.close()
-          print(f"[INFO] DB ready at {db.resolve()}")
-          PY
-
-      - name: Run database health check
-        run: python scripts/db_health_check.py
-
       - name: Start application
         run: |
           nohup python main.py > server.log 2>&1 &
           echo $! > server.pid
-          sleep 5
+          # Poll until the server is ready (up to 30 seconds)
+          ready=0
+          for i in $(seq 1 30); do
+            if curl -sf http://127.0.0.1:5000/ > /dev/null 2>&1; then
+              echo "Server is ready after ${i}s"
+              ready=1
+              break
+            fi
+            echo "Waiting for server... (${i}s elapsed)"
+            sleep 1
+          done
+          if [ $ready -eq 0 ]; then
+            echo "Server failed to start within 30 seconds"
+            cat server.log
+            exit 1
+          fi
+
+      - name: Run database health check
+        run: python scripts/db_health_check.py
 
       - name: Run HTTP smoke load check
         env:
