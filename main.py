@@ -299,6 +299,29 @@ def _merge_tag_names(sidecar_tags: list[str], db_tags: list[str]) -> list[str]:
     return sorted(merged.values(), key=lambda x: x.lower())
 
 
+def _tag_map_from_cache() -> dict[str, list[str]]:
+    """
+    Canonical per-video tags from cache backend (DB in normal operation, JSON fallback otherwise).
+    """
+    tag_map = cache.get_tags()
+    return tag_map if isinstance(tag_map, dict) else {}
+
+
+def _collect_unique_tags_from_tag_map(tag_map: dict[str, list[str]]) -> list[str]:
+    """Extract normalized unique tags from filename -> tags mapping."""
+    unique_tags: set[str] = set()
+    for tag_list in tag_map.values():
+        if not isinstance(tag_list, list):
+            continue
+        for raw in tag_list:
+            if not isinstance(raw, str):
+                continue
+            normalized = _normalize_tag(raw)
+            if normalized:
+                unique_tags.add(normalized)
+    return sorted(unique_tags, key=lambda x: x.lower())
+
+
 def _merge_popular_tags(
     db_popular_tags: list[dict[str, int | str]],
     sidecar_tags: list[str],
@@ -472,60 +495,6 @@ def watch_video(filename: str):
         videos=paginated,
         page=page,
         total_pages=total,
-        favorites_list=favorites_list,
-        feature_vr_simplify=config.feature_vr_simplify,
-        feature_previews=config.feature_previews,
-    )
-
-
-@app.route("/favorites")
-@performance_monitor("route_favorites")
-def favorites():
-    """Favorites page - list favorited videos with sorting and pagination."""
-    sort_param = request.args.get("sort", "date")
-    order = request.args.get("order", "desc")
-    reverse = order == "desc"
-    try:
-        page = int(request.args.get("page", "1"))
-    except (TypeError, ValueError):
-        page = 1
-    try:
-        per_page = int(request.args.get("per_page", str(INDEX_DEFAULT_PER_PAGE)))
-    except (TypeError, ValueError):
-        per_page = INDEX_DEFAULT_PER_PAGE
-
-    page = max(1, page)
-    per_page = max(1, min(per_page, INDEX_MAX_PER_PAGE))
-    offset = (page - 1) * per_page
-
-    # Get all video data, then filter by favorites
-    all_video_data = cache.get_all_video_data(sort_param, reverse)
-    favorites_list = cache.get_favorites()
-    video_data = [v for v in all_video_data if v["filename"] in favorites_list]
-
-    total_videos = len(video_data)
-    if offset >= total_videos and total_videos:
-        page = max(1, (total_videos - 1) // per_page + 1)
-        offset = (page - 1) * per_page
-
-    paginated_data = video_data[offset:offset + per_page]
-    total_pages = max(1, (total_videos + per_page - 1) // per_page)
-
-    # Background thumbnail jobs
-    ensure_thumbnails_exist([v["filename"] for v in paginated_data])
-
-    # Load config for feature flags
-    config = get_config()
-
-    return render_template(
-        "favorites.html",
-        videos=paginated_data,
-        current_sort=sort_param,
-        current_order=order,
-        current_page=page,
-        total_pages=total_pages,
-        per_page=per_page,
-        total_videos=total_videos,
         favorites_list=favorites_list,
         feature_vr_simplify=config.feature_vr_simplify,
         feature_previews=config.feature_previews,
@@ -816,27 +785,38 @@ def random_video():
 @app.route('/tags')
 @performance_monitor("route_tags")
 def tags_page():
-    """Tags page (merged read path: sidecar + DB)."""
+    """Tags page (canonical read path: cache.get_tags(), with non-destructive fallback merge)."""
+    primary_tag_map = _tag_map_from_cache()
+    primary_tags = _collect_unique_tags_from_tag_map(primary_tag_map)
     sidecar_tags, _ = get_sidecar_tags_snapshot()
-    db_tags = cache.get_all_unique_tags()
-    merged_tags = _merge_tag_names(sidecar_tags, db_tags)
+    fallback_db_tags = cache.get_all_unique_tags()
+    merged_tags = _merge_tag_names(primary_tags + sidecar_tags, fallback_db_tags)
     return render_template('tags.html', tags=merged_tags, tag_count=len(merged_tags))
 
 
 @app.route('/tag/<tag>')
 @performance_monitor("route_tag_videos")
 def tag_videos(tag):
-    """Optimized tag filtering with cached data"""
+    """Tag filtering using canonical per-video tag map, with sidecar/DB fallback merge."""
     normalized_tag = tag.lstrip("#")
+    normalized_key = normalized_tag.lower()
+
+    primary_tag_map = _tag_map_from_cache()
+    primary_matches = [
+        filename
+        for filename, tag_list in primary_tag_map.items()
+        if isinstance(tag_list, list)
+        and any(_normalize_tag(t).lower() == normalized_key for t in tag_list if isinstance(t, str))
+    ]
 
     _, by_tag = get_sidecar_tags_snapshot()
     filenames = by_tag.get(normalized_tag, [])
     if not filenames:
         # Case-insensitive fallback key lookup.
         by_tag_ci = {k.lower(): v for k, v in by_tag.items()}
-        filenames = by_tag_ci.get(normalized_tag.lower(), [])
+        filenames = by_tag_ci.get(normalized_key, [])
 
-    # Always include DB/JSON-backed matches in the merged read path.
+    # Always include DB-backed matches in the merged read path.
     db_filtered_videos = cache.get_videos_by_tag_optimized(normalized_tag)
     db_video_map = {v.get("filename"): v for v in db_filtered_videos if v.get("filename")}
 
@@ -850,8 +830,17 @@ def tag_videos(tag):
     except Exception:
         all_video_map = {}
 
-    # Preserve existing sidecar-first ordering, then append DB-only entries.
-    for fn in filenames:
+    # Preserve canonical cache order first, then sidecar-first ordering, then DB-only entries.
+    ordered_filenames = []
+    seen_order: set[str] = set()
+    for source in (primary_matches, filenames):
+        for fn in source:
+            if fn in seen_order:
+                continue
+            seen_order.add(fn)
+            ordered_filenames.append(fn)
+
+    for fn in ordered_filenames:
         if fn in seen_filenames:
             continue
 

@@ -27,6 +27,19 @@ htmlcov/
 # Local backups and logs
 backups/
 *.log
+logs/
+videos/
+images/
+data/
+admin-dashboard/
+archive/
+backup_json/
+doc/
+docs/
+temp_test_cwd/
+*.db
+*.db.backup_*
+video_analytics.json
 
 # Editor / OS junk
 .vscode/

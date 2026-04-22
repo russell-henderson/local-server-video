@@ -49,7 +49,23 @@ class RatingsService:
         """
         if not self.database:
             return None
-        return self.database.get_filename_by_hash(media_hash)
+
+        filename = self.database.get_filename_by_hash(media_hash)
+        if filename:
+            return filename
+
+        # Non-destructive fallback: rebuild missing mapping on demand using
+        # deterministic filename hash logic used by watch pages.
+        try:
+            all_filenames = self.database.get_all_filenames()
+            for candidate in all_filenames:
+                if self.get_media_hash(candidate) == media_hash:
+                    self.database.register_media_hash(media_hash, candidate)
+                    return candidate
+        except Exception:
+            return None
+
+        return None
     
     def register_media_hash(self, filename: str) -> str:
         """
