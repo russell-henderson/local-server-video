@@ -1,0 +1,472 @@
+local-video-server/
+├── .git/ [contents excluded]
+├── .github/ [contents excluded]
+├── .kiro/ [contents excluded]
+├── .mypy_cache/ [contents excluded]
+├── .pytest_cache/ [contents excluded]
+├── .tmp/ [contents excluded]
+├── .venv/ [contents excluded]
+├── .vscode/ [contents excluded]
+├── __pycache__/ [contents excluded]
+├── admin-dashboard/
+│   ├── .github/ [contents excluded]
+│   ├── .next/ [contents excluded]
+│   ├── node_modules/ [contents excluded]
+│   ├── public/
+│   ├── src/
+│   │   ├── app/
+│   │   │   ├── api/
+│   │   │   │   ├── cache/
+│   │   │   │   │   └── status/
+│   │   │   │   │       └── route.ts
+│   │   │   │   ├── links/
+│   │   │   │   │   └── health/
+│   │   │   │   │       └── route.ts
+│   │   │   │   ├── performance/
+│   │   │   │   │   ├── active/
+│   │   │   │   │   │   └── route.ts
+│   │   │   │   │   ├── json/
+│   │   │   │   │   │   └── route.ts
+│   │   │   │   │   ├── routes/
+│   │   │   │   │   │   └── route.ts
+│   │   │   │   │   └── workers/
+│   │   │   │   │       └── route.ts
+│   │   │   │   ├── system/
+│   │   │   │   │   └── storage/
+│   │   │   │   │       └── route.ts
+│   │   │   │   └── tags/
+│   │   │   │       └── popular/
+│   │   │   │           └── route.ts
+│   │   │   ├── globals.css
+│   │   │   ├── layout.tsx
+│   │   │   └── page.tsx
+│   │   └── lib/
+│   │       └── api.ts
+│   ├── .dockerignore
+│   ├── .gitignore
+│   ├── Dockerfile
+│   ├── eslint.config.mjs
+│   ├── next-env.d.ts
+│   ├── next.config.ts
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── postcss.config.mjs
+│   ├── README.md
+│   ├── tailwind.config.ts
+│   └── tsconfig.json
+├── archive/
+│   └── remove/
+│       ├── images/
+│       ├── python_legacy/
+│       │   ├── __pycache__/
+│       │   │   ├── app_subs_integration.cpython-314.pyc
+│       │   │   ├── config_subtitles.cpython-314.pyc
+│       │   │   ├── manage_subs.cpython-314.pyc
+│       │   │   └── subtitles.cpython-314.pyc
+│       │   ├── app_subs_integration.py
+│       │   ├── config_subtitles.py
+│       │   ├── manage_subs.py
+│       │   └── subtitles.py
+│       ├── templates-backup/
+│       │   ├── best_of.html.backup
+│       │   ├── favorites.html.backup
+│       │   ├── index.html.backup
+│       │   ├── README.md
+│       │   ├── tag_videos.html.backup
+│       │   ├── tags.html.backup
+│       │   └── watch.html.backup
+│       ├── templates_backup/
+│       │   ├── best_of.html.backup
+│       │   ├── favorites.html.backup
+│       │   ├── index.html.backup
+│       │   ├── tag_videos.html.backup
+│       │   └── tags.html.backup
+│       ├── chat.js
+│       ├── dummy.txt
+│       ├── export-code-descriptions-openai.ps1
+│       ├── export-code-descriptions.ps1
+│       └── export-project-structure-no-media.ps1
+├── backend/
+│   ├── __pycache__/ [contents excluded]
+│   ├── app/
+│   │   ├── __pycache__/
+│   │   │   ├── __init__.cpython-313.pyc
+│   │   │   └── __init__.cpython-314.pyc
+│   │   ├── admin/
+│   │   │   ├── __pycache__/
+│   │   │   │   ├── __init__.cpython-313.pyc
+│   │   │   │   ├── __init__.cpython-314.pyc
+│   │   │   │   ├── performance.cpython-313.pyc
+│   │   │   │   ├── performance.cpython-314.pyc
+│   │   │   │   ├── routes.cpython-313.pyc
+│   │   │   │   └── routes.cpython-314.pyc
+│   │   │   ├── __init__.py
+│   │   │   ├── performance.py
+│   │   │   └── routes.py
+│   │   ├── api/
+│   │   │   ├── __pycache__/
+│   │   │   │   ├── __init__.cpython-313.pyc
+│   │   │   │   ├── __init__.cpython-314.pyc
+│   │   │   │   ├── ratings.cpython-313.pyc
+│   │   │   │   ├── ratings.cpython-314.pyc
+│   │   │   │   ├── schemas.cpython-313.pyc
+│   │   │   │   └── schemas.cpython-314.pyc
+│   │   │   ├── __init__.py
+│   │   │   ├── ratings.py
+│   │   │   └── schemas.py
+│   │   ├── core/
+│   │   │   ├── __pycache__/
+│   │   │   │   ├── __init__.cpython-313.pyc
+│   │   │   │   ├── __init__.cpython-314.pyc
+│   │   │   │   ├── cache.cpython-314.pyc
+│   │   │   │   ├── db.cpython-314.pyc
+│   │   │   │   ├── rate_limiter.cpython-313.pyc
+│   │   │   │   └── rate_limiter.cpython-314.pyc
+│   │   │   ├── __init__.py
+│   │   │   ├── cache.py
+│   │   │   ├── db.py
+│   │   │   └── rate_limiter.py
+│   │   ├── migrations/
+│   │   │   ├── __pycache__/
+│   │   │   │   ├── __init__.cpython-314.pyc
+│   │   │   │   └── env.cpython-314.pyc
+│   │   │   ├── versions/
+│   │   │   │   ├── __pycache__/
+│   │   │   │   │   ├── 001_add_ratings.cpython-314.pyc
+│   │   │   │   │   └── __init__.cpython-314.pyc
+│   │   │   │   ├── 001_add_ratings.py
+│   │   │   │   └── __init__.py
+│   │   │   ├── __init__.py
+│   │   │   └── env.py
+│   │   └── __init__.py
+│   ├── services/
+│   │   ├── __pycache__/
+│   │   │   ├── __init__.cpython-313.pyc
+│   │   │   ├── __init__.cpython-314.pyc
+│   │   │   ├── ratings_service.cpython-313.pyc
+│   │   │   └── ratings_service.cpython-314.pyc
+│   │   ├── __init__.py
+│   │   └── ratings_service.py
+│   └── __init__.py
+├── backup_json/
+│   ├── favorites.json
+│   ├── ratings.json
+│   ├── tags.json
+│   └── views.json
+├── backups/
+│   ├── favorites-20260413-230123.json
+│   ├── ratings-20260413-230123.json
+│   ├── tags-20260413-230123.json
+│   ├── video_metadata-20260413-230123.db
+│   └── views-20260413-230123.json
+├── data/
+│   ├── video_metadata.db
+│   └── video_search.db
+├── doc/
+│   ├── ADMIN_DASH_UPGRADE.md
+│   ├── BACKEND_DETAILED.md
+│   ├── LATEST.md
+│   ├── PHASE_2.md
+│   ├── PHASE_2_LVC.md
+│   ├── PHASE_3.md
+│   ├── PHASE_4.md
+│   ├── PHASE_5.md
+│   ├── PHASE_6.md
+│   ├── PHASE_7.md
+│   ├── PHASE_8.md
+│   ├── PHASE_9.md
+│   ├── Project_ local-video-server.md
+│   ├── PROJECT_ANALYSIS_REPORT.md
+│   ├── SUGGESTED_CHANGES.md
+│   ├── TODO_ADMIN_DASH.md
+│   └── TODOv4.md
+├── docs/
+│   ├── archive/
+│   │   ├── IMPLEMENTATION_COMPLETION_SUMMARY_v1.md
+│   │   ├── IMPLEMENTATION_GUIDE_v1.md
+│   │   ├── IMPLEMENTATION_SUMMARY_v1.md
+│   │   ├── MIGRATION_SUMMARY_v1.md
+│   │   ├── OPTIMIZATION_SUMMARY_v1.md
+│   │   ├── PERFORMANCE_ANALYSIS_SUMMARY_v1.md
+│   │   ├── PERFORMANCE_OPTIMIZATION_GUIDE_v1.md
+│   │   └── TODO_ADMIN_DASH.md
+│   ├── deferred/
+│   │   ├── legacy/
+│   │   │   ├── SUBTITLE_GENERATION_COMPLETE.md
+│   │   │   ├── SUBTITLE_GENERATION_GUIDE.md
+│   │   │   └── SUBTITLE_SYSTEM_TROUBLESHOOTING.md
+│   │   ├── IMPLEMENTATION_GUIDE.md
+│   │   ├── IMPLEMENTATION_SUMMARY.md
+│   │   ├── Local Video Server UI.md
+│   │   ├── OPTIMIZATION_SUMMARY.md
+│   │   ├── PERFORMANCE_ANALYSIS_SUMMARY.md
+│   │   ├── PERFORMANCE_OPTIMIZATION_GUIDE.md
+│   │   ├── PROJECT.md
+│   │   ├── README.md
+│   │   ├── SUBTITLE_GENERATION_COMPLETE.md
+│   │   ├── SUBTITLE_GENERATION_GUIDE.md
+│   │   ├── SUBTITLE_SYSTEM_TROUBLESHOOTING.md
+│   │   ├── tasklist.md
+│   │   ├── tasklist_backup.md
+│   │   ├── TODO.md
+│   │   ├── VIDEO_PREVIEW_IMPROVEMENTS.md
+│   │   └── VR_MIGRATION_NOTE.md
+│   ├── releases/
+│   │   ├── index.md
+│   │   ├── pr_announcement_v1.02.1.md
+│   │   ├── v1.02.md
+│   │   ├── v1.03.0.md
+│   │   └── v1.03.0_SUMMARY.md
+│   ├── ADAPTIVE_STREAMING_SYSTEM.md
+│   ├── ADMIN_API_SPEC.md
+│   ├── ADMIN_DASHBOARD.md
+│   ├── ADMIN_DASHBOARD_BACKEND.md
+│   ├── ADMIN_DASHBOARD_FRONTEND.md
+│   ├── ADMIN_DASHBOARD_IMPL_NOTES.md
+│   ├── ADMIN_DASHBOARD_MIGRATION.md
+│   ├── ADMIN_DASHBOARD_TESTING.md
+│   ├── ADMIN_METADATA_PRUNE.md
+│   ├── API.md
+│   ├── ARCHITECTURE.md
+│   ├── ARCHIVE_INDEX.md
+│   ├── CHANGELOG.md
+│   ├── copilot_needs_help.md
+│   ├── DATA_BACKEND.md
+│   ├── DEV_DOCKER_FAST_LOOP.md
+│   ├── docs.zip
+│   ├── DOCS_INVENTORY.md
+│   ├── GEMINI.md
+│   ├── IMPLEMENTATION.md
+│   ├── Local Video Server UI.md
+│   ├── OPENAI_COST_ANALYSIS.md
+│   ├── PERFORMANCE.md
+│   ├── PERFORMANCE_MONITORING.md
+│   ├── PLANS.md
+│   ├── PR_2_COMPLETION_NOTES.md
+│   ├── PR_2_POST_MERGE_SUMMARY.md
+│   ├── PROJECT.md
+│   ├── project_structure.txt
+│   ├── PYTHON_UPDATE.md
+│   ├── QA_TESTING_GUIDE.md
+│   ├── SOURCE_OF_TRUTH.md
+│   ├── SUBTITLE_GENERATION_GUIDE.md
+│   ├── TAG_CLEANUP_NOTES.md
+│   ├── TAG_SYNC_NOTES.md
+│   ├── TASK_2_COMPLETION.md
+│   ├── tasklist.md
+│   ├── test_implementations.html
+│   ├── test_vr_ratings_favorites.html
+│   ├── TODO.md
+│   ├── TODO_GROUP_DELETE.md
+│   ├── TODOS.md
+│   ├── TODOv3.md
+│   ├── UI.md
+│   ├── UPDATE.md
+│   ├── VIDEO_PREVIEW_IMPROVEMENTS.md
+│   ├── VR_RATINGS_FAVORITES_FIX.md
+│   └── WRITE_PATH_GUARDS.md
+├── images/ [contents excluded]
+├── logs/
+│   ├── analytics-test-1755779581458.json
+│   ├── analytics-test-1755781005853.json
+│   └── analytics-test-1755781164620.json
+├── nginx/
+│   └── conf.d/
+│       └── default.conf
+├── node_modules/
+│   ├── .bin/
+│   │   ├── baseline-browser-mapping
+│   │   ├── baseline-browser-mapping.cmd
+│   │   └── baseline-browser-mapping.ps1
+│   ├── baseline-browser-mapping/
+│   │   ├── dist/
+│   │   │   ├── cli.cjs
+│   │   │   ├── index.cjs
+│   │   │   ├── index.d.ts
+│   │   │   └── index.js
+│   │   ├── LICENSE.txt
+│   │   ├── package.json
+│   │   └── README.md
+│   └── .package-lock.json
+├── scripts/
+│   ├── __pycache__/
+│   │   ├── analyze_thumbnails.cpython-314.pyc
+│   │   ├── generate_short_list_report.cpython-314.pyc
+│   │   ├── test_video_preview.cpython-313-pytest-8.4.2.pyc
+│   │   └── test_video_preview.cpython-314.pyc
+│   ├── analyze_thumbnails.py
+│   ├── check_links.py
+│   ├── db_health_check.py
+│   ├── export-project-structure.ps1
+│   ├── fix_docs_fence_content.ps1
+│   ├── fix_docs_markdown.ps1
+│   ├── generate_short_list_report.py
+│   ├── http_smoke_load_check.py
+│   ├── strip_outer_wrappers.ps1
+│   ├── tag_videos_from_titles_learned.py
+│   ├── TAGS.md
+│   └── test_video_preview.py
+├── static/
+│   ├── css/
+│   │   ├── advanced-search.css
+│   │   ├── app.css
+│   │   ├── links.css
+│   │   ├── player-controls.css
+│   │   ├── subtitle-controls.css
+│   │   └── theme.css
+│   ├── js/
+│   │   ├── admin_dashboard.js
+│   │   ├── platform.js
+│   │   ├── player.js
+│   │   ├── rating.js
+│   │   ├── ratings.js
+│   │   ├── tags.js
+│   │   └── ui.js
+│   ├── thumbnails/ [contents excluded]
+│   ├── analytics-test.js
+│   ├── dark.js
+│   ├── device-detection.js
+│   ├── favorites.js
+│   ├── metrics.js
+│   ├── optimized-utils.js
+│   ├── README.md
+│   ├── recently-played.js
+│   ├── styles.css
+│   ├── subtitle-controls.js
+│   ├── sw.js
+│   ├── video-analytics.js
+│   ├── video-player-controls.js
+│   ├── video-preview-debug.js
+│   ├── video-preview-enhanced.js
+│   └── vr-support.js
+├── temp_test_cwd/
+│   ├── perm_check_dir/
+│   ├── pytest_runtime/
+│   │   └── tmp7_dy1g9k/
+│   │       [permission denied]
+│   ├── tmp6v1doudw/
+│   │   [permission denied]
+│   └── video_metadata.db
+├── templates/
+│   ├── admin/
+│   │   └── performance.html
+│   ├── partials/
+│   │   ├── icons.html
+│   │   └── rating.html
+│   ├── _base.html
+│   ├── _navbar.html
+│   ├── _player.html
+│   ├── best_of.html
+│   ├── favorites.html
+│   ├── gallery.html
+│   ├── gallery_group.html
+│   ├── image_gallery.html
+│   ├── index.html
+│   ├── links.html
+│   ├── popular.html
+│   ├── tag_videos.html
+│   ├── tags.html
+│   └── watch.html
+├── tests/
+│   ├── __pycache__/
+│   │   ├── conftest.cpython-313-pytest-7.4.2.pyc
+│   │   ├── conftest.cpython-314-pytest-9.0.0.pyc
+│   │   ├── run_endpoints_smoke.cpython-314.pyc
+│   │   ├── run_fav_views_smoke.cpython-314.pyc
+│   │   ├── test_admin_performance_routes.cpython-313-pytest-7.4.2.pyc
+│   │   ├── test_admin_performance_routes.cpython-313-pytest-8.4.2.pyc
+│   │   ├── test_admin_performance_routes.cpython-314-pytest-9.0.0.pyc
+│   │   ├── test_admin_performance_routes.cpython-314.pyc
+│   │   ├── test_api_hash_invariants.cpython-313-pytest-7.4.2.pyc
+│   │   ├── test_api_hash_invariants.cpython-314-pytest-9.0.0.pyc
+│   │   ├── test_api_hash_invariants.cpython-314.pyc
+│   │   ├── test_basic.cpython-313-pytest-7.4.2.pyc
+│   │   ├── test_basic.cpython-314-pytest-9.0.0.pyc
+│   │   ├── test_basic.cpython-314.pyc
+│   │   ├── test_cors_support.cpython-313-pytest-7.4.2.pyc
+│   │   ├── test_cors_support.cpython-314-pytest-9.0.0.pyc
+│   │   ├── test_cors_support.cpython-314.pyc
+│   │   ├── test_favorites_views.cpython-313-pytest-7.4.2.pyc
+│   │   ├── test_favorites_views.cpython-313-pytest-8.4.2.pyc
+│   │   ├── test_favorites_views.cpython-314-pytest-9.0.0.pyc
+│   │   ├── test_favorites_views.cpython-314.pyc
+│   │   ├── test_metadata_prune_and_guards.cpython-313-pytest-7.4.2.pyc
+│   │   ├── test_perf.cpython-313-pytest-7.4.2.pyc
+│   │   ├── test_perf.cpython-314-pytest-9.0.0.pyc
+│   │   ├── test_perf.cpython-314.pyc
+│   │   ├── test_rate_limiting.cpython-313-pytest-7.4.2.pyc
+│   │   ├── test_rate_limiting.cpython-314-pytest-9.0.0.pyc
+│   │   ├── test_rate_limiting.cpython-314.pyc
+│   │   ├── test_rating_mapping.cpython-313-pytest-7.4.2.pyc
+│   │   ├── test_rating_mapping.cpython-314-pytest-9.0.0.pyc
+│   │   ├── test_rating_mapping.cpython-314.pyc
+│   │   ├── test_rating_write_and_read.cpython-313-pytest-7.4.2.pyc
+│   │   ├── test_rating_write_and_read.cpython-314-pytest-9.0.0.pyc
+│   │   ├── test_rating_write_and_read.cpython-314.pyc
+│   │   ├── test_ratings_api_contract_phase2.cpython-313-pytest-7.4.2.pyc
+│   │   ├── test_ratings_api_contract_phase2.cpython-314-pytest-9.0.0.pyc
+│   │   ├── test_routes.cpython-313-pytest-7.4.2.pyc
+│   │   ├── test_routes.cpython-314-pytest-9.0.0.pyc
+│   │   ├── test_routes.cpython-314.pyc
+│   │   ├── test_tag_merge_phase5.cpython-313-pytest-7.4.2.pyc
+│   │   ├── test_tag_merge_phase5.cpython-314-pytest-9.0.0.pyc
+│   │   ├── test_watch_page_smoke.cpython-313-pytest-7.4.2.pyc
+│   │   ├── test_watch_page_smoke.cpython-314-pytest-9.0.0.pyc
+│   │   └── test_watch_page_smoke.cpython-314.pyc
+│   ├── conftest.py
+│   ├── run_endpoints_smoke.py
+│   ├── run_fav_views_smoke.py
+│   ├── test_admin_performance_routes.py
+│   ├── test_api_hash_invariants.py
+│   ├── test_basic.py
+│   ├── test_cors_support.py
+│   ├── test_favorites_views.py
+│   ├── test_metadata_prune_and_guards.py
+│   ├── test_perf.py
+│   ├── test_rate_limiting.py
+│   ├── test_rating_mapping.py
+│   ├── test_rating_write_and_read.py
+│   ├── test_ratings_api_contract_phase2.py
+│   ├── test_routes.py
+│   ├── test_tag_merge_phase5.py
+│   └── test_watch_page_smoke.py
+├── tools/
+│   ├── README.md
+│   └── safe_maintenance.py
+├── videos/ [contents excluded]
+├── .dockerignore
+├── .gitignore
+├── backup_cache_20251002_053845.db
+├── backup_metadata_20251002_053845.db
+├── cache_manager.py
+├── config.py
+├── database_migration.py
+├── dev.ps1
+├── docker-compose.override.yml
+├── docker-compose.yml
+├── Dockerfile
+├── env.example
+├── file-structure.txt
+├── file_watcher.py
+├── healthcheck.py
+├── LICENSE
+├── local-video-server.zip
+├── main.py
+├── Makefile
+├── package-lock.json
+├── package.json
+├── performance_monitor.py
+├── pytest.ini
+├── README.md
+├── remove.py
+├── requirements.txt
+├── SHORT-LIST.html
+├── SHORT-LIST.md
+├── test_subtitles.py
+├── thumbnail_errors.log
+├── thumbnail_manager.py
+├── video_cache.db
+├── video_metadata.db
+├── video_metadata.db.backup_20251115_111347
+├── video_search.db
+└── views.json

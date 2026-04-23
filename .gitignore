@@ -240,6 +240,11 @@ videos/
 static/thumbnails/
 logs/
 *.log
+*.jpg
+*.png
+*.gif
+*.jpeg
+*.webp
 
 # Test files
 test_*.py
@@ -255,5 +260,9 @@ admin-dashboard/node_modules/
 admin-dashboard/.next/
 admin-dashboard/.turbo/
 admin-dashboard/.env.local
+
+# Archive files
+
+*.zip
 
 # End of https://www.toptal.com/developers/gitignore/api/python
