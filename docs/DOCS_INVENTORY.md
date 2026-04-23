@@ -17,26 +17,38 @@ Purpose: Track every documentation file that affects Local Video Server so we ca
 - Design = UI, UX, or visual style
 - Ops = Operations, releases, QA, or dev tooling
 
+## Task file canon (Phase 0)
+
+Three different paths have historically carried “task” content. **Do not confuse them:**
+
+| Path | Role |
+|------|------|
+| **`TODO.md` (repo root)** | **Canonical** for Cursor / Copilot / agents: priority-ordered work and acceptance checks (see `.github/` instructions). |
+| **`docs/TODOS.md`** | **Docs-facing** index: engineering lanes, supplemental checklists, and pointers to the root task file. Not a replacement for root `TODO.md`. |
+| **`docs/TODO.md`** | **Legacy** duplicate filename; **do not extend**. Planned archive candidate after reference cleanup (inventory row 31). |
+
 ## Current inventory
 
 | ID | Path | File name | Type | Scope | Notes |
 |---|---|---|---|---|---|
 | 1 | ./ | README.md | Core | High level | Keep - core doc |
+| 1b | docs/ | PRD.md | Core | High level | Product requirements; keep in sync with SOF/API |
 | 2 | docs/ | ARCHITECTURE.md | Core | High level | Keep - core doc |
 | 3 | docs/ | project_structure.txt | Working | Ops | Active working doc |
 | 4 | ./ | LATEST.md | Core | Ops | Keep - core doc |
-| 5 | ./ | TODOv4.md | Working | High level | Long form roadmap / strategy; use docs/TODOS.md for current actionable tasks |
+| 4a | ./ | TODO.md | Core | High level | **Agent/Cursor/Copilot canonical task queue** (repo root); single source for priorities per `.github/` |
+| 5 | ./ | TODOv4.md | Working | High level | Long form roadmap / strategy; pair with root `TODO.md` + `docs/TODOS.md` (see Task file canon above) |
 | 6 | docs/ | DOCS_INVENTORY.md | Core | Ops | Keep - core doc |
 | 7 | docs/ | ADAPTIVE_STREAMING_SYSTEM.md | Core | Feature | Keep - core doc |
 | 8 | docs/ | ARCHIVE_INDEX.md | Core | Ops | Keep - core doc |
 | 9 | docs/ | CHANGELOG.md | Core | Ops | Keep - core doc |
 | 10 | docs/ | DATA_BACKEND.md | Core | Feature | Keep - core doc |
-| 11 | docs/ | GEMINI.md | Legacy | Feature | Legacy - archive |
+| 11 | docs/archive/ | GEMINI.md | Legacy | Feature | Moved Phase 1a from docs/ |
 | 12 | docs/ | IMPLEMENTATION.md | Core | High level | Keep - core doc |
 | 13 | docs/archive/ | IMPLEMENTATION_COMPLETION_SUMMARY_v1.md | Legacy | Ops | Archived completion notes, replaced by docs/IMPLEMENTATION.md |
 | 14 | docs/archive/ | IMPLEMENTATION_GUIDE_v1.md | Legacy | Feature | Archived early implementation guide, replaced by docs/IMPLEMENTATION.md |
 | 15 | docs/archive/ | IMPLEMENTATION_SUMMARY_v1.md | Legacy | Feature | Archived implementation summary, replaced by docs/IMPLEMENTATION.md |
-| 16 | docs/ | Local Video Server UI.md | Legacy | Design | Legacy - archive |
+| 16 | docs/archive/ | Local_Video_Server_UI_legacy.md | Legacy | Design | Moved Phase 1a from docs/Local Video Server UI.md |
 | 17 | docs/archive/ | MIGRATION_SUMMARY_v1.md | Legacy | Feature | Archived migration notes, details now live in docs/IMPLEMENTATION.md |
 | 18 | docs/ | OPENAI_COST_ANALYSIS.md | Core | Feature | Keep - core doc |
 | 19 | docs/archive/ | OPTIMIZATION_SUMMARY_v1.md | Legacy | Feature | Archived historic optimization summary, replaced by docs/PERFORMANCE.md |
@@ -45,22 +57,22 @@ Purpose: Track every documentation file that affects Local Video Server so we ca
 | 22 | docs/ | PERFORMANCE_MONITORING.md | Core | Feature | Keep - core doc |
 | 23 | docs/archive/ | PERFORMANCE_OPTIMIZATION_GUIDE_v1.md | Legacy | Feature | Archived historic optimization guide, replaced by docs/PERFORMANCE.md |
 | 24 | docs/ | PROJECT.md | Core | High level | Keep - core doc |
-| 25 | docs/ | PR_2_COMPLETION_NOTES.md | Legacy | Ops | Legacy - archive |
-| 26 | docs/ | PR_2_POST_MERGE_SUMMARY.md | Legacy | Ops | Legacy - archive |
-| 27 | docs/ | PYTHON_UPDATE.md | Legacy | Ops | Legacy - archive |
+| 25 | docs/archive/ | PR_2_COMPLETION_NOTES.md | Legacy | Ops | Moved Phase 1a from docs/ |
+| 26 | docs/archive/ | PR_2_POST_MERGE_SUMMARY.md | Legacy | Ops | Moved Phase 1a from docs/ |
+| 27 | docs/archive/ | PYTHON_UPDATE.md | Legacy | Ops | Moved Phase 1a from docs/ |
 | 28 | docs/ | QA_TESTING_GUIDE.md | Core | Ops | Keep - core doc |
-| 29 | docs/ | SUBTITLE_GENERATION_GUIDE.md | Legacy | Feature | Legacy - archive |
-| 30 | docs/ | TASK_2_COMPLETION.md | Legacy | Ops | Legacy - archive |
-| 31 | docs/ | TODO.md | Legacy | High level | Legacy - archive |
-| 32 | docs/ | TODOS.md | Core | High level | Live actionable task list; all new tasks go here |
-| 33 | docs/ | TODO_GROUP_DELETE.md | Legacy | Feature | Legacy - archive |
-| 34 | docs/ | TODOv3.md | Legacy | High level | Legacy - archive |
+| 29 | docs/archive/ | SUBTITLE_GENERATION_GUIDE.md | Legacy | Feature | Moved Phase 1a from docs/ |
+| 30 | docs/archive/ | TASK_2_COMPLETION.md | Legacy | Ops | Moved Phase 1a from docs/ |
+| 31 | docs/ | TODO.md | Legacy | High level | **Legacy only** — duplicate name; do not extend; archive candidate (not root `TODO.md`) |
+| 32 | docs/ | TODOS.md | Core | High level | **Docs-facing** task index / supplemental checklists; points to root `TODO.md` for agent priorities |
+| 33 | docs/archive/ | TODO_GROUP_DELETE.md | Legacy | Feature | Moved Phase 1a from docs/ |
+| 34 | docs/archive/ | TODOv3.md | Legacy | High level | Moved Phase 1a from docs/ |
 | 35 | docs/ | UI.md | Core | Design | Keep - core doc |
-| 36 | docs/ | UPDATE.md | Legacy | Ops | Legacy - archive |
+| 36 | docs/archive/ | UPDATE.md | Legacy | Ops | Moved Phase 1a from docs/ |
 | 37 | docs/ | VIDEO_PREVIEW_IMPROVEMENTS.md | Core | Feature | Keep - core doc |
 | 38 | docs/ | VR_RATINGS_FAVORITES_FIX.md | Working | Feature | Active working doc |
 | 39 | docs/ | copilot_needs_help.md | Working | Ops | Active working doc |
-| 40 | docs/ | tasklist.md | Legacy | Feature | Legacy - archive |
+| 40 | docs/archive/ | tasklist.md | Legacy | Feature | Moved Phase 1a from docs/ |
 | 41 | docs/deferred/ | IMPLEMENTATION_GUIDE.md | Legacy | Feature | Legacy - archive |
 | 42 | docs/deferred/ | IMPLEMENTATION_SUMMARY.md | Legacy | Ops | Legacy - archive |
 | 43 | docs/deferred/ | Local Video Server UI.md | Legacy | Design | Legacy - archive |
@@ -138,23 +150,23 @@ Planned outcome: all implementation guidance and completion notes are merged int
 ### Group 3: TODO and planning docs
 
 - **Target core docs**:  
-  - Short term list: `docs/TODOS.md`  
-  - Long form plan: `TODOv4.md`  
+  - **Agent task queue (canonical):** `TODO.md` at repo root  
+  - **Docs-facing index:** `docs/TODOS.md` (supplemental lanes; points to root `TODO.md`)  
+  - **Long form plan:** `TODOv4.md`  
 
 - **Members to consolidate or archive**  
-  - `docs/TODO.md`  
-  - `docs/TODOv3.md`  
+  - `docs/TODO.md` (legacy path under `docs/` — not root `TODO.md`)  
+  - `docs/archive/TODOv3.md` (was `docs/TODOv3.md`; Phase 1a)  
   - `docs/todos.md` or variants if present  
-  - `docs/tasklist.md`  
-  - `docs/tasklist_backup.md`  
-  - `docs/TODO_GROUP_DELETE.md`  
-  - `docs/PROJECT.md`  
+  - `docs/archive/tasklist.md` (was `docs/tasklist.md`; Phase 1a)  
+  - `docs/deferred/tasklist_backup.md`  
+  - `docs/archive/TODO_GROUP_DELETE.md` (was `docs/TODO_GROUP_DELETE.md`; Phase 1a)  
   - `docs/deferred/PROJECT.md`  
   - `docs/deferred/TODO.md`  
   - `docs/deferred/tasklist.md`  
   - `docs/deferred/tasklist_backup.md`  
 
-Planned outcome: active planning lives only in `TODOv4.md` and `docs/TODOS.md`. All other planning docs are archived as history and not updated.
+Planned outcome: active agent work is tracked in **root `TODO.md`**; narrative roadmap in **`TODOv4.md`**; **`docs/TODOS.md`** remains the docs-side index. **Do not** list `docs/PROJECT.md` as an archive member — it is core. Legacy duplicates under `docs/` (e.g. `docs/TODO.md`) are archived as history only.
 
 ---
 
@@ -162,7 +174,7 @@ Planned outcome: active planning lives only in `TODOv4.md` and `docs/TODOS.md`. 
 
 - **Target core doc**: none, feature has been removed from the product
 - **Members to archive and stop referencing**  
-  - `docs/SUBTITLE_GENERATION_GUIDE.md`  
+  - `docs/archive/SUBTITLE_GENERATION_GUIDE.md` (was `docs/SUBTITLE_GENERATION_GUIDE.md`; Phase 1a)  
   - `docs/SUBTITLE_GENERATION_COMPLETE.md`  
   - `docs/SUBTITLE_SYSTEM_TROUBLESHOOTING.md`  
   - `docs/deferred/SUBTITLE_GENERATION_GUIDE.md`  
@@ -183,7 +195,7 @@ Planned outcome: subtitle system remains fully documented only in archive for hi
   - Static assets notes: `static/README.md`  
 
 - **Members to consolidate or archive**  
-  - `docs/Local Video Server UI.md`  
+  - `docs/archive/Local_Video_Server_UI_legacy.md` (was `docs/Local Video Server UI.md`; Phase 1a)  
   - `docs/deferred/Local Video Server UI.md`  
   - `archive/templates-backup/README.md`  
 
@@ -204,8 +216,8 @@ Planned outcome: all current UI guidance and visual rules live in `UI.md`. Old U
   - `docs/releases/pr_announcement_v1.02.1.md`  
   - `docs/releases/v1.03.0.md`  
   - `docs/releases/v1.03.0_SUMMARY.md`  
-  - `docs/PR_2_COMPLETION_NOTES.md`  
-  - `docs/PR_2_POST_MERGE_SUMMARY.md`  
+  - `docs/archive/PR_2_COMPLETION_NOTES.md` (was `docs/PR_2_COMPLETION_NOTES.md`; Phase 1a)  
+  - `docs/archive/PR_2_POST_MERGE_SUMMARY.md` (was `docs/PR_2_POST_MERGE_SUMMARY.md`; Phase 1a)  
 
 Planned outcome: releases stay as a family of core historical documents. PR completion notes are treated as legacy but kept for forensic reference.
 
@@ -215,7 +227,7 @@ Planned outcome: releases stay as a family of core historical documents. PR comp
 
 These do not have strong redundancy but should be handled consistently.
 
-- `docs/GEMINI.md`  
+- `docs/archive/GEMINI.md` (was `docs/GEMINI.md`; Phase 1a)  
   - Status: legacy feature doc  
   - Plan: keep in archive, do not treat as core  
 

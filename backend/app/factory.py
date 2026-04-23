@@ -54,6 +54,7 @@ def create_app() -> Flask:
     app.add_url_rule("/tag/<tag>", endpoint="tag_videos", view_func=legacy.tag_videos)
     app.add_url_rule("/best-of", endpoint="best_of", view_func=legacy.best_of)
     app.add_url_rule("/links", endpoint="links", view_func=legacy.links)
+    app.add_url_rule("/search", endpoint="search_page", view_func=legacy.search_page)
     app.add_url_rule("/gallery", endpoint="gallery", view_func=legacy.gallery)
     app.add_url_rule("/gallery/image/<path:filename>", endpoint="serve_gallery_image", view_func=legacy.serve_gallery_image)
     app.add_url_rule("/gallery/groups/<slug>", endpoint="gallery_group", view_func=legacy.gallery_group)

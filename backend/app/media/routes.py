@@ -75,3 +75,8 @@ def best_of():
 @media_bp.route("/links")
 def links():
     return legacy.links()
+
+
+@media_bp.route("/search")
+def search_page():
+    return legacy.search_page()

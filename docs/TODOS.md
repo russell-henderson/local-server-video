@@ -1,5 +1,11 @@
 # Local Video Server TODOs
 
+## Task file canon (read first)
+
+- **Agent / Cursor / Copilot canonical queue:** [`TODO.md`](../TODO.md) at the **repository root**. That file is the single place to read priority-ordered work and to check off acceptance criteria for automation and humans using agent instructions.
+- **This file (`docs/TODOS.md`):** a **docs-facing** engineering task index and supplemental checklist map (historical completions, stability lanes, and hygiene items). It does **not** replace the root task file; keep it aligned with or summarized from `../TODO.md` where useful.
+- **Do not extend** `docs/TODO.md` (under `docs/`) — that path is **legacy** and a planned archive candidate once references are fully cleaned (see `docs/DOCS_INVENTORY.md`).
+
 ## Active
 
 - [x] Complete app-factory + full route-family blueprint extraction.

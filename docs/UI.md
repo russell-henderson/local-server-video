@@ -32,7 +32,7 @@ Consolidated UI documentation (design, player, and preview system). Original fil
 
 ---
 
-See docs/deferred/Local Video Server UI.md and docs/deferred/VIDEO_PREVIEW_IMPROVEMENTS.md for the full original text.
+See `docs/archive/Local_Video_Server_UI_legacy.md` (archived root UI draft), `docs/deferred/Local Video Server UI.md`, and `docs/deferred/VIDEO_PREVIEW_IMPROVEMENTS.md` for the full original text.
 
 ## Tag Autocomplete
 

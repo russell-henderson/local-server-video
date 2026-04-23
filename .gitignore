@@ -247,9 +247,8 @@ logs/
 *.webp
 
 # Test files
-test_*.py
-*_test.py
-tests/
+# Keep source tests tracked; ignore only transient runtime artifacts.
+temp_test_cwd/
 
 # Documentation build artifacts
 docs/_build/

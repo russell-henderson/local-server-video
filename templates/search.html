@@ -1,0 +1,71 @@
+{% extends "_base.html" %}
+
+{% block title %}Search — Local Video Server{% endblock %}
+
+{% block content %}
+<section class="video-hero card mb-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+    <div>
+      <p class="eyebrow text-uppercase mb-1">Search</p>
+      <div class="d-flex align-items-center gap-2 mb-1">
+        <h1 class="hero-title mb-0">Results</h1>
+        <span class="pill pill-muted">{{ result_count }} match{% if result_count != 1 %}es{% endif %}</span>
+      </div>
+      {% if query %}
+        <div class="hero-meta subtle-text">Query: "{{ query }}"</div>
+      {% else %}
+        <div class="hero-meta subtle-text">Enter terms to search title, filename, and tags.</div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+{% if videos %}
+  <div class="video-grid mb-5">
+    {% for video in videos %}
+      <article class="card video-card h-100" data-role="video-card" data-preview-delay="500">
+        <a href="{{ url_for('watch_video', filename=video.filename) }}" class="video-thumb-link">
+          <div class="video-preview-container">
+            {% set thumb_stem = video.filename.rsplit('.',1)[0] %}
+            {% set thumbnail = 'thumbnails/' ~ thumb_stem ~ '.jpg' %}
+            <img class="card-img-top video-thumbnail"
+                 src="{{ url_for('static', filename=thumbnail) | safe }}"
+                 alt="{{ video.filename }}"
+                 onerror="this.onerror=null;this.src='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';">
+            <div class="video-preview" data-filename="{{ video.filename }}">
+              <video muted preload="none">
+                <source src="{{ url_for('stream_video', filename=video.filename) }}" type="video/mp4">
+              </video>
+            </div>
+          </div>
+        </a>
+
+        <div class="card-body p-3 d-flex flex-column">
+          {% with tags=video.tags, max_tags=3, show_overflow_count=True, tag_scope='card' %}
+            {% include 'partials/video_tag_chips.html' %}
+          {% endwith %}
+          <h5 class="card-title text-truncate mb-2">{{ video.display_title or video.filename }}</h5>
+
+          {% with current_rating=video.rating, current_views=video.views, filename=video.filename, media_hash=video.media_hash or video.filename, favorites_list=favorites_list %}
+            {% include 'partials/video_metadata_row.html' %}
+          {% endwith %}
+        </div>
+      </article>
+    {% endfor %}
+  </div>
+{% else %}
+  <section class="search-empty-state card p-4 mb-5">
+    {% if query %}
+      <p class="mb-1">No videos matched your search.</p>
+      <p class="subtle-text mb-0">Try different keywords across title, filename, or tags.</p>
+    {% else %}
+      <p class="mb-1">Start searching from the header.</p>
+      <p class="subtle-text mb-0">Search supports case-insensitive partial matching with multi-token AND logic.</p>
+    {% endif %}
+  </section>
+{% endif %}
+{% endblock %}
+
+{% block extra_scripts %}
+  <script src="{{ url_for('static', filename='video-preview-enhanced.js') }}" defer></script>
+{% endblock %}

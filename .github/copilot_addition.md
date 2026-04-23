@@ -6,7 +6,7 @@ Below is a **revised `copilot-instructions.md`** with the specific changes that 
 
 ## Project Overview
 
-**Local Video Server** is a Flask-based application for managing a personal video library and image gallery with responsive themes, cross-platform support (desktop/mobile/VR), performance optimization, and a Next.js admin dashboard for performance monitoring. Source of truth for current work: `docs/TODO.md` (top-to-bottom priority order).
+**Local Video Server** is a Flask-based application for managing a personal video library and image gallery with responsive themes, cross-platform support (desktop/mobile/VR), performance optimization, and a Next.js admin dashboard for performance monitoring. **Source of truth for priority-ordered work:** [`TODO.md`](../TODO.md) at the **repository root** (agents/Copilot/Cursor). [`docs/TODOS.md`](../docs/TODOS.md) is a **docs-facing** supplemental task index and checklists only. **`docs/TODO.md`** (under `docs/`) is **legacy** — do not extend; planned archive candidate (see `docs/DOCS_INVENTORY.md`).
 
 ---
 
@@ -242,12 +242,13 @@ repo/
 │   └── partials/
 │       ├── rating.html          # Rating star partial (uses icons macro)
 │       └── icons.html           # Icon macros for favorite + rating stars
+├── TODO.md                      # Canonical agent task queue (repo root; read top-to-bottom)
 ├── docs/                        # Current, active documentation
 │   ├── ADMIN_DASHBOARD.md       # Admin dashboard spec
 │   ├── IMPLEMENTATION.md        # Architecture + dev workflow
 │   ├── PERFORMANCE.md           # Optimization notes
 │   ├── UI.md                    # UI patterns & player behavior
-│   └── TODO.md                  # Single source of truth for current work
+│   └── TODOS.md                 # Docs-facing supplemental task index (not a replacement for root TODO.md)
 ├── archive/                     # Deprecated systems, cost analyses, old designs
 ├── .github/
 │   └── copilot-instructions.md  # This file
@@ -322,7 +323,7 @@ Run with:
 ## When Uncertain
 
 1. Propose the smallest, reversible change. Do not refactor unrelated code.
-2. Check `docs/TODO.md` acceptance criteria. Implement exactly as specified.
+2. Check root **`TODO.md`** acceptance criteria. Implement exactly as specified.
 3. Prefer existing patterns. If the codebase uses a style, follow it.
 4. Document edge cases. Add a comment explaining why a workaround is needed.
 5. Test on multiple platforms. Desktop, mobile, VR if the change affects UI.
@@ -334,13 +335,13 @@ Run with:
 * Do not remove files unless the task explicitly instructs it OR a replacement exists.
 * Do not change API contracts without updating tests & docs.
 * Preserve `.github/copilot-instructions.md`. Update it when architectural patterns change.
-* Always check `docs/TODO.md` first. It is the single source of truth for priorities.
+* Always check **root `TODO.md` first** for priorities. Use **`docs/TODOS.md`** only as a supplemental docs-side index when helpful.
 
 ---
 
 ## First Actions for New Issues
 
-1. Read `docs/TODO.md` from the top.
+1. Read root **`TODO.md`** from the top.
 2. Check acceptance criteria for the relevant task.
 3. Review the files in "Architecture Essentials" to understand the current implementation.
 4. Run `.\dev.ps1 dev` to start the server locally; test your changes in real-time.

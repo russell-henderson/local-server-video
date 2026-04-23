@@ -71,6 +71,7 @@ Subtitle generation and troubleshooting have been removed as an active feature. 
 
 ### 3.1 Files
 
+- `docs/archive/SUBTITLE_GENERATION_GUIDE.md` (moved from `docs/SUBTITLE_GENERATION_GUIDE.md`, Phase 1a 2026-04-23)
 - `docs/deferred/SUBTITLE_GENERATION_GUIDE.md`
 - `docs/deferred/SUBTITLE_GENERATION_COMPLETE.md`
 - `docs/deferred/SUBTITLE_SYSTEM_TROUBLESHOOTING.md`
@@ -87,15 +88,14 @@ Subtitle generation and troubleshooting have been removed as an active feature. 
 
 ## 4. Planning and TODO history
 
-These are older planning docs that have been superseded by `TODOv4.md` and `docs/TODOS.md`.
+These are older planning docs. **Active priority-ordered work** lives in **`TODO.md` at the repository root** (canonical for agents/Copilot/Cursor). **`docs/TODOS.md`** is a **docs-facing** supplemental task index. Long-form roadmap remains in **`TODOv4.md`**.
 
 ### 4.1 Files
 
-- `docs/TODO.md`
-- `docs/TODOv3.md`
-- `docs/tasklist.md`
-- `docs/tasklist_backup.md`
-- `docs/TODO_GROUP_DELETE.md`
+- `docs/TODO.md` (**legacy** duplicate filename under `docs/`; **do not extend**; planned archive candidate — not the same as root `TODO.md`)
+- `docs/archive/TODOv3.md` (moved from `docs/TODOv3.md`, Phase 1a)
+- `docs/archive/tasklist.md` (moved from `docs/tasklist.md`, Phase 1a)
+- `docs/archive/TODO_GROUP_DELETE.md` (moved from `docs/TODO_GROUP_DELETE.md`, Phase 1a)
 - `docs/deferred/PROJECT.md`
 - `docs/deferred/TODO.md`
 - `docs/deferred/tasklist.md`
@@ -106,8 +106,9 @@ These are older planning docs that have been superseded by `TODOv4.md` and `docs
 - Only read if you need to see how the project evolved.
 - Do not add new tasks here.
 - All new planning work goes into:
-  - `TODOv4.md` for long form
-  - `docs/TODOS.md` for current actionable items
+  - **`TODO.md` (repo root)** for **priority-ordered agent/operator tasks** and acceptance checks
+  - **`TODOv4.md`** for long-form roadmap and strategy
+  - **`docs/TODOS.md`** for **docs-facing** supplemental checklists or lanes that point to root `TODO.md` where needed
 
 ---
 
@@ -117,7 +118,7 @@ Older UI descriptions and template backups, replaced by `docs/UI.md` and `static
 
 ### 5.1 Files
 
-- `docs/Local Video Server UI.md`
+- `docs/archive/Local_Video_Server_UI_legacy.md` (moved from `docs/Local Video Server UI.md`, Phase 1a)
 - `docs/deferred/Local Video Server UI.md`
 - `archive/templates-backup/README.md`
 
@@ -132,7 +133,7 @@ Older UI descriptions and template backups, replaced by `docs/UI.md` and `static
 
 ## 6. Release and PR notes
 
-Release documents remain part of the core history but are listed here for convenience.
+Release documents under `docs/releases/` remain part of the core history. PR forensic notes were moved to `docs/archive/` in Phase 1a (2026-04-23).
 
 ### 6.1 Files
 
@@ -140,8 +141,8 @@ Release documents remain part of the core history but are listed here for conven
 - `docs/releases/pr_announcement_v1.02.1.md`
 - `docs/releases/v1.03.0.md`
 - `docs/releases/v1.03.0_SUMMARY.md`
-- `docs/PR_2_COMPLETION_NOTES.md`
-- `docs/PR_2_POST_MERGE_SUMMARY.md`
+- `docs/archive/PR_2_COMPLETION_NOTES.md` (moved from `docs/PR_2_COMPLETION_NOTES.md`, Phase 1a)
+- `docs/archive/PR_2_POST_MERGE_SUMMARY.md` (moved from `docs/PR_2_POST_MERGE_SUMMARY.md`, Phase 1a)
 
 ### 6.2 How to use
 
@@ -159,9 +160,15 @@ These are one off legacy feature docs or meta docs that are kept for context but
 
 ### 7.1 Files
 
-- `docs/GEMINI.md`  
+- `docs/archive/GEMINI.md` (moved from `docs/GEMINI.md`, Phase 1a)  
   - Status: legacy  
   - Scope: earlier AI integration notes that are not part of the current plan
+
+- `docs/archive/UPDATE.md` (moved from `docs/UPDATE.md`, Phase 1a)
+
+- `docs/archive/PYTHON_UPDATE.md` (moved from `docs/PYTHON_UPDATE.md`, Phase 1a)
+
+- `docs/archive/TASK_2_COMPLETION.md` (moved from `docs/TASK_2_COMPLETION.md`, Phase 1a)
 
 - `docs/deferred/VR_MIGRATION_NOTE.md`  
   - Status: legacy  

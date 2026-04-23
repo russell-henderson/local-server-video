@@ -2,6 +2,17 @@
 
 Last updated: 2026-04-23
 
+## Documentation map
+
+- **Product scope & requirements:** `docs/PRD.md`
+- **System shape (factory, blueprints, data):** `docs/ARCHITECTURE.md`
+- **HTTP routes & JSON bodies:** `docs/API.md`
+- **Operator runbook:** `docs/DEPLOYMENT.md`
+- **Official tests:** `docs/TESTING.md`
+- **This file:** non-negotiable runtime policy + stable URL contracts
+
+**README** links the full guide: see *Comprehensive documentation guide* in the repository root `README.md`.
+
 ## Runtime Policy
 
 - Runtime metadata authority is SQLite only.
@@ -16,6 +27,7 @@ Last updated: 2026-04-23
 - `/watch/<filename>`
 - `/video/<filename>`
 - `/tag/<tag>`
+- `GET /search?q=...` (query param `q`; shared navbar form uses `method="get"`, `name="q"`)
 - `/api/ratings/<media_hash>`
 - `/admin/cache/status`
 - `/admin/cache/refresh`

@@ -1,10 +1,8 @@
-<nav id="main-nav" class="navbar navbar-expand-lg nav-shell">
-  <div class="container-fluid">
-    <div class="d-flex align-items-center nav-brand-block">
-      <a class="navbar-brand brand-mark" href="{{ url_for('index') }}">
-        LOCAL
-      </a>
-      <span class="nav-kicker">Video Server</span>
+<nav id="main-nav" class="navbar navbar-expand-lg align-items-center nav-shell">
+  <div class="container-fluid align-items-center">
+    <div class="nav-brand-cluster">
+      <a class="navbar-brand brand-mark" href="{{ url_for('index') }}">LOCAL</a>
+      <span class="nav-brand-divider d-none d-sm-block" aria-hidden="true"></span>
     </div>
 
     <button class="navbar-toggler" type="button"
@@ -15,33 +13,49 @@
     </button>
 
     <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav me-auto nav-links">
+      <ul class="navbar-nav mb-2 mb-lg-0 align-items-lg-center nav-links">
         <li class="nav-item">
-          <a class="nav-link nav-pill" href="{{ url_for('index') }}"><i class="fas fa-home me-1"></i> Home</a>
+          <a class="nav-link nav-pill{% if request.endpoint == 'index' %} active{% endif %}" href="{{ url_for('index') }}"><i class="fas fa-home me-1"></i> Home</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link nav-pill" href="{{ url_for('random_video') }}"><i class="fas fa-shuffle me-1"></i> Random</a>
+          <a class="nav-link nav-pill{% if request.endpoint == 'tags_page' %} active{% endif %}" href="{{ url_for('tags_page') }}"><i class="fas fa-tags me-1"></i> Tags</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link nav-pill" href="{{ url_for('tags_page') }}"><i class="fas fa-tags me-1"></i> Tags</a>
+          <a class="nav-link nav-pill{% if request.endpoint == 'favorites_page' %} active{% endif %}" href="{{ url_for('favorites_page') }}"><span class="icon favorite-icon is-on me-1"></span> Favorites</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link nav-pill" href="{{ url_for('favorites_page') }}"><span class="icon favorite-icon is-on"></span> Favorites</a>
+          <a class="nav-link nav-pill{% if request.endpoint == 'popular_page' %} active{% endif %}" href="{{ url_for('popular_page') }}"><i class="fas fa-fire me-1"></i> Popular</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link nav-pill" href="{{ url_for('popular_page') }}"><i class="fas fa-fire me-1"></i> Popular</a>
+          <a class="nav-link nav-pill{% if request.endpoint in ('gallery', 'gallery_group') %} active{% endif %}" href="{{ url_for('gallery') }}"><i class="fas fa-images me-1"></i> Gallery</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link nav-pill" href="{{ url_for('gallery') }}"><i class="fas fa-images me-1"></i> Gallery</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link nav-pill" href="{{ url_for('links') }}"><i class="fas fa-link me-1"></i> Links</a>
+          <a class="nav-link nav-pill{% if request.endpoint == 'links' %} active{% endif %}" href="{{ url_for('links') }}"><i class="fas fa-link me-1"></i> Links</a>
         </li>
       </ul>
 
-      <div class="d-flex align-items-center gap-2 nav-actions">
-        <span class="pill badge-dark">Always dark</span>
-        <a class="btn random-btn" href="{{ url_for('random_video') }}" title="Play a random video">
+      <div class="d-flex align-items-center gap-2 nav-actions ms-lg-auto">
+        <form class="nav-search-form" method="get" action="{{ url_for('search_page') }}" role="search">
+          <label class="visually-hidden" for="nav-search-q">Search videos</label>
+          <div class="nav-search-wrap">
+            <i class="fas fa-search nav-search-icon" aria-hidden="true"></i>
+            <input
+              id="nav-search-q"
+              class="form-control form-control-sm nav-search-input"
+              type="search"
+              name="q"
+              value="{{ request.args.get('q', '') }}"
+              placeholder="Search…"
+              aria-label="Search videos"
+              enterkeyhint="search"
+            >
+          </div>
+        </form>
+        <button type="button" class="nav-theme-pill" id="toggle-dark-mode" title="Dark theme" aria-pressed="true">
+          <i class="fas fa-moon nav-theme-icon" aria-hidden="true"></i>
+          <span>Dark</span>
+        </button>
+        <a class="btn random-btn nav-random-cta" href="{{ url_for('random_video') }}" title="Play a random video">
           <i class="fas fa-shuffle me-1"></i>
           Random
         </a>

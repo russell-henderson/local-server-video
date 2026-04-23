@@ -9,8 +9,22 @@ from pathlib import Path
 TRAILING_COPY_RE = re.compile(r"^(?P<stem>.*)\s\((?P<num>2)\)$")
 
 
+def _repo_root() -> Path:
+    """This file lives at scripts/maintenance/remove.py."""
+    return Path(__file__).resolve().parents[2]
+
+
+def _videos_folder() -> Path:
+    """Same default as ServerConfig.video_directory; override with LVS_VIDEO_DIRECTORY (see config.py)."""
+    override = os.environ.get("LVS_VIDEO_DIRECTORY", "").strip()
+    if override:
+        return Path(override).expanduser().resolve()
+    return _repo_root() / "videos"
+
+
 def main() -> int:
-    folder = Path(r"Z:\local-video-server\videos")
+    folder = _videos_folder()
+    print(f"[INFO] Video folder: {folder}")
 
     if not folder.exists() or not folder.is_dir():
         print(f"[ERROR] Folder not found or not a directory: {folder}")

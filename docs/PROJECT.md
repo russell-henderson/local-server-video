@@ -17,6 +17,9 @@ If you update the system in a significant way, you should usually update at leas
 - `README.md`  
   Short public facing introduction plus quick start instructions.
 
+- `docs/PRD.md`  
+  Product requirements: goals, scope, functional expectations aligned with the codebase.
+
 - `docs/PROJECT.md`  
   This file. High level overview, phases, and doc map.
 
@@ -44,8 +47,11 @@ If you update the system in a significant way, you should usually update at leas
 - `docs/QA_TESTING_GUIDE.md`  
   Manual and automated test strategy, including smoke tests for gallery and admin dashboard.
 
+- [`TODO.md`](../TODO.md) (repo root)  
+  **Canonical task queue** for Cursor / Copilot / agents: priority order, acceptance checks, and what to do next.
+
 - `docs/TODOS.md`  
-  Live actionable task list. Short form what to do next.
+  **Docs-facing** task index and supplemental engineering checklists; points readers to the root `TODO.md` for active agent work.
 
 - `TODOv4.md`  
   Long form roadmap and strategy. Background and future plan.
@@ -77,7 +83,7 @@ Key outcomes:
 - Redundant performance, implementation, and planning docs are archived and merged into:
   - `PERFORMANCE.md`
   - `IMPLEMENTATION.md`
-  - `TODOS.md` and `TODOv4.md`
+  - `TODO.md` (root), `docs/TODOS.md`, and `TODOv4.md`
 - `ARCHIVE_INDEX.md` explains what is historical and what replaced it.
 
 Status:
@@ -146,7 +152,7 @@ Key outcomes:
 
 Status:
 
-- To be driven by `docs/TODOS.md` and `TODOv4.md`.
+- To be driven by root `TODO.md` (agents), `docs/TODOS.md` (docs index), and `TODOv4.md` (roadmap).
 
 ---
 
@@ -162,7 +168,8 @@ Use this section as a personal rule set for future you and for any AI agent.
 
 2. When you plan work  
    - Put narrative and strategy into `TODOv4.md`  
-   - Put concrete tasks and checklists into `docs/TODOS.md`
+   - Put **priority-ordered agent tasks** into root `TODO.md` (per `.github` agent instructions)  
+   - Use `docs/TODOS.md` for **docs-facing** summaries, lanes, or supplemental checklists that point to `TODO.md` where needed
 
 3. When you retire or replace a doc  
    - Move the old file into `docs/archive/` or `docs/deferred/`  
@@ -208,6 +215,6 @@ Detailed behavior and endpoint contracts live in:
 
 When you pick up the project next time, start by:
 
-1. Checking `docs/TODOS.md` for active tasks.  
+1. Reading root `TODO.md` for active agent tasks, then `docs/TODOS.md` for supplemental doc-side checklists.  
 2. Confirming that any work you plan fits into the phases above.  
 3. Updating this file only when the overall project state or doc set changes in a meaningful way.

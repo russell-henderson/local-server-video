@@ -499,3 +499,67 @@ That gives you the reorg you want without turning the first patch into chaos.
 6. Then consolidate docs/tests.
 
 That is the strongest version of the plan for this repo as it exists today.
+
+---
+
+## Change Log (Canonical Search)
+
+* Added one shared global search form in `templates/_navbar.html` that submits to canonical `GET /search`.
+* Added canonical search route wiring in `backend/app/media/routes.py` and preserved endpoint compatibility in `backend/app/factory.py`.
+* Implemented canonical DB-backed search behavior in `backend/app/legacy_runtime.py`:
+  * `display_title = video.title if present else video.filename`
+  * indexes `display_title`, raw `filename`, and `tags`
+  * case-insensitive partial matching
+  * multi-token AND semantics across indexed fields
+  * empty query returns helper state with zero results (HTTP 200)
+  * relevance ordering by display-title phrase/title strength/filename/tag-only tiers with stable fallback
+* Added `templates/search.html` using the same card contract as existing grids:
+  * shared tag chips partial
+  * shared metadata/footer row partial
+  * preview block and title rendering contract preserved
+* Updated `static/styles.css` with canonical navbar/search-result styles used by the new shared flow.
+* Updated `.gitignore` to keep source tests tracked and ignore only transient test artifacts (`temp_test_cwd/`).
+* Added official-suite pytest coverage:
+  * `tests/test_smoke_suite.py` (header form + `/search` 200 contract)
+  * `tests/test_regression_suite.py` (display-title fallback, filename/tag/case/multi-token AND behavior, empty helper state, shared card contract markers)
+* Verification run:
+  * `python -m pytest -q tests/test_smoke_suite.py tests/test_regression_suite.py` passed.
+
+---
+
+## Change Log (Root Cleanup Pass)
+
+* Performed a cleanup-only pass (no runtime behavior changes) after canonical search lock.
+* Moved root one-off maintenance scripts to `scripts/maintenance/`:
+  * `file_watcher.py` -> `scripts/maintenance/file_watcher.py`
+  * `remove.py` -> `scripts/maintenance/remove.py`
+* Removed generated root artifacts and archived policy in docs:
+  * removed `SHORT-LIST.md`, `SHORT-LIST.html`, `file-structure.txt`
+  * added `docs/archive/generated/README.md` with regeneration commands/policy
+* Removed unused root Node metadata pair:
+  * `package.json`
+  * `package-lock.json`
+* Removed stray root media artifact:
+  * `EcsnlFipIEdbRJmctwgf--0--8pffq.jpg`
+* Root DB backup artifact was not present at cleanup time:
+  * `video_metadata.db.backup_20251115_111347` already absent from working tree
+* Verification after cleanup:
+  * `python -m pytest -q tests/test_smoke_suite.py tests/test_regression_suite.py` -> passed (29)
+  * `python -c "from main import app; client=app.test_client(); print(client.get('/ping').status_code)"` -> `200`
+  * `docker compose up -d --build` -> success
+  * `docker compose ps` -> services up (`video-server`, `admin-dashboard`, `nginx-proxy`)
+
+---
+
+## Change Log (Header/Nav Polish)
+
+* Polished `templates/_navbar.html` and `static/styles.css` only (no route or handler changes).
+* Restyled **LOCAL** wordmark; removed redundant "Video Server" kicker.
+* Nav order: Home, Tags, Favorites, Popular, Gallery, Links; removed duplicate **Random** from the left nav (Random remains one far-right CTA, same `url_for('random_video')`).
+* Search: still `GET` to `/search` with `name="q"`; compact pill input with magnifying-glass **inside** the field; submit via **Enter** (no separate search button); `id="nav-search-q"` for the visible label.
+* Theme: visible label **Dark**; `id="toggle-dark-mode"` preserved for `static/js/ui.js` hook.
+* Smaller, pill-aligned **Random** CTA and consistent **Dark** chip styling.
+* **Second pass (media-console bar):** elevated glass `nav-shell` (gradient, blur, border, shadow), `body` / `html` top spacing so there is no strip above the sticky bar, **LOCAL** in `.nav-brand-cluster` with optional vertical divider, `request.endpoint`-based `active` on nav links, **Popular** flame warm accent (icon only), recessed search pill with cyan focus ring, **Dark** pill with moon icon + label, **Random** toned down, responsive rules for `nav-actions` / small screens.
+* Verification: `python -m pytest -q tests/test_smoke_suite.py tests/test_regression_suite.py` → 29 passed.
+* **Layout fix (lg+):** Removed `me-auto` from the primary `ul`; `ms-lg-auto` only on `.nav-actions`; default `flex-wrap: nowrap` on `.nav-actions` so Random stays on one row with Search/Dark; `#navbarNav` as a single nowrap flex row with `min-width: 0` / `width: auto` on `.nav-links` to avoid a phantom full-width strip; tighter bar padding; quieter, narrower search field.
+* **Random vertical align:** Global `.btn` (later in `styles.css`) was winning over `.random-btn` with `margin-top: 1rem`, large padding, and `display: inline-block`. Added `.nav-shell .nav-actions .btn.random-btn.nav-random-cta` overrides after `.btn` so Random centers in `.nav-actions` with the compact pill metrics.

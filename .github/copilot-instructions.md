@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-**Local Video Server** is a Flask-based application for managing a personal video library and image gallery with responsive themes, cross-platform support (desktop/mobile/VR), performance optimization, and a Next.js admin dashboard for performance monitoring. Source of truth for current work: `docs/TODO.md` (top-to-bottom priority order).
+**Local Video Server** is a Flask-based application for managing a personal video library and image gallery with responsive themes, cross-platform support (desktop/mobile/VR), performance optimization, and a Next.js admin dashboard for performance monitoring. **Source of truth for priority-ordered work:** `TODO.md` at the **repository root** (agents/Copilot/Cursor). `docs/TODOS.md` is a **docs-facing** supplemental task index only. **`docs/TODO.md`** (under `docs/`) is **legacy** — do not extend; planned archive candidate.
 
 ---
 
@@ -183,12 +183,13 @@ repo/
 │   ├── _player.html             # Reusable player component
 │   └── partials/
 │       └── rating.html          # Rating star partial (included in watch.html)
+├── TODO.md                      # **Canonical agent task queue** (repo root)
 ├── docs/                        # Current, active documentation
 │   ├── ADMIN_DASHBOARD.md       # Admin dashboard spec
 │   ├── IMPLEMENTATION.md        # Architecture + dev workflow
 │   ├── PERFORMANCE.md           # Optimization notes
 │   ├── UI.md                    # UI patterns & player behavior
-│   └── TODO.md                  # **Single source of truth for current work**
+│   └── TODOS.md                 # Docs-facing supplemental task index (not a replacement for root TODO.md)
 ├── archive/                     # Deprecated systems, cost analyses, old designs
 ├── .github/
 │   └── copilot-instructions.md  # This file
@@ -203,18 +204,19 @@ repo/
 
 ---
 
-## Task Workflow (from docs/TODO.md)
+## Task Workflow (from root TODO.md)
 
-1. **Read `docs/TODO.md` top-to-bottom** — tasks are ordered by dependency & priority.
+1. **Read root `TODO.md` top-to-bottom** — tasks are ordered by dependency & priority.
 2. **Pick the highest unchecked task** whose dependencies are met.
 3. **Implement the smallest correct change set** — avoid scope creep.
-4. **Update docs/TODO.md** when done:
+4. **Update root `TODO.md`** when done:
    - Change `- [ ]` to `- [x]`
    - Add a note: `Completed in PR_number (commit abc123).`
-5. **Open a PR** with:
+5. **Optionally** mirror or summarize in **`docs/TODOS.md`** if the doc-side index should stay aligned.
+6. **Open a PR** with:
    - Title: `[scope] short summary` (e.g., `ratings: make stars work on Quest`)
    - Body: summary, linked TODO items, acceptance results, test evidence
-6. **All tests must pass locally & in CI** before merging.
+7. **All tests must pass locally & in CI** before merging.
 
 ---
 
@@ -267,7 +269,7 @@ Run with:
 ## When Uncertain
 
 1. **Propose the smallest, reversible change** — don't refactor unrelated code.
-2. **Check `docs/TODO.md` Acceptance criteria** — implement *exactly* as specified.
+2. **Check root `TODO.md` acceptance criteria** — implement *exactly* as specified.
 3. **Prefer existing patterns** — if the codebase uses a style, follow it (e.g., `data-*` attributes for targeting, `@performance_monitor` for routes).
 4. **Document edge cases** — add a comment explaining *why* a workaround is needed (e.g., "SQLite UNIQUE constraint prevents duplicate ratings").
 5. **Test on multiple platforms** — desktop, mobile, VR if the change affects UI.
@@ -279,13 +281,13 @@ Run with:
 - **Do not remove files** unless the task explicitly instructs it OR a replacement exists.
 - **Do not change API contracts** without updating tests & docs.
 - **Preserve `.github/copilot-instructions.md`** — update it when architectural patterns change.
-- **Always check `docs/TODO.md` first** — it is the single source of truth for priorities.
+- **Always check root `TODO.md` first** for priorities. Use **`docs/TODOS.md`** only as a supplemental docs-side index when helpful.
 
 ---
 
 ## First Actions for New Issues
 
-1. Read `docs/TODO.md` from the top.
+1. Read root **`TODO.md`** from the top.
 2. Check acceptance criteria for the relevant task.
 3. Review the files in "Architecture Essentials" to understand the current implementation.
 4. Run `.\dev.ps1 dev` to start the server locally; test your changes in real-time.

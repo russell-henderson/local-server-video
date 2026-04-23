@@ -870,6 +870,104 @@ def favorites_page():
     )
 
 
+def _normalize_search_tokens(raw_query: str) -> list[str]:
+    """Normalize query into lowercase tokens with whitespace splitting."""
+    return [token for token in raw_query.strip().lower().split() if token]
+
+
+def _display_title_for_video(video: dict) -> str:
+    """Search/display title contract for this pass (no schema migration)."""
+    title = video.get("title")
+    if isinstance(title, str) and title.strip():
+        return title.strip()
+    filename = video.get("filename", "")
+    return filename if isinstance(filename, str) else str(filename)
+
+
+def _match_and_rank_video(video: dict, tokens: list[str], normalized_query: str):
+    """Return sort-key for a match, else None when video does not match."""
+    display_title = _display_title_for_video(video)
+    filename = str(video.get("filename", ""))
+    tags = [str(tag) for tag in (video.get("tags") or [])]
+
+    title_l = display_title.lower()
+    filename_l = filename.lower()
+    tags_l = [tag.lower() for tag in tags]
+
+    for token in tokens:
+        if token in title_l or token in filename_l or any(token in tag for tag in tags_l):
+            continue
+        return None
+
+    title_hits = sum(1 for token in tokens if token in title_l)
+    filename_hits = sum(1 for token in tokens if token in filename_l)
+    tag_hits = sum(1 for token in tokens if any(token in tag for tag in tags_l))
+    exact_phrase_in_title = bool(normalized_query and normalized_query in title_l)
+
+    if exact_phrase_in_title:
+        tier = 0
+    elif title_hits > 0:
+        tier = 1
+    elif filename_hits > 0:
+        tier = 2
+    elif tag_hits > 0 and title_hits == 0 and filename_hits == 0:
+        tier = 3
+    else:
+        tier = 4
+
+    return (
+        tier,
+        -int(exact_phrase_in_title),
+        -title_hits,
+        -filename_hits,
+        -tag_hits,
+        filename_l,
+    )
+
+
+@app.route("/search")
+@performance_monitor("route_search")
+def search_page():
+    """Canonical search destination (DB-backed metadata only)."""
+    query = (request.args.get("q") or "").strip()
+    tokens = _normalize_search_tokens(query)
+    favorites_list = cache.get_favorites()
+
+    if not (cache.use_database and cache.db):
+        abort(503, description="Search requires database-backed runtime metadata.")
+
+    if not tokens:
+        return render_template(
+            "search.html",
+            query=query,
+            videos=[],
+            result_count=0,
+            favorites_list=favorites_list,
+        )
+
+    all_video_data = cache.get_all_video_data(sort_by="date", reverse=True)
+    ranked_results = []
+    for video in all_video_data:
+        sort_key = _match_and_rank_video(video, tokens, " ".join(tokens))
+        if sort_key is None:
+            continue
+        enriched = dict(video)
+        enriched["display_title"] = _display_title_for_video(video)
+        ranked_results.append((sort_key, enriched))
+
+    ranked_results.sort(key=lambda item: item[0])
+    results = [video for _, video in ranked_results]
+    ensure_thumbnails_exist([video["filename"] for video in results])
+
+    return render_template(
+        "search.html",
+        query=query,
+        videos=results,
+        result_count=len(results),
+        favorites_list=favorites_list,
+    )
+
+
 @app.route('/random')
 @performance_monitor("route_random")
 def random_video():

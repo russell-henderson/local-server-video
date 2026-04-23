@@ -1,54 +1,87 @@
-## Local Video Server API
+# Local Video Server API
+
+**Last updated:** 2026-04-23
+
+HTTP surface for the Flask app: HTML pages, JSON APIs, and admin/maintenance endpoints.  
+**Source of truth for registration:** `backend/app/factory.py` (plus blueprint modules and `legacy_runtime` view functions).
+
+**Stable public contracts** also summarized in `docs/SOURCE_OF_TRUTH.md`.
+
+---
 
 ## 1. Purpose and scope
 
-This document describes the HTTP API surface of Local Video Server.
+This document describes the HTTP API of Local Video Server for:
 
-It covers:
+- Human-facing HTML routes
+- JSON APIs used by the browser UI and compatible clients
+- Admin cache and optional analytics/admin tools
 
-- Public gallery and watch routes
-- JSON APIs used by the UI and external clients
-- Admin and metrics endpoints used by the admin dashboard
-- Planned admin APIs that will be added in later phases
-
-The goal is to give the admin dashboard and any clients a stable contract to build against.
+For **product intent** and requirement IDs, see `docs/PRD.md`.  
+For **how routes are wired**, see `docs/ARCHITECTURE.md`.
 
 ---
 
-## Stable Public Routes
+## 2. Stable compatibility routes
 
-- `GET /watch/<filename>`
-- `GET /video/<filename>`
-- `GET /tag/<tag>`
-- `GET /admin/cache/status`
-- `POST /admin/cache/refresh`
-- `GET|POST /api/ratings/<media_hash>`
+These URLs are treated as long-lived contracts for bookmarks and integrations:
+
+| Method | Path | Notes |
+|--------|------|--------|
+| `GET` | `/watch/<path:filename>` | Watch page |
+| `GET` | `/video/<path:filename>` | Stream / video delivery |
+| `GET` | `/tag/<tag>` | Videos for a tag |
+| `GET` \| `POST` | `/api/ratings/<media_hash>` | Canonical ratings JSON |
+| `GET` | `/admin/cache/status` | Cache / metadata status |
+| `POST` | `/admin/cache/refresh` | Trigger cache refresh |
+
+**Search (navbar + results):**
+
+| Method | Path | Notes |
+|--------|------|--------|
+| `GET` | `/search` | Query param **`q`** (optional). Token-AND, case-insensitive match over filename / title / tags; relevance sort. |
 
 ---
 
-## Ratings API
+## 3. Health
 
-These endpoints power the rating widget and are used by web browsers, Quest devices, and potentially other clients.
+| Method | Path | Response |
+|--------|------|----------|
+| `GET` | `/ping` | JSON `{ "status": "ok", ... }` |
 
-### GET `/api/ratings/<media_hash>`
+| Method | Path | Response |
+|--------|------|----------|
+| `GET` | `/favicon.ico` | Empty `204` (no body) |
 
-#### Purpose
+---
 
-Fetch rating information for a specific video.
+## 4. Core HTML / navigation routes
 
-#### Path parameters
+| Method | Path | Endpoint name (Flask) |
+|--------|------|------------------------|
+| `GET` | `/` | `index` |
+| `GET` | `/popular` | `popular_page` |
+| `GET` | `/favorites` | `favorites_page` |
+| `GET` | `/tags` | `tags_page` |
+| `GET` | `/best-of` | `best_of` |
+| `GET` | `/links` | `links` |
+| `GET` | `/search` | `search_page` |
+| `GET` | `/random` | `random_video` |
+| `GET` | `/gallery` | `gallery` |
+| `GET` | `/gallery/groups/<slug>` | `gallery_group` |
+| `GET` | `/gallery/image/<path:filename>` | `serve_gallery_image` |
 
-- `media_hash`: opaque stable identifier derived from filename or file hash.
+---
 
-#### Request
+## 5. Ratings API
 
-- Method: `GET`
-- Headers:
-  - `Accept: application/json`
+Canonical JSON surface for the rating widget and compatible clients.
 
-#### Response
+### `GET /api/ratings/<media_hash>`
 
-- `200 OK` with JSON body:
+- **Path:** `media_hash` — stable opaque id for the media item.
+- **Headers:** `Accept: application/json`
+- **200** body example:
 
 ```json
 {
@@ -58,45 +91,97 @@ Fetch rating information for a specific video.
 }
 ```
 
-- `404` when `media_hash` cannot be resolved.
+- **404** if hash cannot be resolved.
 
-### POST `/api/ratings/<media_hash>`
+### `POST /api/ratings/<media_hash>`
 
-- Body:
+- **Body:**
+
 ```json
 { "value": 4 }
 ```
-- `201` on success with the same summary shape as GET.
-- `400` for invalid value.
-- `404` for unknown hash.
-- `429` when write rate limit is exceeded.
 
-## Legacy Compatibility Route
+- **201** on success (summary shape aligned with GET).
+- **400** invalid payload/value.
+- **404** unknown hash.
+- **429** when write rate limit applies.
 
-### POST `/rate`
+---
 
-- Kept intentionally as a compatibility wrapper during migration.
-- Body:
+## 6. Legacy compatibility route
+
+### `POST /rate`
+
+- Intentional compatibility wrapper during migration.
+- **Body:**
+
 ```json
 { "filename": "example.mp4", "rating": 4 }
 ```
-- Returns:
+
+- **Response:**
+
 ```json
 { "success": true, "rating": 4 }
 ```
 
-## Tags/Favorites Runtime Contract
+---
 
-- `POST /tag`
-- `POST /delete_tag`
-- `GET /api/tags/popular`
-- `GET /api/tags/video?filename=<name>`
-- `POST /favorite`
-- `GET /favorites`
+## 7. Tags and favorites (JSON / actions)
 
-These routes read/write through DB-backed cache services at runtime.
+| Method | Path | Role |
+|--------|------|------|
+| `POST` | `/tag` | Add tag (JSON body) |
+| `POST` | `/delete_tag` | Remove tag |
+| `GET` | `/api/tags/popular` | Popular tags |
+| `GET` | `/api/tags/video` | Query: `filename` |
+| `POST` | `/favorite` | Toggle favorite |
 
-## Admin Cache Contract
+---
 
-- `GET /admin/cache/status` -> metadata status payload with `video_count`.
-- `POST /admin/cache/refresh` -> `{ "success": true, "message": "Cache refreshed" }`.
+## 8. Views and analytics
+
+| Method | Path | Role |
+|--------|------|------|
+| `GET` | `/get_views` | Views data route |
+| `POST` | `/view` | Record view |
+| `POST` | `/analytics/save` | Save analytics payload |
+| `GET` | `/analytics/get/<path:filename>` | Per-file analytics |
+| `GET` | `/analytics/export` | Export |
+| `GET` | `/analytics/stats` | Stats summary |
+
+---
+
+## 9. Gallery JSON APIs
+
+| Method | Path | Role |
+|--------|------|------|
+| `GET` | `/api/gallery` | List images |
+| `GET` \| `POST` | `/api/gallery/groups` | List or create groups |
+| `POST` | `/api/gallery/groups/similar` | Similarity helper |
+| `GET` | `/api/similar/<kind>/<path:filename>` | Similar media |
+| `POST` | `/api/gallery/groups/<int:group_id>/images` | Add images to group |
+| `DELETE` | `/api/gallery/groups/<int:group_id>/images/<path:image_path>` | Remove image path |
+| `DELETE` | `/api/gallery/groups/<int:group_id>/items/<int:item_id>` | Remove item |
+| `PUT` \| `DELETE` | `/api/gallery/groups/<int:group_id>` | Modify or delete group |
+
+---
+
+## 10. Admin / maintenance
+
+| Method | Path | Role |
+|--------|------|------|
+| `GET` | `/admin/cache/status` | Status JSON |
+| `POST` | `/admin/cache/refresh` | Refresh e.g. `{ "success": true, "message": "Cache refreshed" }` |
+| `POST` | `/admin/metadata/prune` | Metadata prune (guarded operation) |
+
+Additional admin capabilities may be registered via `register_admin_routes` in `backend/app/admin/routes.py` — consult that module for endpoints beyond the table above.
+
+---
+
+## 11. Related documents
+
+- `docs/PRD.md` — requirements traceability  
+- `docs/ARCHITECTURE.md` — module and blueprint layout  
+- `docs/SOURCE_OF_TRUTH.md` — runtime DB policy + stable route list  
+- `docs/ADMIN_API_SPEC.md` — extended admin dashboard API notes (if present)  
