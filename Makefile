@@ -1,7 +1,7 @@
 # Local Video Server - Development Makefile
 # Usage: make <target>
 
-.PHONY: help dev prod lint test reindex backup health clean install
+.PHONY: help dev prod lint test reindex backup health clean install dev-up dev-down dev-logs
 
 # Default target
 help:
@@ -10,6 +10,9 @@ help:
 	@echo "Development:"
 	@echo "  make dev        - Start development server with hot reload"
 	@echo "  make prod       - Start production server with optimizations"
+	@echo "  make dev-up     - Start Docker video-server fast loop (no rebuild)"
+	@echo "  make dev-down   - Stop Docker video-server fast loop"
+	@echo "  make dev-logs   - Tail Docker video-server logs"
 	@echo "  make install    - Install/upgrade dependencies"
 	@echo ""
 	@echo "Code Quality:"
@@ -29,6 +32,21 @@ dev:
 	@echo "Server will restart automatically when files change"
 	@echo "Access at: http://localhost:5000"
 	@python main.py --dev --reload
+
+# Docker fast dev loop (uses docker-compose.override.yml)
+dev-up:
+	@echo "🚀 Starting Docker fast dev loop for video-server..."
+	@docker compose up -d video-server
+	@echo "✅ video-server started (bind mount + reload)"
+
+dev-down:
+	@echo "🛑 Stopping Docker fast dev loop for video-server..."
+	@docker compose stop video-server
+	@echo "✅ video-server stopped"
+
+dev-logs:
+	@echo "📜 Tailing video-server logs (Ctrl+C to stop)..."
+	@docker compose logs -f --tail=100 video-server
 
 # Production server with optimizations
 prod:

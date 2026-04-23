@@ -237,6 +237,20 @@ def get_video_path(filename: str) -> Path:
     return VIDEO_DIR / filename
 
 
+def _extract_existing_filename(data: dict | None) -> tuple[str | None, tuple[dict, int] | None]:
+    """Validate filename payload and ensure the referenced video still exists."""
+    payload = data or {}
+    filename = payload.get("filename")
+    if not isinstance(filename, str) or not filename.strip():
+        return None, ({"error": "Missing filename"}, 400)
+
+    normalized = filename.strip()
+    if not get_video_path(normalized).exists():
+        return None, ({"error": "Video not found"}, 404)
+
+    return normalized, None
+
+
 def ensure_thumbnails_exist(video_list: list[str]) -> None:
     """
     Queue thumbnail generation for every file in `video_list`.
@@ -250,6 +264,8 @@ def ensure_thumbnails_exist(video_list: list[str]) -> None:
 
 _SIDECAR_TAG_CACHE = {"ts": 0.0, "tags": [], "by_tag": {}}
 _SIDECAR_TAG_TTL_SECONDS = 10.0
+_TAG_PRUNE_STATE = {"ts": 0.0}
+_TAG_PRUNE_TTL_SECONDS = 30.0
 
 _VIDEO_EXTS = (".mp4", ".mkv", ".mov", ".webm", ".avi", ".m4v")
 
@@ -283,6 +299,59 @@ def _read_tags_from_sidecar(p: Path) -> list[str]:
 
 def _normalize_tag(t: str) -> str:
     return t.strip().lstrip("#").strip()
+
+
+def _canonical_tag_label(raw_tag: str) -> str:
+    """Normalize a raw tag and return canonical display/storage form (#tag)."""
+    normalized = _normalize_tag(raw_tag)
+    return f"#{normalized}" if normalized else ""
+
+
+def _merge_video_tags(*tag_sources: list[str]) -> list[str]:
+    """Case-insensitive per-video tag merge with canonical #tag output."""
+    merged: dict[str, str] = {}
+    for source in tag_sources:
+        if not isinstance(source, list):
+            continue
+        for raw_tag in source:
+            if not isinstance(raw_tag, str):
+                continue
+            canonical = _canonical_tag_label(raw_tag)
+            if not canonical:
+                continue
+            key = canonical.lower()
+            if key not in merged:
+                merged[key] = canonical
+    return sorted(merged.values(), key=lambda x: x.lower())
+
+
+def _sidecar_tags_for_video(filename: str) -> list[str]:
+    """Read tags from an adjacent sidecar file (<video>.<ext>.json)."""
+    sidecar_path = _videos_dir() / f"{filename}.json"
+    if not sidecar_path.exists():
+        return []
+    return _read_tags_from_sidecar(sidecar_path)
+
+
+def _prune_orphaned_tag_entries(force: bool = False) -> None:
+    """
+    Remove cached/DB tag mappings for videos that no longer exist on disk.
+    This keeps /tags and /tag/<tag> from surfacing stale tags/videos.
+    """
+    now = time.time()
+    if not force and (now - _TAG_PRUNE_STATE["ts"] < _TAG_PRUNE_TTL_SECONDS):
+        return
+
+    try:
+        valid_videos = set(cache.get_video_list())
+        tag_map = _tag_map_from_cache()
+        for filename, tag_list in tag_map.items():
+            if filename in valid_videos:
+                continue
+            if isinstance(tag_list, list) and tag_list:
+                cache.update_tags(filename, [])
+    finally:
+        _TAG_PRUNE_STATE["ts"] = now
 
 
 def _merge_tag_names(sidecar_tags: list[str], db_tags: list[str]) -> list[str]:
@@ -374,6 +443,9 @@ def get_sidecar_tags_snapshot(force: bool = False):
         for sc in _iter_sidecars(vdir):
             # convert "<name>.mp4.json" -> "<name>.mp4"
             video_filename = sc.name[:-5]  # strip trailing ".json"
+            if not (vdir / video_filename).exists():
+                # Ignore orphan sidecars for videos that are no longer present.
+                continue
             tags = _read_tags_from_sidecar(sc)
             for raw in tags:
                 tag = _normalize_tag(raw)
@@ -469,7 +541,10 @@ def watch_video(filename: str):
     all_tags = cache.get_tags()
     favorites_list = cache.get_favorites()
 
-    current_tags = all_tags.get(filename, [])
+    current_tags = _merge_video_tags(
+        all_tags.get(filename, []),
+        _sidecar_tags_for_video(filename),
+    )
     related_videos = cache.get_related_videos_optimized(filename, 20)
 
     # Pagination
@@ -609,7 +684,10 @@ def get_views_route():
 def rate_video():
     """Optimized rating with write-through cache"""
     data = request.get_json()
-    filename = data.get('filename')
+    filename, err = _extract_existing_filename(data)
+    if err:
+        body, status = err
+        return body, status
     rating = data.get('rating')
 
     try:
@@ -630,7 +708,10 @@ def rate_video():
 def record_view():
     """Optimized view recording with write-through cache"""
     data = request.get_json()
-    filename = data.get('filename')
+    filename, err = _extract_existing_filename(data)
+    if err:
+        body, status = err
+        return body, status
 
     # Update through cache
     new_view_count = cache.update_view(filename)
@@ -643,7 +724,10 @@ def record_view():
 def add_tag():
     """Optimized tag addition with write-through cache"""
     data = request.get_json()
-    filename = data.get('filename')
+    filename, err = _extract_existing_filename(data)
+    if err:
+        body, status = err
+        return body, status
     tag = data.get('tag', '').strip()
 
     if not tag:
@@ -669,7 +753,10 @@ def add_tag():
 def delete_tag():
     """Optimized tag deletion with write-through cache"""
     data = request.get_json()
-    filename = data.get('filename')
+    filename, err = _extract_existing_filename(data)
+    if err:
+        body, status = err
+        return body, status
     tag = data.get('tag', '').strip()
 
     if not tag:
@@ -698,12 +785,32 @@ def popular_tags_api():
     return jsonify({"tags": tags})
 
 
+@app.route('/api/tags/video')
+def video_tags_api():
+    """Return current merged tags for a single video."""
+    filename = (request.args.get('filename') or '').strip()
+    if not filename:
+        return jsonify({"error": "Missing filename"}), 400
+    if not get_video_path(filename).exists():
+        return jsonify({"error": "Video not found"}), 404
+
+    all_tags = cache.get_tags()
+    merged = _merge_video_tags(
+        all_tags.get(filename, []),
+        _sidecar_tags_for_video(filename),
+    )
+    return jsonify({"filename": filename, "tags": merged})
+
+
 @app.route("/favorite", methods=["POST"])
 @performance_monitor("route_toggle_favorite")
 def toggle_favorite():
     """Optimized favorite toggle with write-through cache"""
     data = request.get_json()
-    filename = data.get("filename")
+    filename, err = _extract_existing_filename(data)
+    if err:
+        body, status = err
+        return body, status
 
     favorites = cache.get_favorites()
 
@@ -786,6 +893,7 @@ def random_video():
 @performance_monitor("route_tags")
 def tags_page():
     """Tags page (canonical read path: cache.get_tags(), with non-destructive fallback merge)."""
+    _prune_orphaned_tag_entries()
     primary_tag_map = _tag_map_from_cache()
     primary_tags = _collect_unique_tags_from_tag_map(primary_tag_map)
     sidecar_tags, _ = get_sidecar_tags_snapshot()
@@ -798,6 +906,7 @@ def tags_page():
 @performance_monitor("route_tag_videos")
 def tag_videos(tag):
     """Tag filtering using canonical per-video tag map, with sidecar/DB fallback merge."""
+    _prune_orphaned_tag_entries()
     normalized_tag = tag.lstrip("#")
     normalized_key = normalized_tag.lower()
 
@@ -846,11 +955,8 @@ def tag_videos(tag):
 
         v = db_video_map.get(fn) or all_video_map.get(fn)
         if not v:
-            v = {
-                "filename": fn,
-                "rating": ratings.get(fn, 0),
-                "views": views.get(fn, 0),
-            }
+            # Skip non-existent videos rather than rendering stale fallback cards.
+            continue
 
         filtered_videos.append(v)
         seen_filenames.add(fn)
@@ -1284,6 +1390,19 @@ def refresh_cache():
         cache.refresh_all()
         return jsonify({"success": True, "message": "Cache refreshed"})
     except OSError as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/admin/metadata/prune', methods=['POST'])
+@performance_monitor("route_admin_metadata_prune")
+def admin_metadata_prune():
+    """Manual one-shot metadata prune for entries whose videos are missing on disk."""
+    try:
+        valid_videos = set(cache.get_video_list())
+        summary = cache.prune_metadata_for_missing_videos(valid_videos)
+        app.logger.info("[PRUNE] metadata summary=%s", summary)
+        return jsonify({"success": True, **summary})
+    except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 

@@ -482,6 +482,132 @@ class VideoCache:
         with self._lock:
             self._last_refresh['popular_tags'] = 0
             self._popular_tags.clear()
+
+    def prune_metadata_for_missing_videos(self, valid_videos: set[str]) -> Dict[str, int]:
+        """
+        One-shot cleanup for metadata rows whose filenames are no longer on disk.
+
+        Returns counters for removed records.
+        """
+        with self._lock:
+            ratings = self.get_ratings()
+            views = self.get_views()
+            tags = self.get_tags()
+            favorites = self.get_favorites()
+
+            stale_filenames = (
+                set(ratings.keys())
+                | set(views.keys())
+                | set(tags.keys())
+                | set(favorites)
+            ) - set(valid_videos)
+
+            summary: Dict[str, int] = {
+                "videos_on_disk": len(valid_videos),
+                "ratings_removed": 0,
+                "views_removed": 0,
+                "favorites_removed": 0,
+                "tag_entries_removed": 0,
+                "tag_values_removed": 0,
+            }
+
+            if not stale_filenames:
+                return summary
+
+            if self.use_database and self.db:
+                placeholders = ",".join("?" for _ in stale_filenames)
+                params = tuple(stale_filenames)
+
+                with self.db.get_connection() as conn:
+                    # Count distinct tags that disappear entirely after removing stale filenames.
+                    tag_values_row = conn.execute(
+                        f"""
+                        SELECT COUNT(DISTINCT vt.tag) AS removed_tag_values
+                        FROM video_tags vt
+                        WHERE vt.filename IN ({placeholders})
+                          AND NOT EXISTS (
+                              SELECT 1
+                              FROM video_tags v2
+                              WHERE v2.tag = vt.tag
+                                AND v2.filename NOT IN ({placeholders})
+                          )
+                        """,
+                        params + params,
+                    ).fetchone()
+                    summary["tag_values_removed"] = int(
+                        (tag_values_row["removed_tag_values"] if tag_values_row else 0) or 0
+                    )
+
+                    ratings_deleted = conn.execute(
+                        f"DELETE FROM ratings WHERE filename IN ({placeholders})",
+                        params,
+                    )
+                    views_deleted = conn.execute(
+                        f"DELETE FROM views WHERE filename IN ({placeholders})",
+                        params,
+                    )
+                    favorites_deleted = conn.execute(
+                        f"DELETE FROM favorites WHERE filename IN ({placeholders})",
+                        params,
+                    )
+                    tags_deleted = conn.execute(
+                        f"DELETE FROM video_tags WHERE filename IN ({placeholders})",
+                        params,
+                    )
+                    conn.commit()
+
+                summary["ratings_removed"] = int(ratings_deleted.rowcount or 0)
+                summary["views_removed"] = int(views_deleted.rowcount or 0)
+                summary["favorites_removed"] = int(favorites_deleted.rowcount or 0)
+                summary["tag_entries_removed"] = int(tags_deleted.rowcount or 0)
+            else:
+                # JSON fallback cleanup path (emergency mode only)
+                before_tag_values = {
+                    t.strip().lower()
+                    for tag_list in tags.values()
+                    for t in tag_list
+                    if isinstance(t, str) and t.strip()
+                }
+
+                for filename in stale_filenames:
+                    if filename in ratings:
+                        ratings.pop(filename, None)
+                        summary["ratings_removed"] += 1
+                    if filename in views:
+                        views.pop(filename, None)
+                        summary["views_removed"] += 1
+                    if filename in tags:
+                        removed = tags.pop(filename, [])
+                        if isinstance(removed, list):
+                            summary["tag_entries_removed"] += len(removed)
+
+                kept_favorites = [f for f in favorites if f in valid_videos]
+                summary["favorites_removed"] = len(favorites) - len(kept_favorites)
+
+                after_tag_values = {
+                    t.strip().lower()
+                    for tag_list in tags.values()
+                    for t in tag_list
+                    if isinstance(t, str) and t.strip()
+                }
+                summary["tag_values_removed"] = len(before_tag_values - after_tag_values)
+
+                self._ratings = ratings
+                self._views = views
+                self._tags = tags
+                self._favorites = kept_favorites
+                self._save_json_file(self.ratings_file, self._ratings)
+                self._save_json_file(self.views_file, self._views)
+                self._save_json_file(self.tags_file, self._tags)
+                self._save_json_file(self.favorites_file, {"favorites": self._favorites})
+
+            self.invalidate_ratings()
+            self.invalidate_views()
+            self.invalidate_tags()
+            self.invalidate_favorites()
+            self.invalidate_popular_tags()
+            self._video_metadata.clear()
+            return summary
     
     def _ensure_videos_in_database(self):
         """Ensure all videos from file system are in database"""
