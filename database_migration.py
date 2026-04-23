@@ -5,6 +5,7 @@ Migrates JSON files to SQLite for better performance with larger datasets
 import sqlite3
 import json
 import os
+from pathlib import Path
 from typing import Dict, List, Optional
 import threading
 from contextlib import contextmanager
@@ -12,8 +13,9 @@ from contextlib import contextmanager
 class VideoDatabase:
     """SQLite database manager for video metadata"""
     
-    def __init__(self, db_path: str = "video_metadata.db"):
+    def __init__(self, db_path: str = "data/video_metadata.db"):
         self.db_path = db_path
+        Path(self.db_path).parent.mkdir(parents=True, exist_ok=True)
         self._lock = threading.RLock()
         self.init_database()
     
@@ -245,6 +247,54 @@ class VideoDatabase:
             
             conn.commit()
             print("Migration completed successfully!")
+
+    def import_sidecar_tags(self, video_dir: str = "videos") -> Dict[str, int]:
+        """
+        Import sidecar tags (<video>.<ext>.json) into video_tags table.
+
+        Runtime contract after import is DB-authoritative reads/writes.
+        """
+        sidecar_count = 0
+        tag_rows_added = 0
+        video_root = Path(video_dir)
+        if not video_root.exists():
+            return {"sidecars_scanned": 0, "tag_rows_added": 0}
+
+        with self.get_connection() as conn:
+            for sidecar in video_root.glob("*.json"):
+                video_filename = sidecar.name[:-5]
+                if not (video_root / video_filename).exists():
+                    continue
+                try:
+                    payload = json.loads(sidecar.read_text(encoding="utf-8"))
+                except Exception:
+                    continue
+
+                tags = payload.get("tags", [])
+                if not isinstance(tags, list):
+                    continue
+                sidecar_count += 1
+                conn.execute(
+                    "INSERT OR IGNORE INTO videos (filename) VALUES (?)",
+                    (video_filename,),
+                )
+                for raw in tags:
+                    if not isinstance(raw, str):
+                        continue
+                    normalized = raw.strip()
+                    if not normalized:
+                        continue
+                    if not normalized.startswith("#"):
+                        normalized = f"#{normalized}"
+                    result = conn.execute(
+                        "INSERT OR IGNORE INTO video_tags (filename, tag) VALUES (?, ?)",
+                        (video_filename, normalized),
+                    )
+                    if result.rowcount:
+                        tag_rows_added += 1
+            conn.commit()
+
+        return {"sidecars_scanned": sidecar_count, "tag_rows_added": tag_rows_added}
     
     def get_all_videos(
         self,

@@ -211,8 +211,7 @@ class RatingsService:
                     """, (filename, value))
                     conn.commit()
             except Exception as e:
-                # Fall back to cache if database fails
-                print(f"Database write failed: {e}, using cache fallback")
+                raise RuntimeError(f"Database write failed for rating update: {e}") from e
         
         # Update cache by invalidating it
         self.cache.invalidate_ratings()

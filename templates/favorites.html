@@ -28,19 +28,19 @@
       <span class="sort-label">Sort</span>
       {% set next_order = 'asc' if current_order == 'desc' else 'desc' %}
       <a class="sort-chip {% if current_sort == 'rating' %}active{% endif %}"
-         href="{{ url_for('favorites', sort='rating', order=next_order if current_sort == 'rating' else 'desc', page=1, per_page=per_page) }}">
+         href="{{ url_for('favorites_page', sort='rating', order=next_order if current_sort == 'rating' else 'desc', page=1, per_page=per_page) }}">
         <i class="fas fa-star me-1"></i> Rating
       </a>
       <a class="sort-chip {% if current_sort == 'title' %}active{% endif %}"
-         href="{{ url_for('favorites', sort='title', order=next_order if current_sort == 'title' else 'asc', page=1, per_page=per_page) }}">
+         href="{{ url_for('favorites_page', sort='title', order=next_order if current_sort == 'title' else 'asc', page=1, per_page=per_page) }}">
         <i class="fas fa-font me-1"></i> Title
       </a>
       <a class="sort-chip {% if current_sort == 'views' %}active{% endif %}"
-         href="{{ url_for('favorites', sort='views', order=next_order if current_sort == 'views' else 'desc', page=1, per_page=per_page) }}">
+         href="{{ url_for('favorites_page', sort='views', order=next_order if current_sort == 'views' else 'desc', page=1, per_page=per_page) }}">
         <i class="fas fa-eye me-1"></i> Views
       </a>
       <a class="sort-chip {% if current_sort == 'date' %}active{% endif %}"
-         href="{{ url_for('favorites', sort='date', order=next_order if current_sort == 'date' else 'desc', page=1, per_page=per_page) }}">
+         href="{{ url_for('favorites_page', sort='date', order=next_order if current_sort == 'date' else 'desc', page=1, per_page=per_page) }}">
         <i class="fas fa-clock me-1"></i> Date Added
       </a>
     </div>
@@ -52,11 +52,11 @@
     <div class="btn-group" role="group" aria-label="Pagination">
       {% if current_page > 1 %}
         <a class="btn btn-outline-secondary btn-sm"
-           href="{{ url_for('favorites', page=current_page-1, per_page=per_page, sort=current_sort, order=current_order) }}">&larr; Prev</a>
+           href="{{ url_for('favorites_page', page=current_page-1, per_page=per_page, sort=current_sort, order=current_order) }}">&larr; Prev</a>
       {% endif %}
       {% if current_page < total_pages %}
         <a class="btn btn-outline-secondary btn-sm"
-           href="{{ url_for('favorites', page=current_page+1, per_page=per_page, sort=current_sort, order=current_order) }}">Next &rarr;</a>
+           href="{{ url_for('favorites_page', page=current_page+1, per_page=per_page, sort=current_sort, order=current_order) }}">Next &rarr;</a>
       {% endif %}
     </div>
   </div>
@@ -87,19 +87,10 @@
       <div class="card-body p-3">
         <div class="d-flex justify-content-between align-items-center mb-2">
           <h5 class="card-title text-truncate mb-0">{{ video.filename }}</h5>
-
-          <!-- Favorite Toggle Button -->
-          <button class="btn btn-sm favorite-btn touch-target"
-                  data-filename="{{ video.filename }}"
-                  title="Toggle Favorite"
-                  aria-label="{% if video.filename in favorites_list %}Remove from favorites{% else %}Add to favorites{% endif %}">
-            <span class="icon favorite-icon{% if video.filename in favorites_list %} is-on{% endif %}"></span>
-          </button>
         </div>
 
-        <!-- Rating widget -->
-        {% with current_rating=video.rating, filename=video.filename, media_hash=video.media_hash or video.filename %}
-          {% include 'partials/rating.html' %}
+        {% with current_rating=video.rating, filename=video.filename, media_hash=video.media_hash or video.filename, favorites_list=favorites_list %}
+          {% include 'partials/video_metadata_controls.html' %}
         {% endwith %}
 
         <!-- Live view count -->
@@ -128,8 +119,6 @@
 {% block extra_scripts %}
   <script src="{{ url_for('static', filename='video-preview-enhanced.js') }}" defer></script>
   <script src="{{ url_for('static', filename='optimized-utils.js') }}" defer></script>
-  <script type="module" src="{{ url_for('static', filename='js/rating.js') }}"></script>
-
   <script>
     /* Rating widget + live view count updates */
     document.addEventListener('DOMContentLoaded', () => {

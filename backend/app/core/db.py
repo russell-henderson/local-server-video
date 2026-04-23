@@ -16,7 +16,7 @@ from pathlib import Path
 class DatabaseSession:
     """Database session management wrapper."""
 
-    def __init__(self, db_path: str = "video_metadata.db"):
+    def __init__(self, db_path: str = "data/video_metadata.db"):
         """
         Initialize database session.
 
@@ -24,6 +24,7 @@ class DatabaseSession:
             db_path: Path to SQLite database file
         """
         self.db_path = Path(db_path)
+        self.db_path.parent.mkdir(parents=True, exist_ok=True)
 
     @contextmanager
     def get_session(self) -> Generator:
@@ -95,7 +96,7 @@ def get_db_session() -> DatabaseSession:
     if _db_session is None:
         db_path = os.environ.get(
             'LVS_DB_PATH',
-            'video_metadata.db'
+            'data/video_metadata.db'
         )
         _db_session = DatabaseSession(db_path)
     return _db_session
@@ -113,7 +114,7 @@ def init_db() -> None:
 class AlembicConfig:
     """Alembic migration configuration."""
 
-    def __init__(self, db_path: str = "video_metadata.db"):
+    def __init__(self, db_path: str = "data/video_metadata.db"):
         """
         Initialize Alembic config.
 
@@ -131,5 +132,5 @@ class AlembicConfig:
 
 def get_alembic_config() -> AlembicConfig:
     """Get Alembic configuration."""
-    db_path = os.environ.get('LVS_DB_PATH', 'video_metadata.db')
+    db_path = os.environ.get('LVS_DB_PATH', 'data/video_metadata.db')
     return AlembicConfig(db_path)

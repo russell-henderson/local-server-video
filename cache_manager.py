@@ -2,14 +2,11 @@
 Cache Manager for Video Server Performance Optimization
 Implements in-memory caching with periodic refresh and write-through caching
 
-Primary Backend: SQLite database (default, use_database=True)
+Primary Backend: SQLite database (required at runtime)
 - All runtime operations read from and write to SQLite database
 - Database is the canonical source of truth for all video metadata
 
-Legacy Fallback: JSON files (emergency fallback only)
-- JSON files are backup snapshots, not the source of truth
-- Only used if database initialization fails (should not occur in normal operation)
-- See docs/DATA_BACKEND.md for architecture details
+JSON files are backup/export artifacts only and are not used for runtime fallback.
 """
 import os
 import json
@@ -53,8 +50,7 @@ class VideoCache:
                 self.db = VideoDatabase()
                 print("[OK] Database backend initialized")
             except (ImportError, OSError) as e:
-                print(f"⚠️  Database initialization failed, falling back to JSON: {e}")
-                self.use_database = False
+                raise RuntimeError(f"Database initialization failed: {e}") from e
         
         # Cache storage
         self._ratings: Dict[str, int] = {}
@@ -145,8 +141,7 @@ class VideoCache:
                 if self.use_database and self.db:
                     self._ratings = self.db.get_ratings_map()
                 else:
-                    # Load from JSON
-                    self._ratings = self._load_json_file(self.ratings_file)
+                    raise RuntimeError("Runtime DB backend unavailable for ratings")
                 self._last_refresh['ratings'] = time.time()
 
             # Record cache metrics if available
@@ -169,8 +164,7 @@ class VideoCache:
                 if self.use_database and self.db:
                     self._views = self.db.get_views_map()
                 else:
-                    # Load from JSON
-                    self._views = self._load_json_file(self.views_file)
+                    raise RuntimeError("Runtime DB backend unavailable for views")
                 self._last_refresh['views'] = time.time()
 
             try:
@@ -192,8 +186,7 @@ class VideoCache:
                 if self.use_database and self.db:
                     self._tags = self.db.get_tags_map()
                 else:
-                    # Load from JSON
-                    self._tags = self._load_json_file(self.tags_file)
+                    raise RuntimeError("Runtime DB backend unavailable for tags")
                 self._last_refresh['tags'] = time.time()
 
             try:
@@ -216,9 +209,7 @@ class VideoCache:
                     # Load from database
                     self._favorites = self.db.get_favorites()
                 else:
-                    # Load from JSON
-                    data = self._load_json_file(self.favorites_file)
-                    self._favorites = data.get("favorites", [])
+                    raise RuntimeError("Runtime DB backend unavailable for favorites")
                 self._last_refresh['favorites'] = time.time()
 
             try:
@@ -369,8 +360,7 @@ class VideoCache:
                 # Save to database
                 self.db.update_rating(filename, rating)
             else:
-                # Save to JSON
-                self._save_json_file(self.ratings_file, self._ratings)
+                raise RuntimeError("Runtime DB backend unavailable for rating writes")
             
     
     def update_view(self, filename: str):
@@ -381,11 +371,7 @@ class VideoCache:
                 new_count = self.db.increment_view_count(filename)
                 self._views[filename] = new_count
             else:
-                # Manual increment for JSON
-                current_views = self._views.get(filename, 0) + 1
-                self._views[filename] = current_views
-                self._save_json_file(self.views_file, self._views)
-                new_count = current_views
+                raise RuntimeError("Runtime DB backend unavailable for view writes")
             
             return new_count
     
@@ -402,8 +388,7 @@ class VideoCache:
                 for tag in tags:
                     self.db.add_tag(filename, tag)
             else:
-                # Save to JSON
-                self._save_json_file(self.tags_file, self._tags)
+                raise RuntimeError("Runtime DB backend unavailable for tag writes")
             
             # Popular tags depend on overall usage counts
             self.invalidate_popular_tags()
@@ -425,8 +410,7 @@ class VideoCache:
                     if fav not in current_favorites:
                         self.db.toggle_favorite(fav)  # Add
             else:
-                # Save to JSON
-                self._save_json_file(self.favorites_file, {"favorites": favorites})
+                raise RuntimeError("Runtime DB backend unavailable for favorite writes")
     
     def refresh_all(self):
         """Force refresh all cache entries"""
@@ -725,80 +709,20 @@ class VideoCache:
         """Get videos filtered by tag with database optimization"""
         if self.use_database and self.db:
             return self._filter_existing(self.db.get_videos_by_tag(tag))
-        else:
-            # Fallback to cache-based filtering
-            all_tags = self.get_tags()
-            filtered_videos = []
-            for video, video_tags in all_tags.items():
-                if any(tag.lower() in t.lower() for t in video_tags):
-                    metadata = self.get_video_metadata(video)
-                    if metadata:
-                        filtered_videos.append(metadata)
-            return filtered_videos
+        raise RuntimeError("Runtime DB backend unavailable for tag filtering")
     
     def get_related_videos_optimized(self, filename: str, limit: int = 20) -> List[Dict]:
         """Get related videos with database optimization"""
         if self.use_database and self.db:
             return self._filter_existing(self.db.get_related_videos(filename, limit))
-        else:
-            # Fallback to cache-based related video logic
-            all_tags = self.get_tags()
-            current_tags = all_tags.get(filename, [])
-            if not current_tags:
-                return []
-
-            current_tags_set = set(current_tags)
-            related_videos: List[Dict] = []
-
-            # Heuristic scoring to make recommendations feel smarter without DB support
-            for video, video_tags in all_tags.items():
-                if video == filename:
-                    continue
-                overlap = len(current_tags_set & set(video_tags))
-                if overlap <= 0:
-                    continue
-
-                metadata = self.get_video_metadata(video)
-                if not metadata:
-                    continue
-
-                rating = float(metadata.get('rating', 0) or 0)
-                views = int(metadata.get('views', 0) or 0)
-                recency = float(metadata.get('added_date', 0) or 0)
-
-                score = (
-                    overlap * 3.0
-                    + rating * 0.6
-                    + min(views, 5000) / 500.0
-                    + (recency / 1e9) * 0.1  # lightweight bias toward newer items
-                )
-
-                metadata['tag_overlap'] = overlap
-                metadata['related_score'] = score
-                related_videos.append(metadata)
-
-            related_videos.sort(
-                key=lambda x: (
-                    x.get('related_score', 0),
-                    x.get('tag_overlap', 0),
-                    x.get('rating', 0),
-                    x.get('views', 0),
-                ),
-                reverse=True,
-            )
-            return related_videos[:limit]
+        raise RuntimeError("Runtime DB backend unavailable for related videos")
     
     def get_all_unique_tags(self) -> List[str]:
         """Get all unique tags with database optimization"""
         if self.use_database and self.db:
             return self.db.get_all_tags()
         else:
-            # Fallback to cache-based tag extraction
-            all_tags = self.get_tags()
-            unique_tags = set()
-            for tag_list in all_tags.values():
-                unique_tags.update(tag_list)
-            return sorted(unique_tags, key=lambda x: x.lower())
+            raise RuntimeError("Runtime DB backend unavailable for unique tag reads")
 
     def get_popular_tags(self, limit: int = 50) -> List[Dict[str, Any]]:
         """Return most-used tags with basic caching."""
@@ -813,15 +737,7 @@ class VideoCache:
                 if self.use_database and self.db:
                     self._popular_tags = self.db.get_popular_tags(target_limit)
                 else:
-                    counter: Counter = Counter()
-                    all_tags = self.get_tags()
-                    for tag_list in all_tags.values():
-                        counter.update(tag_list)
-                    most_common = counter.most_common(target_limit)
-                    self._popular_tags = [
-                        {'tag': tag, 'count': count}
-                        for tag, count in most_common
-                    ]
+                    raise RuntimeError("Runtime DB backend unavailable for popular tags")
                 self._popular_tag_cache_limit = target_limit
                 self._last_refresh['popular_tags'] = time.time()
 

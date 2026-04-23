@@ -1,0 +1,16 @@
+{# Shared metadata controls contract: favorite + rating #}
+{% set favorite_filenames = favorites_list|default([], true) %}
+<div class="video-metadata-controls d-flex align-items-center gap-2">
+  <button
+    class="btn btn-sm favorite-btn touch-target"
+    data-filename="{{ filename }}"
+    title="Toggle Favorite"
+    aria-label="{% if filename in favorite_filenames %}Remove from favorites{% else %}Add to favorites{% endif %}"
+  >
+    <span class="icon favorite-icon{% if filename in favorite_filenames %} is-on{% endif %}"></span>
+  </button>
+
+  {% with current_rating=current_rating, filename=filename, media_hash=media_hash %}
+    {% include "partials/rating.html" %}
+  {% endwith %}
+</div>

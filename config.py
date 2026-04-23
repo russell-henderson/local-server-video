@@ -25,8 +25,8 @@ class ServerConfig:
     supported_formats: list = field(default_factory=lambda: ['.mp4', '.avi', '.mkv', '.mov', '.wmv'])
     
     # Database settings
-    metadata_db: str = "video_metadata.db"
-    cache_db: str = "video_cache.db"
+    metadata_db: str = "data/video_metadata.db"
+    cache_db: str = "data/video_search.db"
     
     # Performance settings
     cache_timeout: int = 3600  # 1 hour

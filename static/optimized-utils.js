@@ -133,11 +133,7 @@ class OptimizedUtils {
                 this.handleFavoriteClick(favoriteBtn, e);
             }
 
-            // Rating star clicks
-            const ratingStar = e.target.closest('.rating i[data-value]');
-            if (ratingStar) {
-                this.handleRatingClick(ratingStar, e);
-            }
+            // Ratings are handled by static/js/ratings.js to avoid duplicate writes.
         });
 
         // Delegate video events
@@ -191,33 +187,6 @@ class OptimizedUtils {
                 if (data.success) {
                     // Update all favorite buttons for this video
                     this.updateFavoriteButtons(filename, data.favorites.includes(filename));
-                }
-            })
-            .catch(console.error);
-        });
-    }
-
-    // Consolidated rating handler
-    handleRatingClick(star, event) {
-        event.preventDefault();
-        event.stopPropagation();
-        
-        const rating = parseInt(star.dataset.value);
-        const container = star.closest('.rating');
-        const filename = container.dataset.filename;
-        
-        if (!filename) return;
-
-        this.throttle(`rating-${filename}`, () => {
-            fetch('/rate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ filename, rating })
-            })
-            .then(r => r.json())
-            .then(data => {
-                if (data.success) {
-                    this.updateRatingDisplay(container, rating);
                 }
             })
             .catch(console.error);
@@ -367,16 +336,17 @@ class OptimizedUtils {
         } catch (e) { /* ignore logging errors in older consoles */ }
 
         buttons.forEach(btn => {
-            const icon = btn.querySelector('i');
+            const icon = btn.querySelector('.icon, i');
             if (!icon) return;
 
-            // Preserve any existing classes (e.g., fa-heart, text-danger) and only toggle the style family
-            // Remove existing style families if present
-            icon.classList.remove('fas', 'far', 'fal', 'fab', 'fad');
-            // Add the requested family and ensure base heart class exists
-            icon.classList.add(isFavorite ? 'fas' : 'far');
-            if (!icon.classList.contains('fa-heart')) icon.classList.add('fa-heart');
-            if (!icon.classList.contains('text-danger')) icon.classList.add('text-danger');
+            if (icon.classList.contains('icon')) {
+                icon.classList.toggle('is-on', isFavorite);
+            } else {
+                icon.classList.remove('fas', 'far', 'fal', 'fab', 'fad');
+                icon.classList.add(isFavorite ? 'fas' : 'far');
+                if (!icon.classList.contains('fa-heart')) icon.classList.add('fa-heart');
+                if (!icon.classList.contains('text-danger')) icon.classList.add('text-danger');
+            }
 
             // Set ARIA and data attributes for easier visual debugging and CSS hooks
             try { btn.setAttribute('aria-pressed', isFavorite ? 'true' : 'false'); } catch (e) {}

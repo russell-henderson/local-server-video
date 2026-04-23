@@ -20,16 +20,9 @@
       <div class="card-body p-2">
         <h5 class="card-title text-truncate">{{ video.filename }}</h5>
         
-        <!-- Rating widget -->
-        <div class="rating" data-filename="{{ video.filename }}" role="group" aria-label="Rate this video">
-          {% for i in range(1,6) %}
-            <i class="{{ 'fas' if i<=video.rating else 'far' }} fa-star"
-               data-value="{{ i }}"
-               role="button"
-               tabindex="0"
-               aria-label="Rate {{ i }} star{% if i != 1 %}s{% endif %}"></i>
-          {% endfor %}
-        </div>
+        {% with current_rating=video.rating, filename=video.filename, media_hash=video.media_hash or video.filename, favorites_list=favorites_list %}
+          {% include 'partials/video_metadata_controls.html' %}
+        {% endwith %}
         
         <!-- View count -->
         <p class="view-count"

@@ -71,15 +71,9 @@
     
     <!-- Player controls (no subtitle system) -->
 
-    <!-- Fullscreen button -->
-    <!-- Favorite toggle (also included here so it remains visible when the video element is moved into an immersive/VR container) -->
-    <button class="btn btn-sm favorite-btn player-favorite-btn" data-filename="{{ filename }}" title="Toggle Favorite" aria-label="{% if filename in favorites_list %}Remove from favorites{% else %}Add to favorites{% endif %}">
-      <i class="fa{% if filename in favorites_list %}s{% else %}r{% endif %} fa-heart text-danger"></i>
-    </button>
-
-    <!-- Compact rating widget placed in player controls so it remains visible in fullscreen/VR -->
-    {% with current_rating=ratings.get(filename, 0) if (ratings is defined) else 0, filename=filename, media_hash=media_hash %}
-      {% include 'partials/rating.html' %}
+    <!-- Fullscreen-safe metadata controls for desktop/mobile/VR -->
+    {% with current_rating=ratings.get(filename, 0) if (ratings is defined) else 0, filename=filename, media_hash=media_hash, favorites_list=favorites_list %}
+      {% include 'partials/video_metadata_controls.html' %}
     {% endwith %}
 
     <button data-action="fullscreen" aria-label="Fullscreen" title="Fullscreen (F)">

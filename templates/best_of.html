@@ -37,23 +37,12 @@
         <div class="card-body p-2">
           <div class="d-flex justify-content-between align-items-center mb-1">
             <h5 class="card-title text-truncate mb-0">{{ video.filename }}</h5>
-
-            <!-- Favorite Toggle Button -->
-            <button class="btn btn-sm favorite-btn"
-                    data-filename="{{ video.filename }}"
-                    title="Toggle Favorite"
-                    aria-label="{% if video.filename in favorites_list %}Remove from favorites{% else %}Add to favorites{% endif %}">
-              <span class="icon favorite-icon{% if video.filename in favorites_list %} is-on{% endif %}"></span>
-            </button>
           </div>
 
-          <!-- Rating widget -->
-          {% with current_rating=video.rating, filename=video.filename, media_hash=video.filename %}
-            {% include 'partials/rating.html' %}
+          {% with current_rating=video.rating, filename=video.filename, media_hash=video.media_hash or video.filename, favorites_list=favorites_list %}
+            {% include 'partials/video_metadata_controls.html' %}
           {% endwith %}
-          </div>
 
-          <!-- Live view count -->
           <p class="view-count"
              id="view-count-{{ video.filename|replace('.', '-') }}">
              Views: {{ video.views }}
@@ -65,7 +54,7 @@
   </div>
 {% else %}
   <div class="text-center mt-5">
-    <div style="font-size: 4rem; opacity: 0.5; margin-bottom: 1rem;">🏆</div>
+    <div class="display-1 opacity-50 mb-3">🏆</div>
     <h2>No highly rated videos yet</h2>
     <p class="text-muted">Videos with 4+ star ratings will appear here.</p>
     <p class="text-muted">Start rating your videos to build your "Best of" collection!</p>
@@ -89,35 +78,9 @@
   <script src="{{ url_for('static', filename='dark.js') }}" defer></script>
 
   <script>
-    /* Rating widget + live view count updates */
+    /* Live view count updates (ratings handled by shared static/js/ratings.js) */
     document.addEventListener('DOMContentLoaded', () => {
       // Video preview is now handled by video-preview-enhanced.js
-      
-      // Rating functionality
-      document.querySelectorAll('.rating i').forEach(star => {
-        star.addEventListener('click', () => {
-          const rating = star.dataset.value;
-          const container = star.parentElement;
-          const filename = container.dataset.filename;
-
-          fetch('/rate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ filename, rating })
-          })
-          .then(r => r.json())
-          .then(data => {
-            if (data.success) {
-              container.querySelectorAll('i').forEach((s, idx) => {
-                s.className = (idx + 1) <= rating ? 'fas fa-star' : 'far fa-star';
-              });
-            }
-          })
-          .catch(console.error);
-        });
-      });
-
-      // Live view counts
       fetch('/get_views')
         .then(r => r.json())
         .then(data => {

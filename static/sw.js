@@ -3,7 +3,7 @@ const CACHE_NAME = 'local-video-server-v1';
 const STATIC_CACHE_URLS = [
   '/',
   '/static/styles.css',
-  '/static/js/rating.js',
+  '/static/js/ratings.js',
   '/static/js/optimized-utils.js',
   '/static/js/video-preview-enhanced.js',
   // Add other critical static assets

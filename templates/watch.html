@@ -12,17 +12,8 @@
 <div class="video-info mb-4 d-flex flex-wrap align-items-center">
   <h2 class="video-title me-3 mb-2 mb-sm-0">{{ filename }}</h2>
 
-  <!-- Favorite toggle button -->
-  <button class="btn btn-sm favorite-btn me-3 mb-2 mb-sm-0"
-          data-filename="{{ filename }}"
-          title="Toggle Favorite"
-          aria-label="{% if filename in favorites_list %}Remove from favorites{% else %}Add to favorites{% endif %}">
-    <span class="icon favorite-icon{% if filename in favorites_list %} is-on{% endif %}"></span>
-  </button>
-
-  <!-- Rating -->
-  {% with current_rating=ratings.get(filename, 0), filename=filename, media_hash=media_hash %}
-    {% include 'partials/rating.html' %}
+  {% with current_rating=ratings.get(filename, 0), filename=filename, media_hash=media_hash, favorites_list=favorites_list %}
+    {% include 'partials/video_metadata_controls.html' %}
   {% endwith %}
 
   <!-- View count -->
@@ -31,7 +22,7 @@
   </div>
 
   <!-- Tags -->
-  <div class="tags-container flex-grow-1">
+  <div class="tags-container grow">
     <div id="existing-tags" class="mb-2" data-filename="{{ filename }}" data-tags='{{ tags|tojson|safe }}'>
       {% for tag in tags %}
         <span class="badge tag-badge" data-tag="{{ tag }}">
@@ -79,11 +70,9 @@
         <div class="card-body p-2">
           <h5 class="card-title text-truncate">{{ video.filename }}</h5>
           <p class="mb-0 small view-count">Views: {{ video.views }}</p>
-          <div class="rating small">
-            {% for i in range(1,6) %}
-              <i class="{{ 'fas' if i<=video.rating else 'far' }} fa-star"></i>
-            {% endfor %}
-          </div>
+          {% with current_rating=video.rating, filename=video.filename, media_hash=video.media_hash or video.filename, favorites_list=favorites_list %}
+            {% include 'partials/video_metadata_controls.html' %}
+          {% endwith %}
         </div>
       </div>
     </div>
@@ -98,14 +87,7 @@
 <!-- Pagination for related videos -->
 {% if total_pages > 1 %}
 <nav class="mb-4">
-  <ul class="pagination justify-content-center">
-    {% for p in range(1, total_pages + 1) %}
-    <li class="page-item {% if p == page %}active{% endif %}">
-      <a class="page-link"
-         href="{{ url_for('watch_video', filename=filename, page=p) }}">{{ p }}</a>
-    </li>
-    {% endfor %}
-  </ul>
+  <ul class="pagination justify-content-center">{%- for p in range(1, total_pages + 1) -%}<li class="page-item {% if p == page %}active{% endif %}"><a class="page-link" href="{{ url_for('watch_video', filename=filename, page=p) }}">{{ p }}</a></li>{%- endfor -%}</ul>
 </nav>
 {% endif %}
 
@@ -117,7 +99,6 @@
 {% block extra_scripts %}
   <!-- Watch page specific scripts -->
   <script src="{{ url_for('static', filename='js/ui.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/rating.js') }}" type="module"></script>
   <script src="{{ url_for('static', filename='video-player-controls.js') }}" defer></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -143,7 +124,7 @@
         });
       }
 
-          /* Ratings are handled by shared static/js/rating.js (ES6 module) */
+          /* Ratings are handled by shared static/js/ratings.js (delegated) */
 
       /* Tag management: handled by shared static/js/tags.js (delegated) */
     });

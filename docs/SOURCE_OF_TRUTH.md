@@ -1,96 +1,49 @@
 # Source Of Truth
 
-Last updated: April 14, 2026
-Repository: `local-video-server`
+Last updated: 2026-04-23
 
-This file is the canonical implementation reference.  
-If another doc conflicts with this file, treat this file and code as authoritative.
+## Runtime Policy
 
-## 1. Canonical Runtime Entrypoints
-- Local runtime: `python main.py`
-- Docker runtime: `Dockerfile` `CMD ["python", "main.py"]`
-- Flask app bootstrap: `main.py`
+- Runtime metadata authority is SQLite only.
+- Runtime DB paths:
+  - `data/video_metadata.db`
+  - `data/video_search.db`
+- Automatic JSON fallback is not allowed in runtime code.
+- JSON files are explicit export/backup artifacts only.
 
-## 2. Actual Docker Topology
-Defined in `docker-compose.yml`:
-- `video-server`
-  - builds from repo root Dockerfile
-  - exposes `5000:5000`
-- `nginx-proxy`
-  - image `nginx:alpine`
-  - exposes `8080:80`
-  - proxies/serves static assets
-- `admin-dashboard`
-  - builds from `admin-dashboard/Dockerfile`
-  - exposes `3000:3000`
-  - reads app metadata/video/image volumes as read-only
+## Public Route Contract (Stable)
 
-No additional production services are currently defined.
-
-## 3. Metadata Authority And Fallback
-- Primary metadata authority: SQLite (`video_metadata.db`) via:
-  - `database_migration.py` (`VideoDatabase`)
-  - `cache_manager.py` (`VideoCache`)
-- JSON files are fallback/backups only:
-  - `ratings.json`, `views.json`, `tags.json`, `favorites.json`
-- Runtime intent:
-  - DB-first for reads/writes
-  - JSON path used only when DB is unavailable
-
-## 4. Admin/Performance Surfaces
-Current endpoints include:
-- `/admin/performance`
-- `/admin/performance/json`
-- `/api/admin/performance/routes`
-- `/api/admin/performance/workers`
-- `/api/admin/performance/active`
+- `/watch/<filename>`
+- `/video/<filename>`
+- `/tag/<tag>`
+- `/api/ratings/<media_hash>`
 - `/admin/cache/status`
 - `/admin/cache/refresh`
 
-`psutil` behavior:
-- installed: full system metric collection
-- missing: graceful fallback (same output keys with numeric defaults), no import-time failure
+## Ratings/Favorites/Tags Guardrails
 
-## 5. Ratings API Contract (Current)
-Route prefix: `/api/ratings/<path:media_hash>`
+- Canonical ratings controller is `static/js/ratings.js`.
+- Keep legacy `/rate` compatibility path until every ratings surface is validated against the canonical flow.
+- Favorites endpoint is `favorites_page` for template `url_for(...)` wiring.
+- Runtime tags reads/writes are DB-backed (with explicit sidecar import path).
+- Metadata controls contract is hard-required on every video surface:
+  - favorite icon + rating stars
+  - DB-backed current visual state
+  - interactive updates via shared controller path
+- Rendering contract is shared and centralized:
+  - `templates/partials/video_metadata_controls.html` for favorite+rating controls
+  - `templates/partials/rating.html` for star rendering internals
+  - no page-specific duplicate or static-only metadata control markup
 
-### GET
-- Unknown/unresolved `media_hash`: `404`
-- Known hash: `200` with rating summary payload
+## Deployment Topology
 
-### POST
-- Unknown/unresolved `media_hash`: `404`
-- Invalid payload (`value` missing/type/range invalid): `400`
-- Rate limit exceeded: `429` (unchanged behavior)
-- Known hash + valid payload: `201` with unchanged summary shape
+- Flask + Docker Compose remain the runtime architecture.
+- `docker-compose.yml` mounts DB files from `./data` into `/app/data`.
+- `LVS_DB_PATH` points to `data/video_metadata.db`.
 
-## 6. Current Status Labels
+## Test Reporting Surfaces
 
-### Implemented now
-- Flask media server routes and watch/listing flows
-- SQLite-first metadata cache and persistence
-- Ratings API hash contract above
-- Admin performance surfaces and caching
-- Optional `psutil` fallback mode
+- `tests/test_smoke_suite.py`
+- `tests/test_regression_suite.py`
 
-### Optional / partially implemented
-- System metrics detail quality depends on `psutil` availability
-- Some large or legacy test modules remain noisy/legacy and are not baseline-gated
-
-### Planned / not yet canonicalized
-- Broader full-suite test harmonization beyond current safe baseline
-- Additional doc consolidation of older historical files in `docs/`
-
-## 7. Safe Regression Baseline
-Use these commands as current validation baseline:
-
-```powershell
-python -m compileall -q main.py cache_manager.py config.py database_migration.py file_watcher.py thumbnail_manager.py backend tests
-python -m pytest -q tests/test_ratings_api_contract_phase2.py tests/test_admin_performance_routes.py tests/test_basic.py tests/test_routes.py tests/test_rate_limiting.py tests/test_cors_support.py
-```
-
-## 8. Documentation Hierarchy
-1. `docs/SOURCE_OF_TRUTH.md` (this file)
-2. `README.md` (operator/developer quickstart)
-3. `BACKEND_DETAILED.md` (backend detail snapshot)
-4. Historical/planning docs (`PROJECT_ANALYSIS_REPORT.md`, `SUGGESTED_CHANGES.md`, phase notes)
+Legacy fragmented suite reporting is retired; release validation reports through the two suites above.

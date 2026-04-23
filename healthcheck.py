@@ -18,7 +18,7 @@ from typing import Dict, Any, Tuple, List, Optional
 CFG = {
     "APP_HOST": os.getenv("LVS_HOST", "127.0.0.1"),
     "APP_PORT": int(os.getenv("LVS_PORT", "8080")),
-    "DB_PATH": Path(os.getenv("LVS_DB_PATH", r"V:\video-server\app.db")).as_posix(),
+    "DB_PATH": Path(os.getenv("LVS_DB_PATH", r"data/video_metadata.db")).as_posix(),
     "VIDEOS_DIR": Path(
         os.getenv("LVS_VIDEOS_DIR", r"V:\local-video-server\videos")
     ).as_posix(),
