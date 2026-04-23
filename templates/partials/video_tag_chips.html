@@ -1,0 +1,24 @@
+{# Shared tag-chip contract for video cards and watch header #}
+{% set source_tags = tags|default([], true) %}
+{% set scope = tag_scope|default('card', true) %}
+{% if source_tags and source_tags|length > 0 %}
+  {% if max_tags is not none %}
+    {% set visible_tags = source_tags[:max_tags] %}
+  {% else %}
+    {% set visible_tags = source_tags %}
+  {% endif %}
+  <div class="video-tag-chips" data-tag-scope="{{ scope }}">
+    {% for raw_tag in visible_tags %}
+      {% set tag_value = raw_tag|string %}
+      {% set clean_tag = tag_value.lstrip('#') %}
+      <a class="tag-chip video-tag-chip"
+         href="{{ url_for('tag_videos', tag=clean_tag) }}">
+        <span class="hash">#</span>
+        <span class="tag-label">{{ clean_tag }}</span>
+      </a>
+    {% endfor %}
+    {% if max_tags is not none and show_overflow_count and source_tags|length > max_tags %}
+      <span class="tag-chip video-tag-chip tag-chip-overflow">+{{ source_tags|length - max_tags }}</span>
+    {% endif %}
+  </div>
+{% endif %}

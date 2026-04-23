@@ -534,6 +534,129 @@ body {
   font-size: 1.5rem;
 }
 
+/* Shared video-card metadata footer row */
+.video-metadata-row {
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
+  align-items: center;
+  column-gap: 0.5rem;
+  width: 100%;
+}
+
+.video-metadata-left {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.video-metadata-row .favorite-btn {
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  min-height: 38px;
+  padding: 0;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.video-metadata-row .favorite-icon {
+  font-size: 17px;
+}
+
+.video-metadata-center {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
+.video-metadata-center .rating {
+  gap: 0.55rem;
+}
+
+.video-metadata-center .rating .star {
+  font-size: 19px;
+  margin: 0;
+}
+
+.video-metadata-right {
+  min-width: 72px;
+  justify-self: end;
+}
+
+.video-metadata-right .view-count {
+  white-space: nowrap;
+  text-align: right;
+}
+
+/* Shared video tag chips row */
+.video-tag-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.35rem;
+}
+
+.video-tag-chips .video-tag-chip {
+  font-size: 0.75rem;
+  padding: 0.24rem 0.5rem;
+  border-radius: 999px;
+  line-height: 1.1;
+  text-decoration: none;
+}
+
+.video-tag-chips .video-tag-chip.tag-chip-overflow {
+  opacity: 0.85;
+  cursor: default;
+  pointer-events: none;
+}
+
+.video-tag-chips[data-tag-scope="main"] {
+  margin-bottom: 0.75rem;
+}
+
+/* Shared icon glyphs used by metadata/nav controls */
+.icon {
+  display: inline-block;
+  width: 1em;
+  line-height: 1;
+  text-align: center;
+}
+
+.favorite-icon::before {
+  content: "♡";
+}
+
+.favorite-icon.is-on::before {
+  content: "♥";
+}
+
+.favorite-icon {
+  color: var(--secondary-color);
+}
+
+.favorite-icon.is-on {
+  color: #ff5f8a;
+}
+
+.rating .star-icon::before {
+  content: "★";
+}
+
+.rating .star-icon {
+  color: var(--secondary-color);
+}
+
+.rating .star-icon.is-on {
+  color: #ffd055;
+}
+
+.nav-pill .favorite-icon {
+  margin-right: 0.35rem;
+}
+
 a {
   color: var(--accent-color);
 }
@@ -985,6 +1108,9 @@ a:hover {
   margin-bottom: 0;
   border: 1px solid rgba(255, 255, 255, 0.04);
   min-height: 380px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .video-card .card-img-top {
@@ -997,7 +1123,20 @@ a:hover {
 .video-card .card-body {
   display: flex;
   flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
   gap: 0.4rem;
+}
+
+/* Ensure non-.video-card h-100 cards used for related/tag/best-of also stretch body */
+.card.h-100 {
+  display: flex;
+  flex-direction: column;
+}
+
+.card.h-100 > .card-body {
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .video-thumb-link {

@@ -67,11 +67,13 @@
             </div>
           </div>
         </a>
-        <div class="card-body p-2">
-          <h5 class="card-title text-truncate">{{ video.filename }}</h5>
-          <p class="mb-0 small view-count">Views: {{ video.views }}</p>
-          {% with current_rating=video.rating, filename=video.filename, media_hash=video.media_hash or video.filename, favorites_list=favorites_list %}
-            {% include 'partials/video_metadata_controls.html' %}
+        <div class="card-body p-2 d-flex flex-column">
+          {% with tags=video.tags, max_tags=3, show_overflow_count=True, tag_scope='card' %}
+            {% include 'partials/video_tag_chips.html' %}
+          {% endwith %}
+          <h5 class="card-title text-truncate mb-2">{{ video.filename }}</h5>
+          {% with current_rating=video.rating, current_views=video.views, filename=video.filename, media_hash=video.media_hash or video.filename, favorites_list=favorites_list %}
+            {% include 'partials/video_metadata_row.html' %}
           {% endwith %}
         </div>
       </div>

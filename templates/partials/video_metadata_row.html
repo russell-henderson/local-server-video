@@ -1,0 +1,28 @@
+{# Shared card footer row contract: favorite | rating | views #}
+{% set favorite_filenames = favorites_list|default([], true) %}
+{% set views_value = current_views|default(0, true) %}
+<div class="video-metadata-row mt-auto">
+  <div class="video-metadata-left">
+    <button
+      class="btn btn-sm favorite-btn touch-target"
+      data-filename="{{ filename }}"
+      title="Toggle Favorite"
+      aria-label="{% if filename in favorite_filenames %}Remove from favorites{% else %}Add to favorites{% endif %}"
+    >
+      <span class="icon favorite-icon{% if filename in favorite_filenames %} is-on{% endif %}"></span>
+    </button>
+  </div>
+
+  <div class="video-metadata-center">
+    {% with current_rating=current_rating, filename=filename, media_hash=media_hash %}
+      {% include "partials/rating.html" %}
+    {% endwith %}
+  </div>
+
+  <div class="video-metadata-right">
+    <p class="view-count mb-0 text-end"
+       id="view-count-{{ filename|replace('.', '-') }}">
+       Views: {{ views_value }}
+    </p>
+  </div>
+</div>
