@@ -127,12 +127,35 @@
   // On load: ensure delete handlers are effectively delegated (server-rendered tags stay usable)
   document.addEventListener('DOMContentLoaded', () => {
     const container = document.getElementById('existing-tags');
-    if (container && container.dataset.tags) {
-      try {
-        const tags = JSON.parse(container.dataset.tags);
-        renderTags(container, tags);
-      } catch (e) {
-        // ignore parse errors and leave server rendered markup
+    if (container) {
+      const filename = container.dataset.filename || findFilename(container);
+      if (filename) {
+        // Refresh from backend to avoid stale SSR tags when sidecars/database changed recently.
+        fetch(`/api/tags/video?filename=${encodeURIComponent(filename)}`)
+          .then((r) => r.ok ? r.json() : Promise.reject(new Error('Failed to load video tags')))
+          .then((data) => {
+            if (Array.isArray(data.tags)) {
+              renderTags(container, data.tags);
+            }
+          })
+          .catch((err) => {
+            console.error('Unable to fetch video tags', err);
+            if (container.dataset.tags) {
+              try {
+                const tags = JSON.parse(container.dataset.tags);
+                renderTags(container, tags);
+              } catch (e) {
+                // ignore parse errors and leave server-rendered markup
+              }
+            }
+          });
+      } else if (container.dataset.tags) {
+        try {
+          const tags = JSON.parse(container.dataset.tags);
+          renderTags(container, tags);
+        } catch (e) {
+          // ignore parse errors and leave server-rendered markup
+        }
       }
     }
 
