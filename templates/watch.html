@@ -38,6 +38,10 @@
   </div>
 </div>
 
+{% with tags=tags, max_tags=None, show_overflow_count=False, tag_scope='main' %}
+  {% include 'partials/video_tag_chips.html' %}
+{% endwith %}
+
 <!-- Video player using shared component -->
 <div class="row video-container mb-4">
   <div class="col-12">
