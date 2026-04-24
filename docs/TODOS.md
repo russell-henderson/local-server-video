@@ -4,7 +4,7 @@
 
 - **Agent / Cursor / Copilot canonical queue:** [`TODO.md`](../TODO.md) at the **repository root**. That file is the single place to read priority-ordered work and to check off acceptance criteria for automation and humans using agent instructions.
 - **This file (`docs/TODOS.md`):** a **docs-facing** engineering task index and supplemental checklist map (historical completions, stability lanes, and hygiene items). It does **not** replace the root task file; keep it aligned with or summarized from `../TODO.md` where useful.
-- **Do not extend** `docs/TODO.md` (under `docs/`) — that path is **legacy** and a planned archive candidate once references are fully cleaned (see `docs/DOCS_INVENTORY.md`).
+- **Do not extend** `docs/archive/TODO_docs_legacy.md` (archived from `docs/TODO.md`, Phase 1b) — **legacy** duplicate of the task-file name; use root `TODO.md` instead (see `docs/DOCS_INVENTORY.md`).
 
 ## Active
 
@@ -36,3 +36,7 @@
 
 - [x] Move root legacy DB/JSON artifacts into `backups/` (non-destructive, no deletes).
 - [x] Resolve non-functional template lint warnings where behavior remains unchanged.
+
+## Documentation cleanup
+
+- [x] Phase 2 (admin docs): consolidated read map in `docs/PROJECT.md` (**Admin dashboard documentation cluster**); `docs/DOCS_INVENTORY.md` Group 8 points to it; removed erroneous opening markdown fence from `docs/ADMIN_DASHBOARD.md`.

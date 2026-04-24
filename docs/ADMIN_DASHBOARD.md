@@ -1,4 +1,3 @@
-````markdown
 # Admin Dashboard Specification
 
 This document defines the admin performance dashboard for Local Video Server.
@@ -20,6 +19,8 @@ This document builds on:
 - `docs/UI.md` for global UI patterns and themes.
 
 `ADMIN_DASHBOARD.md` is the single source of truth for the admin dashboard UI.
+
+For a single table of every admin companion doc (backend/front-end/testing/API/prune, archives), see **`docs/PROJECT.md`** → **Admin dashboard documentation cluster**.
 
 ---
 

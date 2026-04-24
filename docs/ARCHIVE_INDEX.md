@@ -92,7 +92,7 @@ These are older planning docs. **Active priority-ordered work** lives in **`TODO
 
 ### 4.1 Files
 
-- `docs/TODO.md` (**legacy** duplicate filename under `docs/`; **do not extend**; planned archive candidate — not the same as root `TODO.md`)
+- `docs/archive/TODO_docs_legacy.md` (moved from `docs/TODO.md`, Phase 1b 2026-04-23 — **legacy** duplicate filename under `docs/`; **do not extend**; not the same as root `TODO.md`)
 - `docs/archive/TODOv3.md` (moved from `docs/TODOv3.md`, Phase 1a)
 - `docs/archive/tasklist.md` (moved from `docs/tasklist.md`, Phase 1a)
 - `docs/archive/TODO_GROUP_DELETE.md` (moved from `docs/TODO_GROUP_DELETE.md`, Phase 1a)
@@ -186,18 +186,12 @@ These are one off legacy feature docs or meta docs that are kept for context but
 
 ---
 
-## 8. Admin dashboard working checklist (future archive)
+## 8. Admin dashboard checklist (archive)
 
-This is a live checklist during development and should be archived once the dashboard ships.
+Admin dashboard task history is **not** maintained at repo root. Use root **`TODO.md`** / **`docs/TODOS.md`** for current work.
 
-### 8.1 File
+### 8.1 Files
 
-- `TODO_ADMIN_DASH.md`  
-  - Status: working until dashboard release  
-  - Archive path: move to `docs/archive/TODO_ADMIN_DASH.md` after launch (placeholder file already exists)  
-  - Notes: stop updating once archived; keep `docs/ADMIN_DASHBOARD.md` and `docs/API.md` as the enduring specs
-
-### 8.2 How to use
-
-- Keep it updated only while the dashboard is in development.
-- After release, move it to the archive path above and remove it from active task tracking.
+- `docs/archive/TODO_ADMIN_DASH.md` — short pointer to the doc cluster in **`docs/PROJECT.md`** (*Admin dashboard documentation cluster*).
+- `docs/archive/doc_legacy/TODO_ADMIN_DASH.md` — historical checklist text (legacy).
+- Enduring specs: **`docs/ADMIN_DASHBOARD.md`**, **`docs/API.md`**, and companions listed in **`docs/DOCS_INVENTORY.md`** Group 8.

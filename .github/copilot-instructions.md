@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-**Local Video Server** is a Flask-based application for managing a personal video library and image gallery with responsive themes, cross-platform support (desktop/mobile/VR), performance optimization, and a Next.js admin dashboard for performance monitoring. **Source of truth for priority-ordered work:** `TODO.md` at the **repository root** (agents/Copilot/Cursor). `docs/TODOS.md` is a **docs-facing** supplemental task index only. **`docs/TODO.md`** (under `docs/`) is **legacy** — do not extend; planned archive candidate.
+**Local Video Server** is a Flask-based application for managing a personal video library and image gallery with responsive themes, cross-platform support (desktop/mobile/VR), performance optimization, and a Next.js admin dashboard for performance monitoring. **Source of truth for priority-ordered work:** `TODO.md` at the **repository root** (agents/Copilot/Cursor). `docs/TODOS.md` is a **docs-facing** supplemental task index only. **`docs/archive/TODO_docs_legacy.md`** (archived from `docs/TODO.md`, Phase 1b) is **legacy** — do not extend.
 
 ---
 

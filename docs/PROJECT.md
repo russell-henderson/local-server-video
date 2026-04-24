@@ -67,6 +67,25 @@ If you update the system in a significant way, you should usually update at leas
 
 You can treat this list as the spine of the documentation set.
 
+### Admin dashboard documentation cluster
+
+Use this cluster when working on the Flask performance dashboard, admin cache routes, or metadata maintenance. **`docs/ADMIN_DASHBOARD.md`** is the UI source of truth; **`docs/API.md`** lists shared HTTP contracts.
+
+| Document | Role |
+|----------|------|
+| [`docs/ADMIN_DASHBOARD.md`](ADMIN_DASHBOARD.md) | Layout, KPIs, visuals, and behavior for `/admin/performance`. |
+| [`docs/ADMIN_DASHBOARD_IMPL_NOTES.md`](ADMIN_DASHBOARD_IMPL_NOTES.md) | Wiring: templates, polling, metrics hooks; does not repeat the full UI spec. |
+| [`docs/ADMIN_DASHBOARD_BACKEND.md`](ADMIN_DASHBOARD_BACKEND.md) | Server-side data and integration notes. |
+| [`docs/ADMIN_DASHBOARD_FRONTEND.md`](ADMIN_DASHBOARD_FRONTEND.md) | Client-side dashboard JS/CSS notes. |
+| [`docs/ADMIN_DASHBOARD_MIGRATION.md`](ADMIN_DASHBOARD_MIGRATION.md) | Migration and rollout considerations. |
+| [`docs/ADMIN_DASHBOARD_TESTING.md`](ADMIN_DASHBOARD_TESTING.md) | Dashboard-specific QA and regression checks. |
+| [`docs/ADMIN_API_SPEC.md`](ADMIN_API_SPEC.md) | Admin HTTP surface detail (alongside `docs/API.md`). |
+| [`docs/ADMIN_METADATA_PRUNE.md`](ADMIN_METADATA_PRUNE.md) | `POST /admin/metadata/prune` contract and response shape. |
+| [`docs/archive/TODO_ADMIN_DASH.md`](archive/TODO_ADMIN_DASH.md) | Historical implementation checklist (frozen reference). |
+| [`docs/archive/doc_legacy/ADMIN_DASH_UPGRADE.md`](archive/doc_legacy/ADMIN_DASH_UPGRADE.md) | Aspirational Next.js/Tailwind sketch only — not the shipped Flask dashboard. |
+
+Metric field names and JSON shapes for the dashboard remain governed by **`docs/PERFORMANCE_MONITORING.md`**.
+
 ---
 
 ## 3. Project phases
