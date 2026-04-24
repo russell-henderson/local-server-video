@@ -95,6 +95,11 @@ class ConfigManager:
         # Drop deprecated keys that no longer exist in ServerConfig
         for deprecated_key in ("search_enabled", "search_index_on_startup"):
             config_data.pop(deprecated_key, None)
+
+        # LVS_DB_PATH maps to key "db_path"; ServerConfig uses metadata_db (see docs/DEPLOYMENT).
+        _db_path_alias = config_data.pop("db_path", None)
+        if _db_path_alias is not None:
+            config_data.setdefault("metadata_db", _db_path_alias)
         
         # Create config object with validation
         try:

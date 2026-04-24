@@ -177,15 +177,27 @@ def test_required_templates_use_shared_tag_chips_partial():
 
 
 def test_tag_chip_overflow_on_related_cards(client):
-    filename = _get_any_video(client)
-    if not filename:
-        pytest.skip("No videos available for tag chip regression test")
+    response = client.get("/admin/cache/status")
+    if response.status_code != 200:
+        pytest.skip("No cache status for tag chip regression test")
+    recent = (response.get_json() or {}).get("recent_videos") or []
+    if len(recent) < 2:
+        pytest.skip("Need two indexed videos: related cards only render with shared-tag overlap")
 
+    filename, related_filename = recent[0], recent[1]
     base = f"chipreg{uuid4().hex[:8]}"
+    shared = f"{base}_link"
     tag_names = [f"{base}a", f"{base}b", f"{base}c", f"{base}d"]
 
+    # `get_related_videos` matches on shared tags; link watch target and the overflow row.
+    for vid in (filename, related_filename):
+        add = client.post("/tag", json={"filename": vid, "tag": shared})
+        assert add.status_code == 200
+        assert (add.get_json() or {}).get("success") is True
+
+    # Related partial uses max_tags=3 + overflow; put four extra tags on the *related* row only.
     for tag_name in tag_names:
-        add = client.post("/tag", json={"filename": filename, "tag": tag_name})
+        add = client.post("/tag", json={"filename": related_filename, "tag": tag_name})
         assert add.status_code == 200
         assert (add.get_json() or {}).get("success") is True
 

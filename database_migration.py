@@ -13,8 +13,11 @@ from contextlib import contextmanager
 class VideoDatabase:
     """SQLite database manager for video metadata"""
     
-    def __init__(self, db_path: str = "data/video_metadata.db"):
-        self.db_path = db_path
+    def __init__(self, db_path: Optional[str] = None):
+        # Honor explicit path; otherwise match docker-compose / DEPLOYMENT: LVS_DB_PATH.
+        self.db_path = db_path if db_path is not None else os.environ.get(
+            "LVS_DB_PATH", "data/video_metadata.db"
+        )
         Path(self.db_path).parent.mkdir(parents=True, exist_ok=True)
         self._lock = threading.RLock()
         self.init_database()
