@@ -9,86 +9,91 @@ from dataclasses import dataclass, field
 from typing import Optional, Dict, Any
 from pathlib import Path
 
+
 @dataclass
 class ServerConfig:
     """Server configuration with validation and defaults"""
-    
+
     # Server settings
     host: str = "0.0.0.0"
     port: int = 5000
     debug: bool = False
-    
+
     # Video settings
     video_directory: str = "videos"
     thumbnail_directory: str = "static/thumbnails"
     max_thumbnail_size: tuple = (320, 240)
-    supported_formats: list = field(default_factory=lambda: ['.mp4', '.avi', '.mkv', '.mov', '.wmv'])
-    
+    supported_formats: list = field(default_factory=lambda: [
+                                    '.mp4', '.avi', '.mkv', '.mov', '.wmv'])
+
     # Database settings
     metadata_db: str = "data/video_metadata.db"
     cache_db: str = "data/video_search.db"
-    
+
     # Performance settings
     cache_timeout: int = 3600  # 1 hour
     max_cache_size: int = 1000
     enable_thumbnails: bool = True
     thumbnail_quality: int = 85
-    
+
     # Monitoring settings
     enable_analytics: bool = True
     log_level: str = "INFO"
     max_log_size: int = 10 * 1024 * 1024  # 10MB
     enable_perf_log: bool = True
-    
+
     # Security settings
     enable_cors: bool = False
     allowed_origins: list = field(default_factory=list)
-    
+
     # Feature flags
     feature_vr_simplify: bool = True
     feature_previews: bool = True
-    
+
     def __post_init__(self):
         """Validate configuration after initialization"""
         self._validate_config()
-    
+
     def _validate_config(self):
         """Validate configuration values"""
         if self.port < 1 or self.port > 65535:
-            raise ValueError(f"Invalid port: {self.port}. Must be between 1-65535")
-        
+            raise ValueError(
+                f"Invalid port: {self.port}. Must be between 1-65535")
+
         if self.thumbnail_quality < 1 or self.thumbnail_quality > 100:
-            raise ValueError(f"Invalid thumbnail quality: {self.thumbnail_quality}. Must be between 1-100")
-        
+            raise ValueError(
+                f"Invalid thumbnail quality: {self.thumbnail_quality}. Must be between 1-100")
+
         if self.log_level not in ['DEBUG', 'INFO', 'WARNING', 'ERROR']:
             raise ValueError(f"Invalid log level: {self.log_level}")
-        
+
         # Ensure directories exist
         Path(self.video_directory).mkdir(exist_ok=True)
         Path(self.thumbnail_directory).mkdir(parents=True, exist_ok=True)
 
+
 class ConfigManager:
     """Manages configuration loading with cascade: env vars -> .env -> config.json -> defaults"""
-    
+
     def __init__(self, config_file: str = "config.json", env_file: str = ".env"):
         self.config_file = config_file
         self.env_file = env_file
         self._config = None
-    
+
     def load_config(self) -> ServerConfig:
         """Load configuration with cascade priority"""
         if self._config is not None:
             return self._config
-        
+
         # Start with defaults
         config_data = {}
-        
+
         # 1. Load from JSON config file
         config_data.update(self._load_json_config())
-        
+
         # 2. Load from .env file
         config_data.update(self._load_env_file())
-        
+
         # 3. Override with environment variables
         config_data.update(self._load_env_vars())
 
@@ -100,23 +105,24 @@ class ConfigManager:
         _db_path_alias = config_data.pop("db_path", None)
         if _db_path_alias is not None:
             config_data.setdefault("metadata_db", _db_path_alias)
-        
+
         # Create config object with validation
         try:
             self._config = ServerConfig(**config_data)
             print("[OK] Configuration loaded successfully")
             return self._config
-        except Exception as e:
+        except (TypeError, ValueError, OSError) as e:
+            # Recover only from expected config construction, validation, or directory errors.
             print(f"[ERROR] Configuration error: {e}")
             print("Using default configuration...")
             self._config = ServerConfig()
             return self._config
-    
+
     def _load_json_config(self) -> Dict[str, Any]:
         """Load configuration from JSON file"""
         if not os.path.exists(self.config_file):
             return {}
-        
+
         try:
             with open(self.config_file, 'r') as f:
                 data = json.load(f)
@@ -125,12 +131,12 @@ class ConfigManager:
         except Exception as e:
             print(f"[WARN] Error loading {self.config_file}: {e}")
             return {}
-    
+
     def _load_env_file(self) -> Dict[str, Any]:
         """Load configuration from .env file"""
         if not os.path.exists(self.env_file):
             return {}
-        
+
         config_data = {}
         try:
             with open(self.env_file, 'r') as f:
@@ -149,12 +155,12 @@ class ConfigManager:
         except Exception as e:
             print(f"[WARN] Error loading {self.env_file}: {e}")
             return {}
-    
+
     def _load_env_vars(self) -> Dict[str, Any]:
         """Load configuration from environment variables with LVS_ prefix"""
         config_data = {}
         prefix = "LVS_"
-        
+
         for key, value in os.environ.items():
             if key.startswith(prefix):
                 config_key = key[len(prefix):].lower()
@@ -163,17 +169,17 @@ class ConfigManager:
         if config_data:
             print("[INFO] Loaded config from environment variables")
         return config_data
-    
+
     def _parse_env_value(self, value: str) -> Any:
         """Parse environment variable value to appropriate type"""
         value = value.strip().strip('"\'')
-        
+
         # Boolean values
         if value.lower() in ('true', 'yes', '1', 'on'):
             return True
         elif value.lower() in ('false', 'no', '0', 'off'):
             return False
-        
+
         # Numeric values
         try:
             if '.' in value:
@@ -182,14 +188,14 @@ class ConfigManager:
                 return int(value)
         except ValueError:
             pass
-        
+
         # List values (comma-separated)
         if ',' in value:
             return [item.strip() for item in value.split(',')]
-        
+
         # String value
         return value
-    
+
     def save_config(self, config: ServerConfig) -> bool:
         """Save current configuration to JSON file"""
         try:
@@ -216,31 +222,35 @@ class ConfigManager:
                 'feature_vr_simplify': config.feature_vr_simplify,
                 'feature_previews': config.feature_previews
             }
-            
-            with open(self.config_file, 'w') as f:
+
+            with open(self.config_file, 'w', encoding='utf-8') as f:
                 json.dump(config_dict, f, indent=2)
-            
+
             print(f"[INFO] Configuration saved to {self.config_file}")
             return True
         except Exception as e:
             print(f"[ERROR] Error saving configuration: {e}")
             return False
-    
+
     def reload_config(self) -> ServerConfig:
         """Reload configuration from files"""
         self._config = None
         return self.load_config()
 
+
 # Global configuration instance
 config_manager = ConfigManager()
+
 
 def get_config() -> ServerConfig:
     """Get the current configuration"""
     return config_manager.load_config()
 
+
 def reload_config() -> ServerConfig:
     """Reload configuration from files"""
     return config_manager.reload_config()
+
 
 if __name__ == "__main__":
     # Test configuration loading
