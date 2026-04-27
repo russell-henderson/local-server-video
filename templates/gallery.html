@@ -349,6 +349,7 @@
     align-items: center;
     justify-content: center;
     padding: 20px;
+    overflow: auto;
   }
   
   .lightbox.active {
@@ -356,20 +357,79 @@
   }
   
   .lightbox-content {
-    max-width: 90vw;
-    max-height: 90vh;
+    width: min(1100px, 92vw);
+    max-height: calc(100vh - 40px);
     position: relative;
     background: rgba(15, 15, 15, 0.9);
     padding: 16px;
     border-radius: 12px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
   
   .lightbox-content img {
+    display: block;
     max-width: 100%;
-    max-height: 72vh;
+    max-height: min(62vh, 680px);
+    margin: 0 auto;
     object-fit: contain;
     border-radius: 10px;
+  }
+
+  .lightbox-toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    gap: 10px;
+    align-items: start;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    background: rgba(15, 15, 15, 0.96);
+  }
+
+  .lightbox-meta {
+    color: #fff;
+    min-width: 0;
+  }
+
+  .lightbox-filename {
+    font-weight: 600;
+    word-break: break-word;
+  }
+
+  .lightbox-submeta,
+  .lightbox-groups,
+  .lightbox-status {
+    color: #b9c7df;
+    font-size: 0.85rem;
+    margin-top: 4px;
+  }
+
+  .lightbox-status {
+    min-height: 1.2em;
+  }
+
+  .lightbox-tool-btn {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    cursor: pointer;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    white-space: nowrap;
+  }
+
+  .lightbox-tool-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+
+  .lightbox-tool-btn.active {
+    background: #e63972;
   }
 
   .lightbox-nav {
@@ -421,11 +481,16 @@
   }
 
   .lightbox-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
     margin-top: 16px;
+    padding-top: 10px;
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 10px;
     align-items: center;
+    background: rgba(15, 15, 15, 0.96);
   }
 
   .lightbox-actions select,
@@ -437,6 +502,10 @@
     color: white;
     min-width: 180px;
     height: 38px;
+  }
+
+  .lightbox-actions select[multiple] {
+    height: 96px;
   }
 
   .lightbox-actions button {
@@ -462,8 +531,20 @@
   }
 
   @media (max-width: 640px) {
+    .lightbox {
+      padding: 10px;
+      align-items: flex-start;
+    }
     .lightbox-content {
+      width: 100%;
+      max-height: calc(100vh - 20px);
       padding: 12px;
+    }
+    .lightbox-content img {
+      max-height: 50vh;
+    }
+    .lightbox-toolbar {
+      grid-template-columns: 1fr;
     }
     .lightbox-actions {
       grid-template-columns: 1fr;
@@ -615,9 +696,23 @@
     <button class="lightbox-nav next" id="lightboxNext" aria-label="Next image">
       <i class="fas fa-chevron-right"></i>
     </button>
+    <div class="lightbox-toolbar">
+      <div class="lightbox-meta">
+        <div class="lightbox-filename" id="lightboxFilename"></div>
+        <div class="lightbox-submeta" id="lightboxIndex"></div>
+        <div class="lightbox-groups" id="lightboxGroups">Groups: loading...</div>
+        <div class="lightbox-status" id="lightboxStatus" aria-live="polite"></div>
+      </div>
+      <button class="lightbox-tool-btn" id="lightboxFavoriteBtn" type="button">
+        <span class="icon favorite-icon"></span> Favorite
+      </button>
+      <button class="lightbox-tool-btn" id="lightboxSimilarBtn" type="button">
+        <i class="fas fa-layer-group"></i> Find Similar
+      </button>
+    </div>
     <img id="lightboxImage" src="" alt="">
     <div class="lightbox-actions">
-      <select id="lightboxGroupSelect">
+      <select id="lightboxGroupSelect" multiple size="4" aria-label="Add current image to groups">
         <option value="">Add to group...</option>
       </select>
       <button class="primary" id="lightboxAddToGroupBtn" disabled>Add</button>
@@ -658,6 +753,12 @@ const similarGroupName = document.getElementById('similarGroupName');
 const lightbox = document.getElementById('lightbox');
 const lightboxImage = document.getElementById('lightboxImage');
 const lightboxClose = document.getElementById('lightboxClose');
+const lightboxFilename = document.getElementById('lightboxFilename');
+const lightboxIndex = document.getElementById('lightboxIndex');
+const lightboxGroups = document.getElementById('lightboxGroups');
+const lightboxStatus = document.getElementById('lightboxStatus');
+const lightboxFavoriteBtn = document.getElementById('lightboxFavoriteBtn');
+const lightboxSimilarBtn = document.getElementById('lightboxSimilarBtn');
 const lightboxGroupSelect = document.getElementById('lightboxGroupSelect');
 const lightboxAddToGroupBtn = document.getElementById('lightboxAddToGroupBtn');
 const lightboxNewGroupName = document.getElementById('lightboxNewGroupName');
@@ -716,8 +817,8 @@ function updateGroupSelect() {
     existingGroupSelect.appendChild(option);
   });
 
-  // Lightbox select mirrors existing groups
-  lightboxGroupSelect.innerHTML = '<option value="">Add to group...</option>';
+  // Lightbox select mirrors existing groups and supports multi-add.
+  lightboxGroupSelect.innerHTML = '';
   allGroups.forEach(group => {
     const option = document.createElement('option');
     option.value = group.id;
@@ -1072,11 +1173,20 @@ async function addToGroup() {
 // Open lightbox
 function openLightbox(image) {
   lightboxCurrentIndex = currentRenderList.indexOf(image);
-  lightboxImage.src = `/gallery/image/${image}`;
-  lightboxCurrentImage = image;
   lightbox.classList.add('active');
-  lightboxAddToGroupBtn.disabled = !lightboxGroupSelect.value;
-  lightboxCreateGroupBtn.disabled = !lightboxNewGroupName.value.trim();
+  showLightboxImage(image, 'Ready. Shortcuts: arrows navigate, F favorites, G focuses groups.');
+}
+
+function showLightboxImage(image, statusMessage = '') {
+  lightboxImage.src = `/gallery/image/${image}`;
+  lightboxImage.alt = image;
+  lightboxCurrentImage = image;
+  lightboxCurrentIndex = currentRenderList.indexOf(image);
+  updateLightboxMeta();
+  updateLightboxActions();
+  refreshLightboxFavoriteState();
+  loadLightboxMemberships(image);
+  setLightboxStatus(statusMessage);
 }
 
 // Close lightbox
@@ -1085,6 +1195,58 @@ function closeLightbox() {
   lightboxImage.src = '';
   lightboxCurrentImage = null;
   lightboxCurrentIndex = -1;
+  setLightboxStatus('');
+  lightboxGroups.textContent = 'Groups: loading...';
+}
+
+function updateLightboxMeta() {
+  lightboxFilename.textContent = lightboxCurrentImage || '';
+  const total = currentRenderList.length;
+  const current = lightboxCurrentIndex >= 0 ? lightboxCurrentIndex + 1 : 0;
+  lightboxIndex.textContent = total ? `Image ${current} of ${total}` : '';
+}
+
+function setLightboxStatus(message) {
+  lightboxStatus.textContent = message || '';
+}
+
+function getSelectedLightboxGroupIds() {
+  return Array.from(lightboxGroupSelect.selectedOptions)
+    .map(option => parseInt(option.value))
+    .filter(Boolean);
+}
+
+function updateLightboxActions() {
+  lightboxAddToGroupBtn.disabled = !lightboxCurrentImage || getSelectedLightboxGroupIds().length === 0;
+  lightboxCreateGroupBtn.disabled = !lightboxCurrentImage || !lightboxNewGroupName.value.trim();
+  lightboxSimilarBtn.disabled = !lightboxCurrentImage;
+}
+
+function refreshLightboxFavoriteState() {
+  const isFavorite = lightboxCurrentImage && favoriteImages.has(lightboxCurrentImage);
+  lightboxFavoriteBtn.classList.toggle('active', Boolean(isFavorite));
+  const icon = lightboxFavoriteBtn.querySelector('.icon');
+  icon.classList.toggle('is-on', Boolean(isFavorite));
+  lightboxFavoriteBtn.setAttribute('aria-pressed', isFavorite ? 'true' : 'false');
+}
+
+async function loadLightboxMemberships(image) {
+  lightboxGroups.textContent = 'Groups: loading...';
+  try {
+    const response = await fetch(`/api/gallery/images/${encodeURIComponent(image)}/groups`);
+    const data = await response.json();
+    if (!response.ok) {
+      lightboxGroups.textContent = 'Groups: unavailable';
+      return;
+    }
+    const groups = Array.isArray(data.groups) ? data.groups : [];
+    lightboxGroups.textContent = groups.length
+      ? `Groups: ${groups.map(group => group.name).join(', ')}`
+      : 'Groups: none yet';
+  } catch (error) {
+    console.error('Failed to load image groups:', error);
+    lightboxGroups.textContent = 'Groups: unavailable';
+  }
 }
 
 // Setup event listeners
@@ -1098,6 +1260,8 @@ function setupEventListeners() {
   lightboxClose.onclick = closeLightbox;
   lightboxAddToGroupBtn.onclick = addCurrentToGroupFromLightbox;
   lightboxCreateGroupBtn.onclick = createGroupFromLightbox;
+  lightboxFavoriteBtn.onclick = toggleCurrentFavoriteFromLightbox;
+  lightboxSimilarBtn.onclick = findSimilarFromLightbox;
   lightboxPrev.onclick = showPrevImage;
   lightboxNext.onclick = showNextImage;
   
@@ -1114,14 +1278,15 @@ function setupEventListeners() {
   };
 
   lightboxGroupSelect.onchange = () => {
-    lightboxAddToGroupBtn.disabled = !lightboxGroupSelect.value || !lightboxCurrentImage;
+    updateLightboxActions();
   };
   lightboxNewGroupName.oninput = () => {
-    lightboxCreateGroupBtn.disabled = !lightboxNewGroupName.value.trim() || !lightboxCurrentImage;
+    updateLightboxActions();
   };
   
   // Keyboard shortcuts
   document.addEventListener('keydown', (e) => {
+    const isTyping = ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName);
     if (e.key === 'Escape') {
       if (lightbox.classList.contains('active')) {
         closeLightbox();
@@ -1133,6 +1298,10 @@ function setupEventListeners() {
         showPrevImage();
       } else if (e.key === 'ArrowRight') {
         showNextImage();
+      } else if (!isTyping && e.key.toLowerCase() === 'f') {
+        toggleCurrentFavoriteFromLightbox();
+      } else if (!isTyping && e.key.toLowerCase() === 'g') {
+        lightboxGroupSelect.focus();
       }
     }
   });
@@ -1150,23 +1319,32 @@ function toggleFavoritesOnly() {
 
 async function addCurrentToGroupFromLightbox() {
   if (!lightboxCurrentImage) return;
-  const groupId = parseInt(lightboxGroupSelect.value);
-  if (!groupId) return;
+  const groupIds = getSelectedLightboxGroupIds();
+  if (groupIds.length === 0) return;
+  lightboxAddToGroupBtn.disabled = true;
+  setLightboxStatus('Adding to selected groups...');
   try {
-    const response = await fetch(`/api/gallery/groups/${groupId}/images`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ images: [lightboxCurrentImage] })
-    });
-    if (response.ok) {
-      alert('Added to group.');
-    } else {
-      const error = await response.json();
-      alert(`Failed to add image: ${error.error}`);
+    for (const groupId of groupIds) {
+      const response = await fetch(`/api/gallery/groups/${groupId}/images`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ images: [lightboxCurrentImage] })
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to add image');
+      }
     }
+    setLightboxStatus(`Added to ${groupIds.length} ${groupIds.length === 1 ? 'group' : 'groups'}.`);
+    await loadGroups();
+    updateGroupSelect();
+    renderGroups();
+    await loadLightboxMemberships(lightboxCurrentImage);
   } catch (error) {
     console.error('Error adding to group from lightbox:', error);
-    alert('Failed to add to group. Please try again.');
+    setLightboxStatus(`Failed to add to group: ${error.message}`);
+  } finally {
+    updateLightboxActions();
   }
 }
 
@@ -1174,6 +1352,8 @@ async function createGroupFromLightbox() {
   if (!lightboxCurrentImage) return;
   const name = lightboxNewGroupName.value.trim();
   if (!name) return;
+  lightboxCreateGroupBtn.disabled = true;
+  setLightboxStatus('Creating group...');
   try {
     const response = await fetch('/api/gallery/groups', {
       method: 'POST',
@@ -1182,16 +1362,60 @@ async function createGroupFromLightbox() {
     });
     if (response.ok) {
       lightboxNewGroupName.value = '';
-      alert('Group created.');
+      setLightboxStatus('Group created.');
       await loadGroups();
       updateGroupSelect();
+      renderGroups();
+      await loadLightboxMemberships(lightboxCurrentImage);
     } else {
       const error = await response.json();
-      alert(`Failed to create group: ${error.error}`);
+      setLightboxStatus(`Failed to create group: ${error.error}`);
     }
   } catch (error) {
     console.error('Error creating group from lightbox:', error);
-    alert('Failed to create group. Please try again.');
+    setLightboxStatus('Failed to create group. Please try again.');
+  } finally {
+    updateLightboxActions();
+  }
+}
+
+function toggleCurrentFavoriteFromLightbox() {
+  if (!lightboxCurrentImage) return;
+  toggleFavoriteImage(lightboxCurrentImage, lightboxFavoriteBtn);
+  refreshLightboxFavoriteState();
+  setLightboxStatus(favoriteImages.has(lightboxCurrentImage) ? 'Added to favorites.' : 'Removed from favorites.');
+}
+
+async function findSimilarFromLightbox() {
+  if (!lightboxCurrentImage) return;
+  lightboxSimilarBtn.disabled = true;
+  setLightboxStatus('Finding similar images...');
+  try {
+    const response = await fetch('/api/gallery/groups/similar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        filename: lightboxCurrentImage,
+        name: '',
+        max_distance: 10,
+        limit: 12
+      })
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      setLightboxStatus(data.error || 'No similar images found.');
+      return;
+    }
+    const added = data.added || [];
+    setLightboxStatus(`Created "${data.group?.name || 'Similar'}" with ${added.length} images.`);
+    await loadGroups();
+    renderGroups();
+    await loadLightboxMemberships(lightboxCurrentImage);
+  } catch (error) {
+    console.error('Find similar from lightbox failed:', error);
+    setLightboxStatus('Failed to find similar images.');
+  } finally {
+    updateLightboxActions();
   }
 }
 
@@ -1200,9 +1424,7 @@ function showPrevImage() {
   const newIndex = lightboxCurrentIndex - 1;
   const nextImg = currentRenderList[newIndex];
   if (nextImg) {
-    lightboxCurrentIndex = newIndex;
-    lightboxCurrentImage = nextImg;
-    lightboxImage.src = `/gallery/image/${nextImg}`;
+    showLightboxImage(nextImg);
   }
 }
 
@@ -1212,9 +1434,7 @@ function showNextImage() {
   if (newIndex >= currentRenderList.length) return;
   const nextImg = currentRenderList[newIndex];
   if (nextImg) {
-    lightboxCurrentIndex = newIndex;
-    lightboxCurrentImage = nextImg;
-    lightboxImage.src = `/gallery/image/${nextImg}`;
+    showLightboxImage(nextImg);
   }
 }
 

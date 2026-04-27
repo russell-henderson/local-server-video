@@ -165,6 +165,7 @@
     align-items: center;
     justify-content: center;
     padding: 20px;
+    overflow: auto;
   }
   
   .lightbox.active {
@@ -172,16 +173,113 @@
   }
   
   .lightbox-content {
-    max-width: 90vw;
-    max-height: 90vh;
+    width: min(1100px, 92vw);
+    max-height: calc(100vh - 40px);
     position: relative;
+    background: rgba(15, 15, 15, 0.9);
+    padding: 16px;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
   
   .lightbox-content img {
+    display: block;
     max-width: 100%;
-    max-height: 90vh;
+    max-height: min(62vh, 680px);
+    margin: 0 auto;
     object-fit: contain;
+    border-radius: 10px;
   }
+
+  .lightbox-toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto auto;
+    gap: 10px;
+    align-items: start;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    background: rgba(15, 15, 15, 0.96);
+  }
+
+  .lightbox-meta {
+    color: #fff;
+    min-width: 0;
+  }
+
+  .lightbox-filename {
+    font-weight: 600;
+    word-break: break-word;
+  }
+
+  .lightbox-submeta,
+  .lightbox-status {
+    color: #b9c7df;
+    font-size: 0.85rem;
+    margin-top: 4px;
+  }
+
+  .lightbox-status {
+    min-height: 1.2em;
+  }
+
+  .lightbox-tool-btn {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    cursor: pointer;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    white-space: nowrap;
+  }
+
+  .lightbox-tool-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+
+  .lightbox-tool-btn.active {
+    background: #e63972;
+  }
+
+  .lightbox-tool-btn.cover {
+    background: #2fa36b;
+  }
+
+  .lightbox-tool-btn.danger {
+    background: #dc3545;
+  }
+
+  .lightbox-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0, 0, 0, 0.4);
+    color: #fff;
+    border: none;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    transition: background 0.2s ease, transform 0.2s ease;
+  }
+
+  .lightbox-nav:hover {
+    background: rgba(0, 0, 0, 0.6);
+    transform: translateY(-50%) scale(1.05);
+  }
+
+  .lightbox-nav.prev { left: -56px; }
+  .lightbox-nav.next { right: -56px; }
   
   .lightbox-close {
     position: absolute;
@@ -228,6 +326,25 @@
     .group-header {
       flex-direction: column;
       align-items: flex-start;
+    }
+
+    .lightbox {
+      padding: 10px;
+      align-items: flex-start;
+    }
+
+    .lightbox-content {
+      width: 100%;
+      max-height: calc(100vh - 20px);
+      padding: 12px;
+    }
+
+    .lightbox-content img {
+      max-height: 50vh;
+    }
+
+    .lightbox-toolbar {
+      grid-template-columns: 1fr;
     }
     
     .group-grid {
@@ -281,6 +398,28 @@
   <div class="lightbox" id="lightbox">
     <button class="lightbox-close" id="lightboxClose">&times;</button>
     <div class="lightbox-content">
+      <button class="lightbox-nav prev" id="lightboxPrev" aria-label="Previous image">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+      <button class="lightbox-nav next" id="lightboxNext" aria-label="Next image">
+        <i class="fas fa-chevron-right"></i>
+      </button>
+      <div class="lightbox-toolbar">
+        <div class="lightbox-meta">
+          <div class="lightbox-filename" id="lightboxFilename"></div>
+          <div class="lightbox-submeta" id="lightboxIndex"></div>
+          <div class="lightbox-status" id="lightboxStatus" aria-live="polite"></div>
+        </div>
+        <button class="lightbox-tool-btn" id="lightboxFavoriteBtn" type="button">
+          <span class="icon favorite-icon"></span> Favorite
+        </button>
+        <button class="lightbox-tool-btn cover" id="lightboxSetCoverBtn" type="button">
+          <i class="fas fa-image"></i> Set Cover
+        </button>
+        <button class="lightbox-tool-btn danger" id="lightboxRemoveBtn" type="button">
+          <i class="fas fa-times"></i> Remove
+        </button>
+      </div>
       <img id="lightboxImage" src="" alt="">
     </div>
   </div>
@@ -302,6 +441,16 @@ const coverGroupBtn = document.getElementById('coverGroupBtn');
 const lightbox = document.getElementById('lightbox');
 const lightboxImage = document.getElementById('lightboxImage');
 const lightboxClose = document.getElementById('lightboxClose');
+const lightboxFilename = document.getElementById('lightboxFilename');
+const lightboxIndex = document.getElementById('lightboxIndex');
+const lightboxStatus = document.getElementById('lightboxStatus');
+const lightboxFavoriteBtn = document.getElementById('lightboxFavoriteBtn');
+const lightboxSetCoverBtn = document.getElementById('lightboxSetCoverBtn');
+const lightboxRemoveBtn = document.getElementById('lightboxRemoveBtn');
+const lightboxPrev = document.getElementById('lightboxPrev');
+const lightboxNext = document.getElementById('lightboxNext');
+let lightboxCurrentImage = null;
+let lightboxCurrentIndex = -1;
 
 // Initialize
 function init() {
@@ -317,7 +466,7 @@ function renderImages() {
   }
   
   groupGrid.innerHTML = '';
-  groupImages.forEach(item => {
+  groupImages.forEach((item, index) => {
     const imageDiv = document.createElement('div');
     imageDiv.className = 'group-image-item';
     imageDiv.dataset.itemId = item.id;
@@ -351,7 +500,7 @@ function renderImages() {
     imageDiv.appendChild(img);
     imageDiv.appendChild(removeBtn);
     
-    imageDiv.onclick = () => openLightbox(item.image_path);
+    imageDiv.onclick = () => openLightbox(item.image_path, index);
     
     groupGrid.appendChild(imageDiv);
   });
@@ -385,8 +534,9 @@ function toggleFavoriteImage(imagePath, btn) {
 }
 
 // Remove image from group
-async function removeImage(itemId, imagePath) {
-  if (!confirm(`Remove "${imagePath}" from this group?`)) return;
+async function removeImage(itemId, imagePath, options = {}) {
+  const shouldConfirm = options.confirmFirst !== false;
+  if (shouldConfirm && !confirm(`Remove "${imagePath}" from this group?`)) return false;
   
   try {
     const response = await fetch(`/api/gallery/groups/${groupId}/items/${itemId}`, {
@@ -396,6 +546,7 @@ async function removeImage(itemId, imagePath) {
     if (response.ok) {
       groupImages = groupImages.filter(img => img.id !== itemId);
       renderImages();
+      return true;
     } else {
       const error = await response.json();
       alert(`Failed to remove image: ${error.error}`);
@@ -404,6 +555,7 @@ async function removeImage(itemId, imagePath) {
     console.error('Error removing image:', error);
     alert('Failed to remove image. Please try again.');
   }
+  return false;
 }
 
 // Edit group name
@@ -452,15 +604,43 @@ async function deleteGroup() {
 }
 
 // Open lightbox
-function openLightbox(imagePath) {
+function openLightbox(imagePath, index = groupImages.findIndex(item => item.image_path === imagePath)) {
+  lightboxCurrentImage = imagePath;
+  lightboxCurrentIndex = index;
   lightboxImage.src = `/gallery/image/${imagePath}`;
+  lightboxImage.alt = imagePath;
   lightbox.classList.add('active');
+  updateLightboxMeta();
+  refreshLightboxFavoriteState();
+  setLightboxStatus('Ready. Shortcuts: arrows navigate, F favorites, C sets cover, Delete removes.');
 }
 
 // Close lightbox
 function closeLightbox() {
   lightbox.classList.remove('active');
   lightboxImage.src = '';
+  lightboxCurrentImage = null;
+  lightboxCurrentIndex = -1;
+  setLightboxStatus('');
+}
+
+function updateLightboxMeta() {
+  lightboxFilename.textContent = lightboxCurrentImage || '';
+  const total = groupImages.length;
+  const current = lightboxCurrentIndex >= 0 ? lightboxCurrentIndex + 1 : 0;
+  lightboxIndex.textContent = total ? `Image ${current} of ${total} in ${groupName}` : '';
+}
+
+function setLightboxStatus(message) {
+  lightboxStatus.textContent = message || '';
+}
+
+function refreshLightboxFavoriteState() {
+  const isFavorite = lightboxCurrentImage && favoriteImages.has(lightboxCurrentImage);
+  lightboxFavoriteBtn.classList.toggle('active', Boolean(isFavorite));
+  const icon = lightboxFavoriteBtn.querySelector('.icon');
+  icon.classList.toggle('is-on', Boolean(isFavorite));
+  lightboxFavoriteBtn.setAttribute('aria-pressed', isFavorite ? 'true' : 'false');
 }
 
 // Setup event listeners
@@ -469,6 +649,11 @@ function setupEventListeners() {
   deleteGroupBtn.onclick = deleteGroup;
   coverGroupBtn.onclick = enterCoverSelect;
   lightboxClose.onclick = closeLightbox;
+  lightboxFavoriteBtn.onclick = toggleCurrentFavoriteFromLightbox;
+  lightboxSetCoverBtn.onclick = setCurrentAsCoverFromLightbox;
+  lightboxRemoveBtn.onclick = removeCurrentFromLightbox;
+  lightboxPrev.onclick = showPrevImage;
+  lightboxNext.onclick = showNextImage;
   
   lightbox.onclick = (e) => {
     if (e.target === lightbox) closeLightbox();
@@ -479,8 +664,76 @@ function setupEventListeners() {
     if (e.key === 'Escape' && lightbox.classList.contains('active')) {
       closeLightbox();
       exitCoverSelect();
+    } else if (lightbox.classList.contains('active')) {
+      if (e.key === 'ArrowLeft') {
+        showPrevImage();
+      } else if (e.key === 'ArrowRight') {
+        showNextImage();
+      } else if (e.key.toLowerCase() === 'f') {
+        toggleCurrentFavoriteFromLightbox();
+      } else if (e.key.toLowerCase() === 'c') {
+        setCurrentAsCoverFromLightbox();
+      } else if (e.key === 'Delete') {
+        removeCurrentFromLightbox();
+      }
     }
   });
+}
+
+function showLightboxImage(index) {
+  const item = groupImages[index];
+  if (!item) return;
+  lightboxCurrentIndex = index;
+  lightboxCurrentImage = item.image_path;
+  lightboxImage.src = `/gallery/image/${item.image_path}`;
+  lightboxImage.alt = item.image_path;
+  updateLightboxMeta();
+  refreshLightboxFavoriteState();
+  setLightboxStatus('');
+}
+
+function showPrevImage() {
+  if (lightboxCurrentIndex <= 0) return;
+  showLightboxImage(lightboxCurrentIndex - 1);
+}
+
+function showNextImage() {
+  if (lightboxCurrentIndex === -1 || lightboxCurrentIndex >= groupImages.length - 1) return;
+  showLightboxImage(lightboxCurrentIndex + 1);
+}
+
+function toggleCurrentFavoriteFromLightbox() {
+  if (!lightboxCurrentImage) return;
+  toggleFavoriteImage(lightboxCurrentImage, lightboxFavoriteBtn);
+  refreshLightboxFavoriteState();
+  setLightboxStatus(favoriteImages.has(lightboxCurrentImage) ? 'Added to favorites.' : 'Removed from favorites.');
+}
+
+async function setCurrentAsCoverFromLightbox() {
+  if (!lightboxCurrentImage) return;
+  lightboxSetCoverBtn.disabled = true;
+  setLightboxStatus('Setting group cover...');
+  const updated = await setCover(lightboxCurrentImage, { reload: false });
+  setLightboxStatus(updated ? 'Group cover updated.' : 'Failed to update group cover.');
+  lightboxSetCoverBtn.disabled = false;
+}
+
+async function removeCurrentFromLightbox() {
+  if (!lightboxCurrentImage || lightboxCurrentIndex < 0) return;
+  if (!confirm(`Remove "${lightboxCurrentImage}" from this group?`)) return;
+  const currentItem = groupImages[lightboxCurrentIndex];
+  lightboxRemoveBtn.disabled = true;
+  setLightboxStatus('Removing from group...');
+  const removed = await removeImage(currentItem.id, currentItem.image_path, { confirmFirst: false });
+  lightboxRemoveBtn.disabled = false;
+  if (!removed) return;
+  if (groupImages.length === 0) {
+    closeLightbox();
+    return;
+  }
+  const nextIndex = Math.min(lightboxCurrentIndex, groupImages.length - 1);
+  showLightboxImage(nextIndex);
+  setLightboxStatus('Removed from group.');
 }
 
 // Cover selection mode
@@ -504,13 +757,14 @@ function exitCoverSelect() {
   coverGroupBtn.innerHTML = '<i class="fas fa-image"></i> Set Cover';
   groupGrid.classList.remove('selection-mode');
   // Restore lightbox click
-  groupGrid.querySelectorAll('.group-image-item').forEach(item => {
+  groupGrid.querySelectorAll('.group-image-item').forEach((item, index) => {
     item.classList.remove('selection-mode');
-    item.onclick = () => openLightbox(item.dataset.imagePath);
+    item.onclick = () => openLightbox(item.dataset.imagePath, index);
   });
 }
 
-async function setCover(imagePath) {
+async function setCover(imagePath, options = {}) {
+  const shouldReload = options.reload !== false;
   try {
     const response = await fetch(`/api/gallery/groups/${groupId}`, {
       method: 'PUT',
@@ -519,7 +773,10 @@ async function setCover(imagePath) {
     });
     if (response.ok) {
       exitCoverSelect();
-      window.location.reload();
+      if (shouldReload) {
+        window.location.reload();
+      }
+      return true;
     } else {
       const error = await response.json();
       alert(`Failed to set cover: ${error.error}`);
@@ -530,6 +787,7 @@ async function setCover(imagePath) {
     alert('Failed to set cover. Please try again.');
     exitCoverSelect();
   }
+  return false;
 }
 
 // Initialize on page load

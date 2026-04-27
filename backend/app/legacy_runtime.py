@@ -1161,6 +1161,21 @@ def api_gallery_groups():
         return jsonify({'error': str(e)}), 500
 
 
+@app.route('/api/gallery/images/<path:filename>/groups', methods=['GET'])
+def api_gallery_image_groups(filename: str):
+    """Get gallery group memberships for one image."""
+    if '..' in filename or filename.startswith('/'):
+        abort(403)
+
+    from database_migration import VideoDatabase
+    db = VideoDatabase()
+
+    try:
+        return jsonify({'groups': db.get_groups_for_image(filename)})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 @app.route("/api/similar/<kind>/<path:filename>")
 def api_similar(kind: str, filename: str):
     """Find perceptually similar media (video thumbnails or gallery images)."""
@@ -1299,7 +1314,9 @@ def api_remove_image_item(group_id: int, item_id: int):
     db = VideoDatabase()
     
     try:
-        db.remove_image_item_by_id(item_id)
+        removed = db.remove_image_item_by_id(item_id, group_id)
+        if not removed:
+            return jsonify({'error': 'Image item not found in this group'}), 404
         return jsonify({'success': True}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500

@@ -32,6 +32,11 @@ def api_gallery_groups():
     return legacy.api_gallery_groups()
 
 
+@gallery_bp.route("/api/gallery/images/<path:filename>/groups", methods=["GET"])
+def api_gallery_image_groups(filename: str):
+    return legacy.api_gallery_image_groups(filename)
+
+
 @gallery_bp.route("/api/similar/<kind>/<path:filename>")
 def api_similar(kind: str, filename: str):
     return legacy.api_similar(kind, filename)

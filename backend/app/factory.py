@@ -59,6 +59,7 @@ def create_app() -> Flask:
     app.add_url_rule("/gallery/groups/<slug>", endpoint="gallery_group", view_func=legacy.gallery_group)
     app.add_url_rule("/api/gallery", endpoint="api_gallery_images", view_func=legacy.api_gallery_images, methods=["GET"])
     app.add_url_rule("/api/gallery/groups", endpoint="api_gallery_groups", view_func=legacy.api_gallery_groups, methods=["GET", "POST"])
+    app.add_url_rule("/api/gallery/images/<path:filename>/groups", endpoint="api_gallery_image_groups", view_func=legacy.api_gallery_image_groups, methods=["GET"])
     app.add_url_rule("/api/similar/<kind>/<path:filename>", endpoint="api_similar", view_func=legacy.api_similar)
     app.add_url_rule("/api/gallery/groups/similar", endpoint="api_gallery_group_similar", view_func=legacy.api_gallery_group_similar, methods=["POST"])
     app.add_url_rule("/api/gallery/groups/<int:group_id>/images", endpoint="api_add_images_to_group", view_func=legacy.api_add_images_to_group, methods=["POST"])

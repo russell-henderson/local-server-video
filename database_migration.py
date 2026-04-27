@@ -892,6 +892,21 @@ class VideoDatabase:
             )
             return [dict(row) for row in cursor.fetchall()]
 
+    def get_groups_for_image(self, image_path: str) -> List[Dict]:
+        """Get all gallery groups that currently contain an image."""
+        with self.get_connection() as conn:
+            cursor = conn.execute(
+                """SELECT gallery_groups.id, gallery_groups.name,
+                          gallery_groups.slug, gallery_groups.cover_image
+                   FROM gallery_groups
+                   INNER JOIN gallery_group_items
+                     ON gallery_group_items.group_id = gallery_groups.id
+                   WHERE gallery_group_items.image_path = ?
+                   ORDER BY gallery_groups.name ASC""",
+                (image_path,)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
     def remove_image_from_group(self, group_id: int,
                                 image_path: str) -> None:
         """Remove an image from a gallery group"""
@@ -903,14 +918,23 @@ class VideoDatabase:
             )
             conn.commit()
 
-    def remove_image_item_by_id(self, item_id: int) -> None:
-        """Remove a specific image item by its ID (handles duplicates)"""
+    def remove_image_item_by_id(self, item_id: int,
+                                group_id: Optional[int] = None) -> bool:
+        """Remove a specific image item by ID, optionally constrained to a group."""
         with self.get_connection() as conn:
-            conn.execute(
-                """DELETE FROM gallery_group_items WHERE id = ?""",
-                (item_id,)
-            )
+            if group_id is None:
+                cursor = conn.execute(
+                    """DELETE FROM gallery_group_items WHERE id = ?""",
+                    (item_id,)
+                )
+            else:
+                cursor = conn.execute(
+                    """DELETE FROM gallery_group_items
+                       WHERE id = ? AND group_id = ?""",
+                    (item_id, group_id)
+                )
             conn.commit()
+            return cursor.rowcount > 0
 
     def update_group_name(self, group_id: int, name: str) -> None:
         """Update a gallery group's name"""

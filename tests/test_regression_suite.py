@@ -14,6 +14,7 @@ from backend.app.api.ratings import is_lan_origin
 from backend.app.factory import create_app
 from backend.app import legacy_runtime
 from backend.app.core.rate_limiter import RateLimiter
+from database_migration import VideoDatabase
 from backend.services.ratings_service import RatingsService
 
 
@@ -99,6 +100,7 @@ def test_watch_page_main_and_related_have_metadata_controls(client):
 def test_gallery_baseline_routes(client):
     assert client.get("/gallery").status_code == 200
     assert client.get("/api/gallery").status_code == 200
+    assert client.get("/api/gallery/images/example.jpg/groups").status_code == 200
 
 
 def test_gallery_routes_registered_once(app):
@@ -109,6 +111,7 @@ def test_gallery_routes_registered_once(app):
         "/gallery/groups/<slug>",
         "/api/gallery",
         "/api/gallery/groups",
+        "/api/gallery/images/<path:filename>/groups",
         "/api/gallery/groups/similar",
         "/api/gallery/groups/<int:group_id>/images",
         "/api/gallery/groups/<int:group_id>/images/<path:image_path>",
@@ -122,6 +125,34 @@ def test_gallery_routes_registered_once(app):
 
     assert all(count == 1 for count in rule_counts.values()), rule_counts
     assert app.view_functions["gallery"] is legacy_runtime.gallery
+
+
+def test_gallery_image_membership_and_item_delete_are_group_scoped(client):
+    db = VideoDatabase()
+    suffix = uuid4().hex
+    image_path = f"phase1-{suffix}.jpg"
+    first_group = db.create_gallery_group(f"phase1 first {suffix}", image_path)
+    second_group = db.create_gallery_group(f"phase1 second {suffix}", image_path)
+    db.add_images_to_group(first_group, [image_path])
+    db.add_images_to_group(second_group, [image_path])
+
+    membership = client.get(f"/api/gallery/images/{image_path}/groups")
+    assert membership.status_code == 200
+    group_ids = {group["id"] for group in (membership.get_json() or {}).get("groups", [])}
+    assert {first_group, second_group}.issubset(group_ids)
+
+    first_item = db.get_group_images_with_ids(first_group)[0]
+    wrong_group_delete = client.delete(
+        f"/api/gallery/groups/{second_group}/items/{first_item['id']}"
+    )
+    assert wrong_group_delete.status_code == 404
+    assert db.get_group_images(first_group) == [image_path]
+
+    correct_group_delete = client.delete(
+        f"/api/gallery/groups/{first_group}/items/{first_item['id']}"
+    )
+    assert correct_group_delete.status_code == 200
+    assert db.get_group_images(first_group) == []
 
 
 def test_admin_cache_contract_remains_stable(client):
