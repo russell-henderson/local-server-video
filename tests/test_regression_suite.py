@@ -101,6 +101,29 @@ def test_gallery_baseline_routes(client):
     assert client.get("/api/gallery").status_code == 200
 
 
+def test_gallery_routes_registered_once(app):
+    """Gallery keeps legacy endpoint names without duplicate URL dispatch rules."""
+    gallery_rules = {
+        "/gallery",
+        "/gallery/image/<path:filename>",
+        "/gallery/groups/<slug>",
+        "/api/gallery",
+        "/api/gallery/groups",
+        "/api/gallery/groups/similar",
+        "/api/gallery/groups/<int:group_id>/images",
+        "/api/gallery/groups/<int:group_id>/images/<path:image_path>",
+        "/api/gallery/groups/<int:group_id>/items/<int:item_id>",
+        "/api/gallery/groups/<int:group_id>",
+    }
+    rule_counts = {
+        rule_path: sum(1 for rule in app.url_map.iter_rules() if rule.rule == rule_path)
+        for rule_path in gallery_rules
+    }
+
+    assert all(count == 1 for count in rule_counts.values()), rule_counts
+    assert app.view_functions["gallery"] is legacy_runtime.gallery
+
+
 def test_admin_cache_contract_remains_stable(client):
     status_response = client.get("/admin/cache/status")
     assert status_response.status_code == 200

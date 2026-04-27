@@ -5,7 +5,6 @@ from flask import Flask
 
 from backend.app.api.ratings import register_ratings_api
 from backend.app.admin.routes import register_admin_routes
-from backend.app.gallery.routes import gallery_bp
 from backend.app.media.routes import media_bp
 from backend.app.metadata.routes import metadata_bp
 from backend.app.tags.routes import tags_bp
@@ -23,7 +22,6 @@ def create_app() -> Flask:
     )
     app.register_blueprint(media_bp)
     app.register_blueprint(tags_bp)
-    app.register_blueprint(gallery_bp)
     app.register_blueprint(metadata_bp)
     register_ratings_api(app)
     register_admin_routes(app)
@@ -33,7 +31,8 @@ def create_app() -> Flask:
     app.after_request(legacy._perf_log_after_request)
     app.teardown_appcontext(legacy.cleanup)
 
-    # Preserve legacy endpoint names used in templates/url_for calls.
+    # Preserve legacy endpoint names used in templates/url_for calls. Gallery routes
+    # stay here until they can move to the blueprint without changing endpoint names.
     app.add_url_rule("/ping", endpoint="ping", view_func=legacy.ping)
     app.add_url_rule("/favicon.ico", endpoint="favicon", view_func=legacy.favicon)
     app.add_url_rule("/", endpoint="index", view_func=legacy.index)
