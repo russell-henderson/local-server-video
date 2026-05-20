@@ -170,6 +170,52 @@ def performance_active_streams():
 
 
 # ============================================================================
+# MEDIA MANAGEMENT ENDPOINTS
+# ============================================================================
+
+from backend.app.admin.operations import AdminMediaManager
+
+# Initialization of management instance
+media_manager = AdminMediaManager()
+
+@admin_bp.route("/media/rename", methods=["POST"])
+def admin_rename_media():
+    """Administrative structural rename endpoint."""
+    data = request.get_json() or {}
+    old_filename = data.get("old_filename")
+    new_filename = data.get("new_filename")
+
+    if not old_filename or not new_filename:
+        return _error_response("MISSING_ARGUMENTS", "Both old and new filenames are required.", status=400)
+
+    try:
+        result = media_manager.rename_media(old_filename, new_filename)
+        return jsonify(result)
+    except (FileNotFoundError, FileExistsError) as err:
+        return _error_response("FILE_CONFLICT", str(err), status=409)
+    except Exception as exc:
+        return _error_response("INTERNAL_EXECUTION_ERROR", str(exc), status=500)
+
+@admin_bp.route("/media/duplicate", methods=["POST"])
+def admin_duplicate_media():
+    """Administrative media and metadata asset cloning endpoint."""
+    data = request.get_json() or {}
+    source_filename = data.get("source_filename")
+    dest_filename = data.get("dest_filename")
+
+    if not source_filename or not dest_filename:
+        return _error_response("MISSING_ARGUMENTS", "Both source and destination filenames must be provided.", status=400)
+
+    try:
+        result = media_manager.duplicate_media(source_filename, dest_filename)
+        return jsonify(result)
+    except (FileNotFoundError, FileExistsError) as err:
+        return _error_response("FILE_CONFLICT", str(err), status=409)
+    except Exception as exc:
+        return _error_response("INTERNAL_EXECUTION_ERROR", str(exc), status=500)
+
+
+# ============================================================================
 # REGISTRATION FUNCTION (called from main.py)
 # ============================================================================
 

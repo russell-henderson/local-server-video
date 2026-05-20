@@ -2,7 +2,7 @@
 from flask import Blueprint
 
 # Shared admin blueprint used across admin routes.
-# Routes declare their full paths so no url_prefix is set here.
-admin_bp = Blueprint("admin", __name__)
+# Mapped under /dashboard as per Phase 1 directive.
+admin_bp = Blueprint("admin", __name__, url_prefix="/dashboard")
 
 __all__ = ["admin_bp"]

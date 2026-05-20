@@ -76,6 +76,24 @@ class VideoDatabase:
                     filename TEXT PRIMARY KEY REFERENCES videos(filename) ON DELETE CASCADE,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
+
+                -- Playlists table
+                CREATE TABLE IF NOT EXISTS playlists (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL UNIQUE,
+                    description TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+
+                -- Playlist items table
+                CREATE TABLE IF NOT EXISTS playlist_items (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    playlist_id INTEGER,
+                    video_filename TEXT,
+                    position INTEGER,
+                    FOREIGN KEY(playlist_id) REFERENCES playlists(id) ON DELETE CASCADE,
+                    FOREIGN KEY(video_filename) REFERENCES videos(filename) ON DELETE CASCADE
+                );
                 
                 -- Media hash mapping (bidirectional lookup)
                 CREATE TABLE IF NOT EXISTS media_hash_map (
@@ -491,6 +509,17 @@ class VideoDatabase:
             
             conn.commit()
             return new_status
+
+    def set_favorite(self, filename: str, is_favorite: bool):
+        """Explicitly set favorite status for a video."""
+        with self.get_connection() as conn:
+            # Ensure video exists in base table
+            conn.execute("INSERT OR IGNORE INTO videos (filename) VALUES (?)", (filename,))
+            if is_favorite:
+                conn.execute("INSERT OR IGNORE INTO favorites (filename) VALUES (?)", (filename,))
+            else:
+                conn.execute("DELETE FROM favorites WHERE filename = ?", (filename,))
+            conn.commit()
     
     def get_favorites(self) -> List[str]:
         """Get list of favorite video filenames"""

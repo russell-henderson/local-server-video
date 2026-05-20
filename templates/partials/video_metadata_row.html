@@ -1,4 +1,4 @@
-{# Shared card footer row contract: favorite | rating | views #}
+{% from "partials/icons.html" import favorite_icon %}
 {% set favorite_filenames = favorites_list|default([], true) %}
 {% set views_value = current_views|default(0, true) %}
 <div class="video-metadata-row mt-auto">
@@ -9,7 +9,15 @@
       title="Toggle Favorite"
       aria-label="{% if filename in favorite_filenames %}Remove from favorites{% else %}Add to favorites{% endif %}"
     >
-      <span class="icon favorite-icon{% if filename in favorite_filenames %} is-on{% endif %}"></span>
+      {{ favorite_icon(filename in favorite_filenames) }}
+    </button>
+    <button
+      class="btn btn-sm playlist-add-btn touch-target ms-2"
+      data-filename="{{ filename }}"
+      title="Add to Playlist"
+      aria-label="Add to Playlist"
+    >
+      <i class="fas fa-list-ul"></i>
     </button>
   </div>
 

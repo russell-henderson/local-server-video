@@ -4,6 +4,7 @@ from pathlib import Path
 from flask import Flask
 
 from backend.app.api.ratings import register_ratings_api
+from backend.app.api.playlists import register_playlists_api
 from backend.app.admin.routes import register_admin_routes
 from backend.app.media.routes import media_bp
 from backend.app.metadata.routes import metadata_bp
@@ -24,6 +25,7 @@ def create_app() -> Flask:
     app.register_blueprint(tags_bp)
     app.register_blueprint(metadata_bp)
     register_ratings_api(app)
+    register_playlists_api(app)
     register_admin_routes(app)
 
     # Keep startup side-effects and request hooks from legacy runtime.
@@ -48,6 +50,8 @@ def create_app() -> Flask:
     app.add_url_rule("/api/tags/video", endpoint="video_tags_api", view_func=legacy.video_tags_api)
     app.add_url_rule("/favorite", endpoint="toggle_favorite", view_func=legacy.toggle_favorite, methods=["POST"])
     app.add_url_rule("/favorites", endpoint="favorites_page", view_func=legacy.favorites_page)
+    app.add_url_rule("/playlists", endpoint="playlists_hub", view_func=legacy.playlists_hub)
+    app.add_url_rule("/playlist/<int:playlist_id>", endpoint="playlist_view", view_func=legacy.playlist_view)
     app.add_url_rule("/random", endpoint="random_video", view_func=legacy.random_video)
     app.add_url_rule("/tags", endpoint="tags_page", view_func=legacy.tags_page)
     app.add_url_rule("/tag/<tag>", endpoint="tag_videos", view_func=legacy.tag_videos)

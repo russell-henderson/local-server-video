@@ -1350,6 +1350,38 @@ def api_modify_group(group_id: int):
         except Exception as e:
             return jsonify({'error': str(e)}), 500
 
+@app.route("/playlists")
+def playlists_hub():
+    """Render the central Playlists Hub."""
+    from backend.app.services.playlists_service import PlaylistsService
+    service = PlaylistsService()
+    playlists = service.get_playlists()
+    
+    # Add counts
+    with service.db.get_session() as conn:
+        for p in playlists:
+            row = conn.execute(
+                "SELECT COUNT(*) FROM playlist_items WHERE playlist_id = ?",
+                (p['id'],)
+            ).fetchone()
+            p['item_count'] = row[0]
+            
+    return render_template("playlists_hub.html", playlists=playlists)
+
+
+@app.route("/playlist/<int:playlist_id>")
+def playlist_view(playlist_id):
+    """Render the sequential Playlist viewer."""
+    from backend.app.services.playlists_service import PlaylistsService
+    service = PlaylistsService()
+    result = service.get_playlist_queue(playlist_id)
+    
+    if not result.get("success"):
+        abort(404)
+        
+    return render_template("playlist_view.html", playlist=result)
+
+
 # ─── BACKGROUND TASKS & STARTUP ─────────────────────────────────────
 
 

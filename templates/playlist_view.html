@@ -1,0 +1,202 @@
+{% extends "_base.html" %}
+
+{% block title %}{{ playlist.name }} - Sequential Playback{% endblock %}
+
+{% block extra_head %}
+<style>
+    .split-layout {
+        display: grid;
+        grid-template-columns: 1fr 340px;
+        gap: 2rem;
+        align-items: start;
+    }
+
+    .queue-pane {
+        background: rgba(22, 27, 34, 0.5);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        max-height: calc(100vh - 200px);
+    }
+
+    .queue-header {
+        padding: 1.25rem;
+        background: rgba(255, 255, 255, 0.03);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .queue-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        overflow-y: auto;
+    }
+
+    .queue-item {
+        padding: 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+    }
+
+    .queue-item:hover {
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .queue-item.active {
+        background: rgba(59, 130, 246, 0.15);
+        border-left: 3px solid var(--primary-color);
+    }
+
+    .queue-item-thumb {
+        width: 80px;
+        height: 45px;
+        border-radius: 4px;
+        object-fit: cover;
+        background: #000;
+    }
+
+    .queue-item-info {
+        flex-grow: 1;
+        min-width: 0;
+    }
+
+    .queue-item-title {
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: #e2e8f0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-bottom: 0.2rem;
+    }
+
+    .queue-item-meta {
+        font-size: 0.75rem;
+        color: #64748b;
+    }
+
+    @media (max-width: 992px) {
+        .split-layout {
+            grid-template-columns: 1fr;
+        }
+        .queue-pane {
+            max-height: none;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="video-hero card mb-4">
+    <div class="d-flex align-items-center gap-3">
+        <a href="{{ url_for('playlists_hub') }}" class="btn btn-sm btn-outline-secondary" style="margin-top:0">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <div>
+            <p class="eyebrow text-uppercase mb-1">Playlist Queue</p>
+            <h1 class="hero-title mb-0">{{ playlist.name }}</h1>
+        </div>
+    </div>
+</section>
+
+<div class="split-layout">
+    <div class="player-pane">
+        <div class="video-container p-0 overflow-hidden">
+            <div class="player shadow-lg">
+                <video id="playlist-video-player" controls autoplay class="w-100">
+                    {% if playlist.items %}
+                    <source src="{{ url_for('stream_video', filename=playlist.items[0].video_filename) }}" type="video/mp4">
+                    {% endif %}
+                </video>
+            </div>
+        </div>
+        <div class="mt-4 p-4 card glassmorphic">
+            <h3 id="current-playing-title" class="mb-2">
+                {% if playlist.items %}{{ playlist.items[0].video_filename }}{% else %}No videos in playlist{% endif %}
+            </h3>
+            <p class="subtle-text mb-0">{{ playlist.description or 'Sequential playback mode enabled.' }}</p>
+        </div>
+    </div>
+
+    <aside class="queue-pane">
+        <div class="queue-header">
+            <h5 class="mb-0">Upcoming Queue <span class="badge bg-primary ms-2">{{ playlist.items|length }}</span></h5>
+        </div>
+        <div class="queue-list" id="playlist-queue">
+            {% for item in playlist.items %}
+            <div class="queue-item {% if loop.first %}active{% endif %}" 
+                 data-filename="{{ item.video_filename }}" 
+                 data-index="{{ loop.index0 }}">
+                {% set thumb_stem = item.video_filename.rsplit('.',1)[0] %}
+                <img src="{{ url_for('static', filename='thumbnails/' ~ thumb_stem ~ '.jpg') }}" 
+                     class="queue-item-thumb" 
+                     onerror="this.src='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';">
+                <div class="queue-item-info">
+                    <div class="queue-item-title">{{ item.video_filename }}</div>
+                    <div class="queue-item-meta">{{ (item.duration / 60)|round(1) if item.duration else '??' }} min</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </aside>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const videoPlayer = document.getElementById('playlist-video-player');
+        const queueItems = document.querySelectorAll('.queue-item');
+        const playingTitle = document.getElementById('current-playing-title');
+        let currentIndex = 0;
+
+        function playAtIndex(index) {
+            if (index < 0 || index >= queueItems.length) return;
+            
+            currentIndex = index;
+            const item = queueItems[index];
+            const filename = item.dataset.filename;
+            
+            // Update active state in UI
+            queueItems.forEach(el => el.classList.remove('active'));
+            item.classList.add('active');
+            item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            
+            // Update player
+            videoPlayer.src = `/video/${encodeURIComponent(filename)}`;
+            playingTitle.textContent = filename;
+            videoPlayer.play();
+            
+            // Update URL hash without reload for shareability
+            window.location.hash = `pos-${index}`;
+        }
+
+        videoPlayer.addEventListener('ended', () => {
+            if (currentIndex + 1 < queueItems.length) {
+                playAtIndex(currentIndex + 1);
+            }
+        });
+
+        queueItems.forEach(item => {
+            item.addEventListener('click', () => {
+                playAtIndex(parseInt(item.dataset.index));
+            });
+        });
+        
+        // Handle deep-linking to position
+        const hash = window.location.hash;
+        if (hash.startsWith('#pos-')) {
+            const pos = parseInt(hash.split('-')[1]);
+            if (!isNaN(pos)) playAtIndex(pos);
+        }
+    });
+</script>
+{% endblock %}

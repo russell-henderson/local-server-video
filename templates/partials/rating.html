@@ -1,3 +1,4 @@
+{% from "partials/icons.html" import star_icon %}
 <!-- templates/partials/rating.html
      Reusable rating widget component with accessible buttons and shared data attributes -->
 {% set current = current_rating or 0 %}
@@ -13,7 +14,7 @@
             role="radio"
             class="star {% if i <= current %}is-active{% endif %}"
             aria-label="{{ i }} star{% if i != 1 %}s{% endif %}">
-      <span class="icon star-icon{% if i <= current %} is-on{% endif %}"></span>
+      {{ star_icon(i <= current) }}
     </button>
   {% endfor %}
 </div>

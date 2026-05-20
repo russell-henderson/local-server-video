@@ -1,0 +1,20 @@
+<!-- templates/partials/playlist_modal.html
+     Glassmorphic overlay for playlist management -->
+<div id="playlist-modal-overlay" class="playlist-modal-overlay">
+    <div class="playlist-modal">
+        <div class="playlist-modal-header">
+            <h3 class="playlist-modal-title">Add to Playlist</h3>
+            <button id="playlist-modal-close" class="playlist-modal-close" aria-label="Close">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="playlist-modal-body" id="playlist-list-container">
+            <!-- Dynamic playlist items injected by static/js/playlists.js -->
+        </div>
+        <div class="playlist-modal-footer">
+            <button id="btn-create-playlist" class="btn-create-playlist">
+                <i class="fas fa-plus"></i> Create New Playlist
+            </button>
+        </div>
+    </div>
+</div>
