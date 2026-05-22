@@ -8,14 +8,21 @@
 <div class="row">
   {% for video in videos %}
   <div class="col-sm-6 col-md-4 col-lg-3 mb-4">
-    <div class="card h-100">
+    <div class="card h-100" data-role="video-card">
       <a href="{{ url_for('watch_video', filename=video.filename) }}">
-        {% set thumb_stem = video.filename.rsplit('.',1)[0] %}
-        {% set thumbnail = 'thumbnails/' ~ thumb_stem ~ '.jpg' %}
-        <img class="card-img-top video-thumbnail"
-             src="{{ url_for('static', filename=thumbnail) | safe }}"
-             alt="{{ video.filename }}"
-             onerror="this.onerror=null;this.src='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';">
+        <div class="video-preview-container">
+          {% set thumb_stem = video.filename.rsplit('.',1)[0] %}
+          {% set thumbnail = 'thumbnails/' ~ thumb_stem ~ '.jpg' %}
+          <img class="card-img-top video-thumbnail"
+               src="{{ url_for('static', filename=thumbnail) | safe }}"
+               alt="{{ video.filename }}"
+               onerror="this.onerror=null;this.src='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';">
+          <div class="video-preview" data-filename="{{ video.filename }}" allowfullscreen allow="fullscreen">
+            <video muted preload="none" controls playsinline>
+              <source src="{{ url_for('stream_video', filename=video.filename) }}" type="video/mp4">
+            </video>
+          </div>
+        </div>
       </a>
       <div class="card-body p-2 d-flex flex-column">
         {% with tags=video.tags, max_tags=3, show_overflow_count=True, tag_scope='card' %}
@@ -39,6 +46,7 @@
 {% endblock %}
 
 {% block extra_scripts %}
+  <script src="{{ url_for('static', filename='video-preview-enhanced.js') }}" defer></script>
   <script src="{{ url_for('static', filename='optimized-utils.js') }}" defer></script>
   <script src="{{ url_for('static', filename='dark.js') }}" defer></script>
 

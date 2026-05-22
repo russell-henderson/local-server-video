@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   video-server:
     build:
@@ -11,13 +9,13 @@ services:
       - ./images:/app/images
       - ./static/thumbnails:/app/static/thumbnails
       - ./logs:/app/logs
-      - ./data/video_metadata.db:/app/data/video_metadata.db
-      - ./data/video_search.db:/app/data/video_search.db
+      # Map the directory context instead of individual files to avoid broken-link container locks
+      - ./data:/app/data
     environment:
       - LVS_HOST=0.0.0.0
       - LVS_PORT=5000
       - LVS_DEBUG=false
-      - LVS_DB_PATH=data/video_metadata.db
+      - LVS_DB_PATH=/app/data/video_metadata.db
     ports:
       - "5000:5000"
     restart: unless-stopped
@@ -52,4 +50,4 @@ services:
       - ./logs:/app/logs:ro
       - ./videos:/app/videos:ro
       - ./images:/app/images:ro
-      - ./data/video_metadata.db:/app/data/video_metadata.db:ro
+      - ./data:/app/data:ro

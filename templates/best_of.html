@@ -26,8 +26,8 @@
                  onerror="this.onerror=null;this.src='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';">
             
             <!-- Video preview element (hidden by default) -->
-            <div class="video-preview" data-filename="{{ video.filename }}">
-              <video muted preload="none">
+            <div class="video-preview" data-filename="{{ video.filename }}" allowfullscreen allow="fullscreen">
+              <video muted preload="none" controls playsinline>
                 <source src="{{ url_for('stream_video', filename=video.filename) }}" type="video/mp4">
               </video>
             </div>

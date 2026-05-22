@@ -1,28 +1,33 @@
-You are an expert full-stack engineer and a meticulous implementation assistant working on the "Local Video Server" project. With our complete Playlist System successfully running inside Docker, we are ready to move to our next priority. 
+You are an expert database automation developer and backend engineer working on the "Local Video Server" project. The user's gallery groups are missing or unlinked due to a structural database refresh. We need a standalone automation script (`scripts/auto_grouper.py`) to scan the video collection, automatically group files by hair color keywords parsed from the filenames, and automatically route any motion formats (`.gif`, `.webp`) into a specialized "Motion" group.
 
-Select ONE of the following architectural workflows to implement next based on our current roadmap requirements:
+### 1. TARGET TABLES & SCHEMA SCHEDULING
+The script must interact directly with the authoritative database path `./data/video_metadata.db` using these explicit tables:
+- `videos`: To query the authoritative list of active `filename` strings.
+- `gallery_groups`: To create or locate the groups. Columns typically include: `id` (INTEGER PK), `name` (TEXT UNIQUE), and optional metadata fields like `cover_path`.
+- `gallery_group_items`: To bind files to their respective groups. Columns include: `group_id` (INTEGER) and `image_path` (TEXT—which stores the video filename in this schema configuration).
 
-### OPTION 1: METADATA PERSISTENCE AND RENDERING RECTIFICATION (Priority 1)
+### 2. TASK: CONSTRUCT THE AUTOMATED GALLERY GROUPER
+Generate a clean, self-contained Python script saved at `scripts/auto_grouper.py`. The script must execute the following automated steps natively:
 
-- **Target Goal:** Investigate and resolve metadata consistency issues across home, gallery, watch, favorites, and tag surfaces.
-- **Core Fixes:** 1. Restore missing rating stars context where partials fail to render.
-  2. Audit why new favorites may fail to persist, and ensure legacy favorites are correctly maintained without defaulting to false.
-  3. Ensure tag aggregation dynamically merges SQLite database tags with legacy file sidecars case-insensitively without causing tags to drop.
-- **Rules:** The SQLite database file (`./data/video_metadata.db`) is the absolute source of truth for active writes. Never reintroduce raw JSON writes on hot paths.
+#### Phase A: Define Group Targets & Rules
+1. **Motion Rule:** Any file ending with a `.gif` or `.webp` extension must immediately be assigned to a group named `Motion`, bypassing the hair color classification.
+2. **Hair Color Classification Mapping:** For all other media files, check the `filename` case-insensitively against specific word variations to assign a category:
+   - Keyword mappings for `Blonde`: matches `blonde`, `blond`
+   - Keyword mappings for `Brunette`: matches `brunette`
+   - Keyword mappings for `Redhead`: matches `redhead`, `red hair`, `ginger`
+   - Keyword mappings for `Dark Hair`: matches `dark hair`, `black hair`, `raven`
 
-### OPTION 2: ULTRAPREMIUM NAVBAR STYLING & RESPONSIVE POLISH (Priority 2)
+#### Phase B: Execute Database Transaction Loops
+1. Open a secure connection to `./data/video_metadata.db`.
+2. **Upsert Groups:** For each target group (`Motion`, `Blonde`, `Brunette`, `Redhead`, `Dark Hair`), verify it exists in `gallery_groups` using `INSERT OR IGNORE`. Retrieve its matching `id`.
+3. **Map Items:** Query all records from the `videos` table. Apply the rules from Phase A.
+4. **Batch Insertion:** Run a high-performance batch insert (`executemany`) into `gallery_group_items` to map the items to their `group_id`. Use `INSERT OR IGNORE` to prevent uniqueness constraint faults if any structural items already exist in the background.
 
-- **Target Goal:** Refine the global layout shell toward a responsive, ultra-premium glassmorphic layout.
-- **Core Fixes:**
-  1. Stylize "Local" text elegantly and drop the redundant "Video Server" text string.
-  2. Keep "Home" perfectly centered, eliminate the duplicate "Random" link, and move the remaining random control into a centered, vertically aligned asset on the far right.
-  3. Shrink the oversized search bar, embed the magnifying glass icon cleanly inside the input wrapper, and adjust layout spacing to prevent the new rating/playlist elements from overflowing smaller tablet or mobile screens.
+#### Phase C: Output & Summary Status
+Print structured summary metrics to standard output tracking exactly how many files were successfully routed into each respective group gallery.
 
-### PERFORMANCE CONSTRAINTS
-Regardless of choice, all read pathways must maintain optimized caching layers. Do not introduce synchronous file parses, blocking operations, or directory scans on hot request lines.
-
-### OUTPUT SPECIFICATION
-
-1. Confirm which option you are selecting to prioritize.
-2. Map out the precise backend services, Jinja templates, or static JavaScript/CSS asset configurations that need modifications.
-3. Provide the full code files or high-precision patches along with clean, non-blocking Windows PowerShell validation scripts to execute inside Docker.
+### 3. WINDOWS-SAFE POWERSHELL RUN & VERIFY PROTOCOL
+Provide a single, flattened block of PowerShell commands optimized for Windows environments. It must:
+- Execute `scripts/auto_grouper.py` inside the active `video-server` Docker container.
+- Restart the `video-server` service container to instantly invalidate old in-memory representations and refresh the layout.
+- Run a single-line inline Python check to query `gallery_group_items` along with an inner join on `gallery_groups`, printing out the count of active rows per group to verify structural synchronization.

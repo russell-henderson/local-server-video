@@ -203,12 +203,30 @@ class VideoPlayer {
   }
   
   toggleFullscreen() {
-    if (!document.fullscreenElement) {
-      this.root.requestFullscreen().catch(err => {
-        console.log('Error attempting to enable fullscreen:', err);
-      });
+    const el = this.root;
+    const isFullscreen = document.fullscreenElement || 
+                         document.webkitFullscreenElement || 
+                         document.mozFullScreenElement || 
+                         document.msFullscreenElement;
+
+    if (!isFullscreen) {
+      const request = el.requestFullscreen || 
+                      el.webkitRequestFullscreen || 
+                      el.mozRequestFullScreen || 
+                      el.msRequestFullscreen;
+      if (request) {
+        request.call(el).catch(err => {
+          console.error(`Fullscreen error: ${err.message} (${err.name})`);
+        });
+      }
     } else {
-      document.exitFullscreen();
+      const exit = document.exitFullscreen || 
+                   document.webkitExitFullscreen || 
+                   document.mozCancelFullScreen || 
+                   document.msExitFullscreen;
+      if (exit) {
+        exit.call(document);
+      }
     }
   }
   

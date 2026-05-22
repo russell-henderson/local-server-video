@@ -604,15 +604,24 @@ body {
   transition: opacity var(--transition-fast), transform var(--transition-fast);
   opacity: 0;
   transform: translateY(6px);
-  pointer-events: none;
+  pointer-events: none; /* Container itself never intercepts clicks */
+  z-index: var(--z-overlay);
 }
 
 .player:hover .player-controls,
 .player.controls-visible .player-controls {
   opacity: 1;
   transform: translateY(0);
+}
+
+/* Only the interactive elements should intercept pointer events when visible */
+.player:hover .player-controls button,
+.player:hover .player-controls input,
+.player.controls-visible .player-controls button,
+.player.controls-visible .player-controls input {
   pointer-events: auto;
 }
+
 
 .player-controls button {
   background: rgba(255, 255, 255, 0.2);

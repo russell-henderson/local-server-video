@@ -1,8 +1,9 @@
 <!-- templates/_player.html -->
-<div class="player" data-player>
+<div class="player" data-player allowfullscreen allow="fullscreen">
   <video 
     src="{{ url_for('stream_video', filename=filename) }}" 
     playsinline
+    controls
     preload="metadata"
     data-filename="{{ filename }}"
   ></video>

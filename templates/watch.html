@@ -43,7 +43,7 @@
 {% endwith %}
 
 <!-- Video player using shared component -->
-<div class="row video-container mb-4">
+<div class="row video-container mb-4" allowfullscreen allow="fullscreen">
   <div class="col-12">
     {% include '_player.html' %}
   </div>
@@ -61,13 +61,17 @@
         <a href="{{ url_for('watch_video', filename=video.filename) }}">
           {% set thumb_stem = video.filename.rsplit('.', 1)[0] %}
           {% set thumb = 'thumbnails/' ~ thumb_stem ~ '.jpg' %}
-          <div class="thumbnail-container">
+          <div class="video-preview-container">
             <img class="card-img-top video-thumbnail"
                  src="{{ url_for('static', filename=thumb) | safe }}"
                  alt="{{ video.filename }}"
                  onerror="this.onerror=null;this.src='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';">
-            <div class="play-overlay">
-              <i class="fas fa-play"></i>
+            
+            <!-- Video preview element (hidden by default) -->
+            <div class="video-preview" data-filename="{{ video.filename }}" allowfullscreen allow="fullscreen">
+              <video muted preload="none" controls playsinline>
+                <source src="{{ url_for('stream_video', filename=video.filename) }}" type="video/mp4">
+              </video>
             </div>
           </div>
         </a>
@@ -104,6 +108,7 @@
 
 {% block extra_scripts %}
   <!-- Watch page specific scripts -->
+  <script src="{{ url_for('static', filename='video-preview-enhanced.js') }}" defer></script>
   <script src="{{ url_for('static', filename='js/ui.js') }}"></script>
   <script src="{{ url_for('static', filename='video-player-controls.js') }}" defer></script>
   <script>

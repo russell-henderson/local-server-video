@@ -109,9 +109,9 @@
 
 <div class="split-layout">
     <div class="player-pane">
-        <div class="video-container p-0 overflow-hidden">
+        <div class="video-container p-0 overflow-hidden" allowfullscreen allow="fullscreen">
             <div class="player shadow-lg">
-                <video id="playlist-video-player" controls autoplay class="w-100">
+                <video id="playlist-video-player" controls autoplay playsinline class="w-100">
                     {% if playlist.items %}
                     <source src="{{ url_for('stream_video', filename=playlist.items[0].video_filename) }}" type="video/mp4">
                     {% endif %}
