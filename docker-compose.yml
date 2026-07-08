@@ -26,7 +26,7 @@ services:
     depends_on:
       - video-server
     ports:
-      - "8080:80"
+      - "8000:80"
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
       - ./static:/usr/share/nginx/html/static:ro

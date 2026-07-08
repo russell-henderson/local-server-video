@@ -339,6 +339,28 @@ def test_video_tag_chips_partial_renders_all_when_unlimited(app):
     assert "+1" not in html
 
 
+def test_playlist_view_template_uses_items_key_not_dict_method(app):
+    playlist = {
+        "id": 1,
+        "name": "Regression Playlist",
+        "description": None,
+        "items": [
+            {
+                "video_filename": "playlist-regression.mp4",
+                "position": 0,
+                "duration": 120,
+            }
+        ],
+    }
+
+    with app.test_request_context("/playlist/1"):
+        html = render_template("playlist_view.html", playlist=playlist)
+
+    assert "/video/playlist-regression.mp4" in html
+    assert 'data-filename="playlist-regression.mp4"' in html
+    assert "Upcoming Queue" in html
+
+
 def _search_video(filename: str, tags: list[str] | None = None, title: str | None = None) -> dict:
     return {
         "filename": filename,

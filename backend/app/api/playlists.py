@@ -1,9 +1,23 @@
 """Playlists API endpoints."""
+from pathlib import Path
+
 from flask import Blueprint, jsonify, request
+from werkzeug.utils import secure_filename
+
 from backend.app.services.playlists_service import PlaylistsService
 
 playlists_bp = Blueprint("playlists", __name__, url_prefix="/api/playlists")
 service = PlaylistsService()
+
+COVER_DIR = Path("static") / "playlist_covers"
+ALLOWED_COVER_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
+MAX_COVER_BYTES = 5 * 1024 * 1024
+
+
+def _cover_files_for_playlist(playlist_id: int):
+    if not COVER_DIR.exists():
+        return []
+    return list(COVER_DIR.glob(f"{playlist_id}.*"))
 
 @playlists_bp.route("", methods=["GET"])
 def get_playlists():
@@ -32,11 +46,73 @@ def create_playlist():
     result = service.create_playlist(name, description)
     return jsonify(result), 201 if result["success"] else 400
 
+
+@playlists_bp.route("/summary", methods=["GET"])
+def playlists_summary():
+    """Return lightweight playlist dashboard summary data."""
+    return jsonify(service.get_summary())
+
 @playlists_bp.route("/<int:playlist_id>", methods=["GET"])
 def get_playlist(playlist_id):
     """Get playlist details and items."""
     result = service.get_playlist_queue(playlist_id)
     return jsonify(result), 200 if result["success"] else 404
+
+
+@playlists_bp.route("/<int:playlist_id>/metadata", methods=["PATCH"])
+def update_playlist_metadata(playlist_id):
+    """Update additive playlist metadata fields."""
+    result = service.update_metadata(playlist_id, request.get_json() or {})
+    if result.get("success"):
+        return jsonify(result)
+    status = 404 if result.get("error") == "Playlist not found." else 400
+    return jsonify(result), status
+
+
+@playlists_bp.route("/<int:playlist_id>/cover", methods=["POST"])
+def upload_playlist_cover(playlist_id):
+    """Upload or replace a playlist cover image."""
+    if request.content_length and request.content_length > MAX_COVER_BYTES:
+        return jsonify({"success": False, "error": "Cover image must be 5 MB or smaller."}), 400
+
+    upload = request.files.get("cover")
+    if not upload or not upload.filename:
+        return jsonify({"success": False, "error": "Cover file is required."}), 400
+
+    extension = Path(secure_filename(upload.filename)).suffix.lower()
+    if extension not in ALLOWED_COVER_EXTENSIONS:
+        return jsonify({"success": False, "error": "Cover must be JPG, PNG, or WebP."}), 400
+
+    playlist = service.get_playlist(playlist_id)
+    if not playlist.get("success"):
+        return jsonify(playlist), 404
+
+    COVER_DIR.mkdir(parents=True, exist_ok=True)
+    destination = COVER_DIR / f"{playlist_id}{extension}"
+    upload.save(destination)
+
+    for old_cover in _cover_files_for_playlist(playlist_id):
+        if old_cover != destination and old_cover.exists():
+            old_cover.unlink()
+
+    cover_path = f"/static/playlist_covers/{destination.name}"
+    result = service.update_cover(playlist_id, cover_path)
+    return jsonify({"success": result.get("success", False), "cover_image": cover_path, "playlist": result})
+
+
+@playlists_bp.route("/<int:playlist_id>/cover", methods=["DELETE"])
+def delete_playlist_cover(playlist_id):
+    """Remove a playlist cover image if present."""
+    playlist = service.get_playlist(playlist_id)
+    if not playlist.get("success"):
+        return jsonify(playlist), 404
+
+    for old_cover in _cover_files_for_playlist(playlist_id):
+        if old_cover.exists():
+            old_cover.unlink()
+
+    result = service.update_cover(playlist_id, None)
+    return jsonify({"success": result.get("success", False), "playlist": result})
 
 @playlists_bp.route("/<int:playlist_id>", methods=["DELETE"])
 def delete_playlist(playlist_id):

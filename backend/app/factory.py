@@ -52,6 +52,7 @@ def create_app() -> Flask:
     app.add_url_rule("/favorites", endpoint="favorites_page", view_func=legacy.favorites_page)
     app.add_url_rule("/playlists", endpoint="playlists_hub", view_func=legacy.playlists_hub)
     app.add_url_rule("/playlist/<int:playlist_id>", endpoint="playlist_view", view_func=legacy.playlist_view)
+    app.add_url_rule("/playlists/<int:playlist_id>/quick/<action>", endpoint="playlist_quick_action", view_func=legacy.playlist_quick_action)
     app.add_url_rule("/random", endpoint="random_video", view_func=legacy.random_video)
     app.add_url_rule("/tags", endpoint="tags_page", view_func=legacy.tags_page)
     app.add_url_rule("/tag/<tag>", endpoint="tag_videos", view_func=legacy.tag_videos)

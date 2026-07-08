@@ -1,6 +1,6 @@
 # Local Video Server
 
-Last updated: April 23, 2026
+Last updated: July 8, 2026
 
 Local-first media server with Flask + Docker Compose, DB-authoritative metadata, and a hash-based ratings API.
 
@@ -52,12 +52,20 @@ Local Flask run:
 python main.py
 ```
 
+The app binds to `0.0.0.0`, so it is reachable on the machine IP as well as localhost.
+Verified local URLs:
+
+- `http://192.168.4.96:5000/`
+- `http://192.168.4.96:8000/`
+
 Docker Compose run:
 
 ```powershell
 docker compose up -d --build
 docker compose ps
 ```
+
+The Compose stack publishes Flask on host port `5000` and nginx on host port `8000`.
 
 ## Ratings and Compatibility Contracts
 

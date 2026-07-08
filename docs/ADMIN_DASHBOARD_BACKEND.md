@@ -53,11 +53,11 @@ The admin dashboard endpoints share the same base URL as the main app.
 
 * Protocol: `http` or `https` depending on deployment.
 * Host: `localhost` or the LAN hostname or IP.
-* Port: configurable, default `5000` in development.
+* Port: configurable, default `5000` in development for Flask and `8000` for the nginx proxy.
 
 Examples in this document assume:
 
-* Base URL: `http://localhost:5000`
+* Base URL: `http://192.168.4.96:5000`
 
 Adjust host and port as needed for your environment.
 
@@ -98,7 +98,7 @@ Returns a complete snapshot of performance metrics and system health for the adm
 Example:
 
 ```bash
-curl "http://localhost:5000/admin/performance/json?window_seconds=900&include_routes=true&include_workers=true"
+curl "http://192.168.4.96:5000/admin/performance/json?window_seconds=900&include_routes=true&include_workers=true"
 ```
 
 #### Successful Response
@@ -242,7 +242,7 @@ Returns detailed route level metrics used by the "Per route performance table" i
 Example:
 
 ```bash
-curl "http://localhost:5000/api/admin/performance/routes?window_seconds=900&sort_by=p95_latency_ms&order=desc&limit=50"
+curl "http://192.168.4.96:5000/api/admin/performance/routes?window_seconds=900&sort_by=p95_latency_ms&order=desc&limit=50"
 ```
 
 #### Successful Response
@@ -313,7 +313,7 @@ Returns the background worker and queue metrics for the admin dashboard.
 Example:
 
 ```bash
-curl "http://localhost:5000/api/admin/performance/workers"
+curl "http://192.168.4.96:5000/api/admin/performance/workers"
 ```
 
 #### Successful Response

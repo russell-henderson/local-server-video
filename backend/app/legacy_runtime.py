@@ -1356,6 +1356,7 @@ def playlists_hub():
     from backend.app.services.playlists_service import PlaylistsService
     service = PlaylistsService()
     playlists = service.get_playlists()
+    summary = service.get_summary()
     
     # Add counts
     with service.db.get_session() as conn:
@@ -1366,7 +1367,7 @@ def playlists_hub():
             ).fetchone()
             p['item_count'] = row[0]
             
-    return render_template("playlists_hub.html", playlists=playlists)
+    return render_template("playlists_hub.html", playlists=playlists, summary=summary)
 
 
 @app.route("/playlist/<int:playlist_id>")
@@ -1380,6 +1381,43 @@ def playlist_view(playlist_id):
         abort(404)
         
     return render_template("playlist_view.html", playlist=result)
+
+
+@app.route("/playlists/<int:playlist_id>/quick/<action>")
+def playlist_quick_action(playlist_id, action):
+    """Resolve a playlist spotlight action to an existing watch/playlist route."""
+    from backend.app.services.playlists_service import PlaylistsService
+    service = PlaylistsService()
+    playlist = service.get_playlist_queue(playlist_id)
+    if not playlist.get("success"):
+        abort(404)
+
+    items = playlist.get("items") or []
+    if not items:
+        return redirect(url_for("playlist_view", playlist_id=playlist_id))
+
+    allowed = {"continue", "shuffle", "newest", "highest_rated", "custom"}
+    selected_action = action if action in allowed else playlist.get("spotlight_action", "continue")
+    selected = None
+
+    if selected_action == "continue":
+        last_played = playlist.get("last_played_video")
+        selected = next((item for item in items if item.get("video_filename") == last_played), None)
+    elif selected_action == "shuffle":
+        selected = random.choice(items)
+    elif selected_action == "newest":
+        selected = max(items, key=lambda item: item.get("added_date") or 0)
+    elif selected_action == "highest_rated":
+        ratings = cache.get_ratings()
+        selected = max(
+            items,
+            key=lambda item: ratings.get(item.get("video_filename"), 0),
+            default=None,
+        )
+
+    if selected and selected.get("video_filename"):
+        return redirect(url_for("watch_video", filename=selected["video_filename"]))
+    return redirect(url_for("playlist_view", playlist_id=playlist_id))
 
 
 # ─── BACKGROUND TASKS & STARTUP ─────────────────────────────────────

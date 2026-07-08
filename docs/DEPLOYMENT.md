@@ -1,5 +1,10 @@
 # Deployment
 
+Verified LAN access on the current workspace host:
+
+- `http://192.168.4.96:5000/`
+- `http://192.168.4.96:8000/`
+
 ## Local Flask Run
 
 ```powershell
@@ -13,6 +18,8 @@ Default host/port comes from `config.py` and `LVS_*` environment overrides.
 ```powershell
 docker compose up --build
 ```
+
+`docker-compose.yml` publishes the Flask container on `5000:5000` and the nginx proxy on `8000:80`, so the service is not localhost-only.
 
 ## Runtime Data Paths
 

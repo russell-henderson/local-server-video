@@ -40,3 +40,4 @@
 ## Documentation cleanup
 
 - [x] Phase 2 (admin docs): consolidated read map in `docs/PROJECT.md` (**Admin dashboard documentation cluster**); `docs/DOCS_INVENTORY.md` Group 8 points to it; removed erroneous opening markdown fence from `docs/ADMIN_DASHBOARD.md`.
+- [x] Align active deployment/admin docs with verified LAN IP access and nginx host port `8000`.

@@ -175,6 +175,26 @@ class VideoDatabase:
                         UPDATE phash_cache SET updated_at = CURRENT_TIMESTAMP WHERE filename = NEW.filename AND kind = NEW.kind;
                     END;
             """)
+            existing_playlist_cols = {
+                row["name"] for row in conn.execute("PRAGMA table_info(playlists)")
+            }
+            playlist_column_defaults = {
+                "cover_image": "TEXT",
+                "spotlight_label": "TEXT DEFAULT ''",
+                "spotlight_action": "TEXT DEFAULT 'continue'",
+                "spotlight_enabled": "INTEGER DEFAULT 1",
+                "sort_mode": "TEXT DEFAULT 'manual'",
+                "autoplay_next": "INTEGER DEFAULT 0",
+                "shuffle_default": "INTEGER DEFAULT 0",
+                "last_played_video": "TEXT",
+                "last_opened_at": "TIMESTAMP",
+                "updated_at": "TIMESTAMP",
+            }
+            for column_name, column_spec in playlist_column_defaults.items():
+                if column_name not in existing_playlist_cols:
+                    conn.execute(
+                        f"ALTER TABLE playlists ADD COLUMN {column_name} {column_spec}"
+                    )
             conn.commit()
     
     def migrate_from_json(self, ratings_file: str = "ratings.json", 

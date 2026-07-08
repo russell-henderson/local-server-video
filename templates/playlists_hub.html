@@ -2,176 +2,240 @@
 
 {% block title %}Playlists Hub - Local Video Server{% endblock %}
 
-{% block extra_head %}
-<style>
-    .playlist-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-        gap: 1.5rem;
-    }
-
-    .playlist-card {
-        background: rgba(22, 27, 34, 0.6);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: var(--radius-lg);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-        overflow: hidden;
-        position: relative;
-    }
-
-    .playlist-card:hover {
-        transform: translateY(-5px);
-        border-color: rgba(59, 130, 246, 0.4);
-        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
-        background: rgba(22, 27, 34, 0.8);
-    }
-
-    .playlist-card-header {
-        padding: 1.5rem;
-        flex-grow: 1;
-    }
-
-    .playlist-title {
-        font-size: 1.4rem;
-        font-weight: 700;
-        margin-bottom: 0.5rem;
-        color: #f8fafc;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-    }
-
-    .playlist-desc {
-        font-size: 0.95rem;
-        color: #94a3b8;
-        margin-bottom: 1rem;
-        line-height: 1.5;
-        display: -webkit-box;
-        -webkit-line-clamp: 3;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-    }
-
-    .playlist-meta {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        margin-top: auto;
-    }
-
-    .playlist-card-footer {
-        padding: 1rem 1.5rem;
-        background: rgba(0, 0, 0, 0.2);
-        border-top: 1px solid rgba(255, 255, 255, 0.05);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .btn-play-playlist {
-        background: var(--primary-color);
-        color: white;
-        border: none;
-        padding: 0.6rem 1.2rem;
-        border-radius: 999px;
-        font-weight: 600;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        transition: all 0.2s ease;
-        text-decoration: none !important;
-    }
-
-    .btn-play-playlist:hover {
-        background: #2563eb;
-        transform: scale(1.05);
-        color: white;
-    }
-
-    .btn-delete-playlist {
-        background: rgba(239, 68, 68, 0.1);
-        color: #f87171;
-        border: 1px solid rgba(239, 68, 68, 0.2);
-        padding: 0.6rem;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-
-    .btn-delete-playlist:hover {
-        background: rgba(239, 68, 68, 0.3);
-        border-color: rgba(239, 68, 68, 0.5);
-        color: #fff;
-    }
-
-    .empty-playlists {
-        padding: 5rem 2rem;
-        text-align: center;
-        background: rgba(255, 255, 255, 0.02);
-        border: 2px dashed rgba(255, 255, 255, 0.05);
-        border-radius: var(--radius-lg);
-    }
-</style>
-{% endblock %}
-
 {% block content %}
-<section class="video-hero card mb-5">
-  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
-    <div>
+<section class="playlists-dashboard" data-playlists-dashboard>
+  <div class="playlists-top-grid">
+    <div class="playlist-hero-panel">
       <p class="eyebrow text-uppercase mb-1">Collections</p>
-      <h1 class="hero-title mb-0">My Playlists</h1>
+      <h1 class="hero-title mb-2">My Playlists</h1>
+      <p class="subtle-text mb-3">Organize, style, and replay your local video sets.</p>
+      <button class="btn-create-playlist playlist-hero-create" id="hub-create-playlist" type="button">
+        <i class="fas fa-plus"></i> Create New
+      </button>
     </div>
-    <button class="btn-create-playlist px-4" id="hub-create-playlist">
-        <i class="fas fa-plus me-2"></i> Create New
-    </button>
+
+    <div class="playlist-tools-panel">
+      <div class="playlist-panel-heading">
+        <p class="eyebrow text-uppercase mb-1">Tools</p>
+        <h2>Playlist Tools</h2>
+      </div>
+      <div class="playlist-tool-row">
+        <label class="playlist-toggle">
+          <input type="checkbox" id="playlist-edit-mode-toggle">
+          <span>Edit Mode</span>
+        </label>
+        <label class="playlist-toggle">
+          <input type="checkbox" id="playlist-compact-toggle">
+          <span>Compact cards</span>
+        </label>
+      </div>
+      <label class="playlist-modal-field">
+        <span>Search playlists</span>
+        <input id="playlist-search" type="search" placeholder="Name or description">
+      </label>
+      <label class="playlist-modal-field">
+        <span>Sort playlists</span>
+        <select id="playlist-sort">
+          <option value="name">Name</option>
+          <option value="created">Created Date</option>
+          <option value="count">Item Count</option>
+          <option value="last_opened">Last Opened</option>
+        </select>
+      </label>
+      <button class="playlist-secondary-action" id="playlist-export-json" type="button">
+        <i class="fas fa-file-export"></i> Export playlists JSON
+      </button>
+    </div>
+
+    <div class="playlist-insights-panel">
+      <div class="playlist-panel-heading">
+        <p class="eyebrow text-uppercase mb-1">Overview</p>
+        <h2>Playlist Insights</h2>
+      </div>
+      <div class="playlist-insight-grid">
+        <div>
+          <span>Total playlists</span>
+          <strong>{{ summary.total_playlists if summary else playlists|length }}</strong>
+        </div>
+        <div>
+          <span>Total videos</span>
+          <strong>{{ summary.total_videos if summary else 0 }}</strong>
+        </div>
+      </div>
+      <p class="subtle-text mb-1">
+        Largest:
+        {% if summary and summary.largest_playlist %}
+          {{ summary.largest_playlist.name }} ({{ summary.largest_playlist.count }})
+        {% else %}
+          None yet
+        {% endif %}
+      </p>
+      <p class="subtle-text mb-0">
+        {% if summary and summary.recently_opened %}
+          Recent: {{ summary.recently_opened[0].name }}
+        {% else %}
+          No recent playlist activity yet
+        {% endif %}
+      </p>
+    </div>
   </div>
+
+  {% if playlists %}
+  <div class="playlist-grid" id="playlist-grid">
+      {% for p in playlists %}
+      {% set description = p.description or 'No description provided.' %}
+      {% set created_date = p.created_at.split(' ')[0] if p.created_at else 'Recently' %}
+      {% set spotlight_label = p.spotlight_label or 'Open playlist' %}
+      {% set spotlight_action = p.spotlight_action or 'continue' %}
+      <article
+        class="playlist-card"
+        id="playlist-{{ p.id }}"
+        data-playlist-id="{{ p.id }}"
+        data-name="{{ p.name|e }}"
+        data-description="{{ description|e }}"
+        data-created="{{ p.created_at or '' }}"
+        data-count="{{ p.item_count }}"
+        data-cover="{{ p.cover_image or '' }}"
+        data-spotlight-label="{{ p.spotlight_label or '' }}"
+        data-spotlight-action="{{ spotlight_action }}"
+        data-spotlight-enabled="{{ 'true' if p.spotlight_enabled else 'false' }}"
+        data-sort-mode="{{ p.sort_mode or 'manual' }}"
+        data-autoplay-next="{{ 'true' if p.autoplay_next else 'false' }}"
+        data-shuffle-default="{{ 'true' if p.shuffle_default else 'false' }}"
+        data-last-opened="{{ p.last_opened_at or '' }}"
+      >
+          <div class="playlist-card-main">
+            <div class="playlist-card-header">
+                <h2 class="playlist-title">{{ p.name }}</h2>
+                <p class="playlist-desc">{{ description }}</p>
+                <div class="playlist-meta playlist-meta-row">
+                    <span class="pill pill-muted playlist-item-count">
+                        <i class="fas fa-video me-1"></i> {{ p.item_count }} Items
+                    </span>
+                    <time class="subtle-text playlist-created-date" datetime="{{ p.created_at or '' }}">
+                        Created {{ created_date }}
+                    </time>
+                </div>
+            </div>
+
+            <div class="playlist-cover playlist-editable" data-playlist-cover="{{ p.id }}">
+              {% if p.cover_image %}
+                <img src="{{ p.cover_image }}" alt="Cover image for {{ p.name }}">
+              {% else %}
+                <div class="playlist-cover-fallback" aria-hidden="true">
+                  <span>{{ p.name[:1] }}</span>
+                </div>
+              {% endif %}
+              <button class="playlist-cover-edit" type="button" data-action="edit-cover" data-playlist-id="{{ p.id }}">
+                Edit
+              </button>
+            </div>
+          </div>
+
+          {% if p.spotlight_enabled %}
+          <a class="playlist-spotlight-bar playlist-editable" href="{{ url_for('playlist_quick_action', playlist_id=p.id, action=spotlight_action) }}">
+            <span>{{ spotlight_label }}</span>
+            <i class="fas fa-bolt" aria-hidden="true"></i>
+          </a>
+          {% else %}
+          <div class="playlist-spotlight-bar playlist-spotlight-muted playlist-editable">
+            <span>Spotlight hidden</span>
+          </div>
+          {% endif %}
+
+          <div class="playlist-card-footer">
+              <a href="{{ url_for('playlist_view', playlist_id=p.id) }}" class="btn-play-playlist">
+                  <i class="fas fa-play"></i> Watch Now
+              </a>
+              <div class="playlist-card-actions">
+                <button class="btn-edit-playlist playlist-editable" type="button" data-action="edit-playlist" data-playlist-id="{{ p.id }}" title="Edit Playlist">
+                    <i class="fas fa-pen"></i>
+                </button>
+                <button class="btn-delete-playlist" onclick='deletePlaylist({{ p.id }}, {{ p.name|tojson }})' title="Delete Playlist">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+              </div>
+          </div>
+      </article>
+      {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-playlists">
+      <i class="fas fa-folder-open fa-4x mb-4 subtle-text" style="opacity: 0.2"></i>
+      <h2 class="mb-3">No Playlists Found</h2>
+      <p class="subtle-text mb-4">You haven't created any custom collections yet. Add videos from the gallery to get started.</p>
+      <button class="btn btn-primary" id="hub-create-empty" type="button">Create Your First Playlist</button>
+  </div>
+  {% endif %}
 </section>
 
-{% if playlists %}
-<div class="playlist-grid">
-    {% for p in playlists %}
-    <article class="playlist-card" id="playlist-{{ p.id }}">
-        <div class="playlist-card-header">
-            <h2 class="playlist-title">{{ p.name }}</h2>
-            <p class="playlist-desc">{{ p.description or 'No description provided.' }}</p>
-            <div class="playlist-meta">
-                <span class="pill pill-muted">
-                    <i class="fas fa-video me-1"></i> {{ p.item_count }} Items
-                </span>
-                <span class="subtle-text" style="font-size: 0.8rem">
-                    Created {{ p.created_at.split(' ')[0] }}
-                </span>
-            </div>
-        </div>
-        <div class="playlist-card-footer">
-            <a href="{{ url_for('playlist_view', playlist_id=p.id) }}" class="btn-play-playlist">
-                <i class="fas fa-play"></i> Watch Now
-            </a>
-            <button class="btn-delete-playlist" onclick="deletePlaylist({{ p.id }}, '{{ p.name }}')" title="Delete Playlist">
-                <i class="fas fa-trash-alt"></i>
-            </button>
-        </div>
-    </article>
-    {% endfor %}
+<div id="playlist-edit-modal-overlay" class="playlist-edit-modal-overlay" aria-hidden="true">
+  <form class="playlist-edit-modal playlist-modal" id="playlist-edit-form">
+    <div class="playlist-modal-header">
+      <h3 class="playlist-modal-title">Edit Playlist</h3>
+      <button id="playlist-edit-modal-close" class="playlist-modal-close" type="button" aria-label="Close">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="playlist-modal-body playlist-edit-modal-body">
+      <input type="hidden" id="playlist-edit-id">
+      <label class="playlist-modal-field">
+        <span>Name</span>
+        <input id="playlist-edit-name" maxlength="120" required>
+      </label>
+      <label class="playlist-modal-field">
+        <span>Description</span>
+        <textarea id="playlist-edit-description" maxlength="500" rows="4"></textarea>
+      </label>
+      <label class="playlist-modal-field">
+        <span>Cover image</span>
+        <input id="playlist-edit-cover" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp">
+      </label>
+      <button id="playlist-remove-cover" class="playlist-secondary-action" type="button">Remove cover</button>
+      <label class="playlist-toggle playlist-modal-toggle">
+        <input type="checkbox" id="playlist-edit-spotlight-enabled">
+        <span>Show spotlight bar</span>
+      </label>
+      <label class="playlist-modal-field">
+        <span>Spotlight label</span>
+        <input id="playlist-edit-spotlight-label" maxlength="80">
+      </label>
+      <label class="playlist-modal-field">
+        <span>Spotlight action</span>
+        <select id="playlist-edit-spotlight-action">
+          <option value="continue">Continue</option>
+          <option value="shuffle">Shuffle</option>
+          <option value="newest">Newest</option>
+          <option value="highest_rated">Highest rated</option>
+          <option value="custom">Custom</option>
+        </select>
+      </label>
+      <label class="playlist-modal-field">
+        <span>Default video order</span>
+        <select id="playlist-edit-sort-mode">
+          <option value="manual">Manual</option>
+          <option value="name">Name</option>
+          <option value="created_at">Created Date</option>
+          <option value="rating">Rating</option>
+          <option value="views">Views</option>
+        </select>
+      </label>
+      <label class="playlist-toggle playlist-modal-toggle">
+        <input type="checkbox" id="playlist-edit-shuffle-default">
+        <span>Shuffle by default</span>
+      </label>
+      <label class="playlist-toggle playlist-modal-toggle">
+        <input type="checkbox" id="playlist-edit-autoplay-next">
+        <span>Autoplay next</span>
+      </label>
+      <p class="playlist-edit-error" id="playlist-edit-error" role="alert"></p>
+    </div>
+    <div class="playlist-modal-footer playlist-edit-footer">
+      <button class="playlist-secondary-action" id="playlist-edit-cancel" type="button">Cancel</button>
+      <button class="btn-create-playlist" type="submit">Save Changes</button>
+    </div>
+  </form>
 </div>
-{% else %}
-<div class="empty-playlists">
-    <i class="fas fa-folder-open fa-4x mb-4 subtle-text" style="opacity: 0.2"></i>
-    <h2 class="mb-3">No Playlists Found</h2>
-    <p class="subtle-text mb-4">You haven't created any custom collections yet. Add videos from the gallery to get started.</p>
-    <button class="btn btn-primary" id="hub-create-empty">Create Your First Playlist</button>
-</div>
-{% endif %}
-
 {% endblock %}
 
 {% block extra_scripts %}
@@ -195,7 +259,6 @@
     }
 
     document.getElementById('hub-create-playlist')?.addEventListener('click', () => {
-        // Reuse the logic from playlists.js via the hidden modal btn
         document.getElementById('btn-create-playlist').click();
     });
 

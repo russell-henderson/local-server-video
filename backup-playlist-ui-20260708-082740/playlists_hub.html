@@ -1,0 +1,206 @@
+{% extends "_base.html" %}
+
+{% block title %}Playlists Hub - Local Video Server{% endblock %}
+
+{% block extra_head %}
+<style>
+    .playlist-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .playlist-card {
+        background: rgba(22, 27, 34, 0.6);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: var(--radius-lg);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .playlist-card:hover {
+        transform: translateY(-5px);
+        border-color: rgba(59, 130, 246, 0.4);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+        background: rgba(22, 27, 34, 0.8);
+    }
+
+    .playlist-card-header {
+        padding: 1.5rem;
+        flex-grow: 1;
+    }
+
+    .playlist-title {
+        font-size: 1.4rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        color: #f8fafc;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .playlist-desc {
+        font-size: 0.95rem;
+        color: #94a3b8;
+        margin-bottom: 1rem;
+        line-height: 1.5;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .playlist-meta {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-top: auto;
+    }
+
+    .playlist-card-footer {
+        padding: 1rem 1.5rem;
+        background: rgba(0, 0, 0, 0.2);
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .btn-play-playlist {
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        padding: 0.6rem 1.2rem;
+        border-radius: 999px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s ease;
+        text-decoration: none !important;
+    }
+
+    .btn-play-playlist:hover {
+        background: #2563eb;
+        transform: scale(1.05);
+        color: white;
+    }
+
+    .btn-delete-playlist {
+        background: rgba(239, 68, 68, 0.1);
+        color: #f87171;
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        padding: 0.6rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .btn-delete-playlist:hover {
+        background: rgba(239, 68, 68, 0.3);
+        border-color: rgba(239, 68, 68, 0.5);
+        color: #fff;
+    }
+
+    .empty-playlists {
+        padding: 5rem 2rem;
+        text-align: center;
+        background: rgba(255, 255, 255, 0.02);
+        border: 2px dashed rgba(255, 255, 255, 0.05);
+        border-radius: var(--radius-lg);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="video-hero card mb-5">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+    <div>
+      <p class="eyebrow text-uppercase mb-1">Collections</p>
+      <h1 class="hero-title mb-0">My Playlists</h1>
+    </div>
+    <button class="btn-create-playlist px-4" id="hub-create-playlist">
+        <i class="fas fa-plus me-2"></i> Create New
+    </button>
+  </div>
+</section>
+
+{% if playlists %}
+<div class="playlist-grid">
+    {% for p in playlists %}
+    <article class="playlist-card" id="playlist-{{ p.id }}">
+        <div class="playlist-card-header">
+            <h2 class="playlist-title">{{ p.name }}</h2>
+            <p class="playlist-desc">{{ p.description or 'No description provided.' }}</p>
+            <div class="playlist-meta">
+                <span class="pill pill-muted">
+                    <i class="fas fa-video me-1"></i> {{ p.item_count }} Items
+                </span>
+                <span class="subtle-text" style="font-size: 0.8rem">
+                    Created {{ p.created_at.split(' ')[0] }}
+                </span>
+            </div>
+        </div>
+        <div class="playlist-card-footer">
+            <a href="{{ url_for('playlist_view', playlist_id=p.id) }}" class="btn-play-playlist">
+                <i class="fas fa-play"></i> Watch Now
+            </a>
+            <button class="btn-delete-playlist" onclick="deletePlaylist({{ p.id }}, '{{ p.name }}')" title="Delete Playlist">
+                <i class="fas fa-trash-alt"></i>
+            </button>
+        </div>
+    </article>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-playlists">
+    <i class="fas fa-folder-open fa-4x mb-4 subtle-text" style="opacity: 0.2"></i>
+    <h2 class="mb-3">No Playlists Found</h2>
+    <p class="subtle-text mb-4">You haven't created any custom collections yet. Add videos from the gallery to get started.</p>
+    <button class="btn btn-primary" id="hub-create-empty">Create Your First Playlist</button>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    async function deletePlaylist(id, name) {
+        if (!confirm(`Are you sure you want to delete "${name}"? This cannot be undone.`)) return;
+
+        try {
+            const response = await fetch(`/api/playlists/${id}`, { method: 'DELETE' });
+            const data = await response.json();
+            if (data.success) {
+                document.getElementById(`playlist-${id}`).style.opacity = '0';
+                document.getElementById(`playlist-${id}`).style.transform = 'scale(0.9)';
+                setTimeout(() => location.reload(), 300);
+            } else {
+                alert(data.error || 'Failed to delete playlist');
+            }
+        } catch (err) {
+            alert('Connection error');
+        }
+    }
+
+    document.getElementById('hub-create-playlist')?.addEventListener('click', () => {
+        // Reuse the logic from playlists.js via the hidden modal btn
+        document.getElementById('btn-create-playlist').click();
+    });
+
+    document.getElementById('hub-create-empty')?.addEventListener('click', () => {
+        document.getElementById('btn-create-playlist').click();
+    });
+</script>
+{% endblock %}

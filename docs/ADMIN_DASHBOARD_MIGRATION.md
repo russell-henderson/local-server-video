@@ -52,9 +52,9 @@ Before starting:
   * Add and run tests for admin routes as described in `ADMIN_DASHBOARD_TESTING.md`.
 * Manually hit JSON endpoints using `curl`:
 
-  * `curl http://localhost:5000/admin/performance/json`
-  * `curl http://localhost:5000/api/admin/performance/routes`
-  * `curl http://localhost:5000/api/admin/performance/workers`
+  * `curl http://192.168.4.96:5000/admin/performance/json`
+  * `curl http://192.168.4.96:5000/api/admin/performance/routes`
+  * `curl http://192.168.4.96:5000/api/admin/performance/workers`
 * Confirm responses match the schemas defined in `ADMIN_API_SPEC.md`.
 
 **Rollback**

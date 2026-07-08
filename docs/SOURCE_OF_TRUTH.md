@@ -1,6 +1,6 @@
 # Source Of Truth
 
-Last updated: 2026-04-23
+Last updated: 2026-07-08
 
 ## Documentation map
 
@@ -52,6 +52,8 @@ Last updated: 2026-04-23
 - Flask + Docker Compose remain the runtime architecture.
 - `docker-compose.yml` mounts DB files from `./data` into `/app/data`.
 - `LVS_DB_PATH` points to `data/video_metadata.db`.
+- The Flask app binds to `0.0.0.0` and is reachable on the LAN IP as well as localhost.
+- The Compose stack publishes Flask on host port `5000` and nginx on host port `8000`.
 
 ## Test Reporting Surfaces
 
