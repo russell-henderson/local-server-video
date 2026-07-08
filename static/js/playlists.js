@@ -385,6 +385,7 @@ document.addEventListener('DOMContentLoaded', () => {
             spotlight_action: card.dataset.spotlightAction || 'continue',
             spotlight_enabled: card.dataset.spotlightEnabled !== 'false',
             sort_mode: card.dataset.sortMode || 'manual',
+            autoplay_enabled: card.dataset.autoplayEnabled !== 'false',
             autoplay_next: card.dataset.autoplayNext === 'true',
             shuffle_default: card.dataset.shuffleDefault === 'true',
             last_opened_at: card.dataset.lastOpened || null
@@ -405,6 +406,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('playlist-edit-spotlight-action').value = data.spotlight_action;
         document.getElementById('playlist-edit-sort-mode').value = data.sort_mode;
         document.getElementById('playlist-edit-shuffle-default').checked = data.shuffle_default;
+        document.getElementById('playlist-edit-autoplay-enabled').checked = data.autoplay_enabled;
         document.getElementById('playlist-edit-autoplay-next').checked = data.autoplay_next;
         document.getElementById('playlist-edit-cover').value = '';
         overlay.classList.add('active');
@@ -421,6 +423,7 @@ document.addEventListener('DOMContentLoaded', () => {
             spotlight_action: document.getElementById('playlist-edit-spotlight-action').value,
             sort_mode: document.getElementById('playlist-edit-sort-mode').value,
             shuffle_default: document.getElementById('playlist-edit-shuffle-default').checked,
+            autoplay_enabled: document.getElementById('playlist-edit-autoplay-enabled').checked,
             autoplay_next: document.getElementById('playlist-edit-autoplay-next').checked
         };
     }
@@ -466,6 +469,7 @@ document.addEventListener('DOMContentLoaded', () => {
         card.dataset.spotlightAction = spotlightAction;
         card.dataset.spotlightEnabled = playlist.spotlight_enabled ? 'true' : 'false';
         card.dataset.sortMode = playlist.sort_mode || 'manual';
+        card.dataset.autoplayEnabled = playlist.autoplay_enabled ? 'true' : 'false';
         card.dataset.autoplayNext = playlist.autoplay_next ? 'true' : 'false';
         card.dataset.shuffleDefault = playlist.shuffle_default ? 'true' : 'false';
         card.dataset.lastOpened = playlist.last_opened_at || '';

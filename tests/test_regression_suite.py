@@ -344,6 +344,8 @@ def test_playlist_view_template_uses_items_key_not_dict_method(app):
         "id": 1,
         "name": "Regression Playlist",
         "description": None,
+        "autoplay_enabled": False,
+        "autoplay_next": False,
         "items": [
             {
                 "video_filename": "playlist-regression.mp4",
@@ -357,7 +359,10 @@ def test_playlist_view_template_uses_items_key_not_dict_method(app):
         html = render_template("playlist_view.html", playlist=playlist)
 
     assert "/video/playlist-regression.mp4" in html
+    assert 'data-autoplay-next="false"' in html
+    assert 'controls autoplay playsinline' not in html
     assert 'data-filename="playlist-regression.mp4"' in html
+    assert 'class="queue-remove-btn"' in html
     assert "Upcoming Queue" in html
 
 

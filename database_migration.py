@@ -184,6 +184,7 @@ class VideoDatabase:
                 "spotlight_action": "TEXT DEFAULT 'continue'",
                 "spotlight_enabled": "INTEGER DEFAULT 1",
                 "sort_mode": "TEXT DEFAULT 'manual'",
+                "autoplay_enabled": "INTEGER DEFAULT 1",
                 "autoplay_next": "INTEGER DEFAULT 0",
                 "shuffle_default": "INTEGER DEFAULT 0",
                 "last_played_video": "TEXT",

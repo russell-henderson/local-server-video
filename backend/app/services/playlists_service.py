@@ -23,6 +23,7 @@ class PlaylistsService:
         playlist.setdefault("spotlight_action", "continue")
         playlist.setdefault("spotlight_enabled", True)
         playlist.setdefault("sort_mode", "manual")
+        playlist.setdefault("autoplay_enabled", True)
         playlist.setdefault("autoplay_next", False)
         playlist.setdefault("shuffle_default", False)
         playlist.setdefault("last_played_video", None)
@@ -40,6 +41,10 @@ class PlaylistsService:
             playlist["spotlight_enabled"] = True
         else:
             playlist["spotlight_enabled"] = bool(playlist.get("spotlight_enabled"))
+        if playlist.get("autoplay_enabled") is None:
+            playlist["autoplay_enabled"] = True
+        else:
+            playlist["autoplay_enabled"] = bool(playlist.get("autoplay_enabled"))
         playlist["autoplay_next"] = bool(playlist.get("autoplay_next"))
         playlist["shuffle_default"] = bool(playlist.get("shuffle_default"))
         return playlist
@@ -183,7 +188,8 @@ class PlaylistsService:
         """Update editable playlist metadata only."""
         allowed = {
             "name", "description", "spotlight_label", "spotlight_action",
-            "spotlight_enabled", "sort_mode", "autoplay_next", "shuffle_default",
+            "spotlight_enabled", "sort_mode", "autoplay_enabled",
+            "autoplay_next", "shuffle_default",
         }
         updates: Dict[str, Any] = {}
 
@@ -202,7 +208,7 @@ class PlaylistsService:
                 return {"success": False, "error": "Unknown spotlight action."}
             if key == "sort_mode" and value not in SORT_MODES:
                 return {"success": False, "error": "Unknown sort mode."}
-            if key in {"spotlight_enabled", "autoplay_next", "shuffle_default"}:
+            if key in {"spotlight_enabled", "autoplay_enabled", "autoplay_next", "shuffle_default"}:
                 value = 1 if bool(value) else 0
             updates[key] = value
 

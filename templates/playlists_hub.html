@@ -100,6 +100,7 @@
         data-spotlight-action="{{ spotlight_action }}"
         data-spotlight-enabled="{{ 'true' if p.spotlight_enabled else 'false' }}"
         data-sort-mode="{{ p.sort_mode or 'manual' }}"
+        data-autoplay-enabled="{{ 'true' if p.autoplay_enabled else 'false' }}"
         data-autoplay-next="{{ 'true' if p.autoplay_next else 'false' }}"
         data-shuffle-default="{{ 'true' if p.shuffle_default else 'false' }}"
         data-last-opened="{{ p.last_opened_at or '' }}"
@@ -225,8 +226,12 @@
         <span>Shuffle by default</span>
       </label>
       <label class="playlist-toggle playlist-modal-toggle">
+        <input type="checkbox" id="playlist-edit-autoplay-enabled">
+        <span>Autoplay when opened</span>
+      </label>
+      <label class="playlist-toggle playlist-modal-toggle">
         <input type="checkbox" id="playlist-edit-autoplay-next">
-        <span>Autoplay next</span>
+        <span>Autoplay next video</span>
       </label>
       <p class="playlist-edit-error" id="playlist-edit-error" role="alert"></p>
     </div>
