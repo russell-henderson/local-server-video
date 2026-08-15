@@ -121,6 +121,15 @@
             max-height: none;
         }
     }
+
+    @media (max-width: 992px) {
+        .split-layout {
+            grid-template-columns: 1fr;
+        }
+        .queue-pane {
+            max-height: none;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -133,7 +142,17 @@
         </a>
         <div>
             <p class="eyebrow text-uppercase mb-1">Playlist Queue</p>
-            <h1 class="hero-title mb-0">{{ playlist.name }}</h1>
+            <div class="d-flex align-items-center gap-3">
+                <h1 class="hero-title mb-0">{{ playlist.name }}</h1>
+                <div class="playlist-rating-widget ms-3" data-playlist-id="{{ playlist.id }}" role="radiogroup" aria-label="Rate this playlist">
+                    {% set prating = playlist.rating or 0 %}
+                    {% for i in range(1, 6) %}
+                        <button type="button" class="btn btn-sm btn-link p-0 text-decoration-none star {% if i <= prating %}text-warning{% else %}text-muted{% endif %}" data-value="{{ i }}" aria-label="{{ i }} star">
+                            <i class="fas fa-star"></i>
+                        </button>
+                    {% endfor %}
+                </div>
+            </div>
         </div>
     </div>
 </section>
@@ -174,7 +193,12 @@
                          onerror="this.src='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';">
                     <div class="queue-item-info">
                         <div class="queue-item-title">{{ item.video_filename }}</div>
-                        <div class="queue-item-meta">{{ (item.duration / 60)|round(1) if item.duration else '??' }} min</div>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="queue-item-meta">{{ (item.duration / 60)|round(1) if item.duration else '??' }} min</div>
+                            {% with current_rating=item.rating, filename=item.video_filename %}
+                                {% include "partials/rating.html" %}
+                            {% endwith %}
+                        </div>
                     </div>
                 </div>
                 <button class="queue-remove-btn" type="button" title="Remove from playlist" aria-label="Remove {{ item.video_filename }} from playlist">
@@ -281,6 +305,9 @@
                 removeQueueItem(removeBtn.closest('.queue-item'));
                 return;
             }
+            if (event.target.closest('.rating')) {
+                return;
+            }
             const main = event.target.closest('.queue-item-main');
             if (main) {
                 playAtIndex(parseInt(main.closest('.queue-item').dataset.index));
@@ -289,6 +316,9 @@
 
         queue?.addEventListener('keydown', (event) => {
             if (event.key !== 'Enter' && event.key !== ' ') return;
+            if (event.target.closest('.rating')) {
+                return;
+            }
             const main = event.target.closest('.queue-item-main');
             if (!main) return;
             event.preventDefault();

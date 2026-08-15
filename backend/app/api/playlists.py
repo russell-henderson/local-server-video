@@ -139,6 +139,25 @@ def remove_from_playlist(playlist_id, filename):
     result = service.remove_from_playlist(playlist_id, filename, position)
     return jsonify(result), 200 if result["success"] else 400
 
+@playlists_bp.route("/<int:playlist_id>/rating", methods=["POST"])
+def set_playlist_rating(playlist_id):
+    """Set or update the rating for a playlist."""
+    data = request.get_json() or {}
+    rating = data.get("rating")
+    
+    if rating is not None:
+        try:
+            rating = int(rating)
+            if rating < 1 or rating > 5:
+                raise ValueError
+        except (ValueError, TypeError):
+            return jsonify({"success": False, "error": "Rating must be an integer between 1 and 5"}), 400
+    else:
+        return jsonify({"success": False, "error": "Rating is required"}), 400
+
+    result = service.set_playlist_rating(playlist_id, rating)
+    return jsonify(result), 200 if result.get("success") else 404
+
 def register_playlists_api(app):
     """Register playlists blueprint with Flask app."""
     app.register_blueprint(playlists_bp)

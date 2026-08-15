@@ -19,6 +19,7 @@ class PlaylistsService:
         playlist = dict(raw or {})
         playlist.setdefault("description", None)
         playlist.setdefault("cover_image", None)
+        playlist.setdefault("rating", None)
         playlist.setdefault("spotlight_label", "")
         playlist.setdefault("spotlight_action", "continue")
         playlist.setdefault("spotlight_enabled", True)
@@ -161,9 +162,10 @@ class PlaylistsService:
                 return {"success": False, "error": "Playlist not found."}
 
             cursor = conn.execute("""
-                SELECT pi.video_filename, pi.position, v.duration, v.added_date
+                SELECT pi.video_filename, pi.position, v.duration, v.added_date, COALESCE(r.rating, 0) as rating
                 FROM playlist_items pi
                 JOIN videos v ON pi.video_filename = v.filename
+                LEFT JOIN ratings r ON v.filename = r.filename
                 WHERE pi.playlist_id = ?
                 ORDER BY pi.position ASC
             """, (playlist_id,))
@@ -243,6 +245,21 @@ class PlaylistsService:
                 )
                 conn.commit()
             return self.get_playlist(playlist_id)
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def set_playlist_rating(self, playlist_id: int, rating: Optional[int]) -> Dict[str, Any]:
+        """Update playlist-level rating."""
+        try:
+            with self.db.get_session() as conn:
+                if not self._playlist_exists(conn, playlist_id):
+                    return {"success": False, "error": "Playlist not found."}
+                conn.execute(
+                    "UPDATE playlists SET rating = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+                    (rating, playlist_id)
+                )
+                conn.commit()
+            return {"success": True, "rating": rating}
         except Exception as e:
             return {"success": False, "error": str(e)}
 

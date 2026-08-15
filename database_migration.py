@@ -179,6 +179,7 @@ class VideoDatabase:
                 row["name"] for row in conn.execute("PRAGMA table_info(playlists)")
             }
             playlist_column_defaults = {
+                "rating": "INTEGER CHECK (rating >= 1 AND rating <= 5)",
                 "cover_image": "TEXT",
                 "spotlight_label": "TEXT DEFAULT ''",
                 "spotlight_action": "TEXT DEFAULT 'continue'",
