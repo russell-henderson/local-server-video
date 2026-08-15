@@ -16,6 +16,7 @@ from backend.app import legacy_runtime
 from backend.app.core.rate_limiter import RateLimiter
 from database_migration import VideoDatabase
 from backend.services.ratings_service import RatingsService
+from scripts import db_health_check
 
 
 def _get_any_video(client):
@@ -42,6 +43,22 @@ def test_ratings_api_roundtrip(client):
         payload = read.get_json() or {}
         assert "average" in payload
         assert "count" in payload
+
+
+def test_db_health_check_uses_lvs_db_path_env(monkeypatch, tmp_path):
+    custom_db = tmp_path / "custom.db"
+    custom_db.touch()
+    monkeypatch.setenv("LVS_DB_PATH", str(custom_db))
+    assert db_health_check.resolve_db_path() == custom_db
+
+
+def test_db_health_check_defaults_to_data_db_path(monkeypatch, tmp_path):
+    monkeypatch.delenv("LVS_DB_PATH", raising=False)
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "data").mkdir()
+    (tmp_path / "data" / "video_metadata.db").touch()
+    (tmp_path / "video_metadata.db").touch()
+    assert db_health_check.resolve_db_path() == Path("data/video_metadata.db")
 
 
 def test_tags_db_authoritative_read_write_path(client):

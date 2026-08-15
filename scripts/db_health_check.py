@@ -15,10 +15,11 @@ Exit codes:
 """
 from __future__ import annotations
 
+import os
 import sqlite3
 from pathlib import Path
 
-DB_PATH = Path("video_metadata.db")
+DB_PATH = Path("data/video_metadata.db")
 
 TABLES = {
     "videos": "SELECT COUNT(*) FROM videos",
@@ -39,11 +40,21 @@ EXPECTED_INDEXES = [
 
 
 def get_connection() -> sqlite3.Connection:
-    if not DB_PATH.exists():
-        raise SystemExit(f"❌ Database file not found at {DB_PATH.resolve()}")
-    conn = sqlite3.connect(DB_PATH)
+    db_path = resolve_db_path()
+    if not db_path.exists():
+        raise SystemExit(f"❌ Database file not found at {db_path.resolve()}")
+    conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     return conn
+
+
+def resolve_db_path() -> Path:
+    env_path = os.getenv("LVS_DB_PATH")
+    if env_path:
+        return Path(env_path)
+    if DB_PATH.exists():
+        return DB_PATH
+    return Path("video_metadata.db")
 
 
 def print_counts(conn: sqlite3.Connection) -> None:
@@ -79,9 +90,10 @@ def check_indexes(conn: sqlite3.Connection) -> bool:
 
 
 def main() -> None:
+    db_path = resolve_db_path()
     conn = get_connection()
     try:
-        print(f"[DB] Checking database: {DB_PATH.resolve()}")
+        print(f"[DB] Checking database: {db_path.resolve()}")
         print_counts(conn)
         indexes_ok = check_indexes(conn)
     finally:
@@ -93,4 +105,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
