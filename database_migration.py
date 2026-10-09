@@ -5,6 +5,10 @@ Migrates JSON files to SQLite for better performance with larger datasets
 import sqlite3
 import json
 import os
+import re
+import math
+import time
+from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional
 import threading
@@ -339,6 +343,32 @@ class VideoDatabase:
 
         return {"sidecars_scanned": sidecar_count, "tag_rows_added": tag_rows_added}
     
+    @staticmethod
+    def _video_subject_tokens(filename: str) -> set[str]:
+        """Extract useful filename keywords, ignoring extension and filler words."""
+        if not filename:
+            return set()
+
+        stem = Path(filename).stem.lower()
+        stem = re.sub(r"[^a-z0-9]+", " ", stem)
+        tokens = {token for token in stem.split() if len(token) > 2}
+        tokens -= {"the", "and", "for", "with", "from", "into", "that", "this"}
+        return tokens
+
+    @staticmethod
+    def _normalize_tag_tokens(tag_value: Optional[str]) -> set[str]:
+        """Normalize tags from the DB or sidecars to a comparable lowercase set."""
+        if not tag_value:
+            return set()
+
+        tags = [part.strip().lower().lstrip('#') for part in str(tag_value).split(',') if part and part.strip()]
+        normalized = set()
+        for tag in tags:
+            cleaned = re.sub(r"[^a-z0-9]+", " ", tag).strip()
+            if cleaned:
+                normalized.add(cleaned)
+        return normalized
+
     def get_all_videos(
         self,
         sort_by: str = 'added_date',
@@ -348,19 +378,23 @@ class VideoDatabase:
     ) -> List[Dict]:
         """Get all videos with metadata efficiently (supports limit/offset)"""
         order_clause = 'DESC' if order.lower() == 'desc' else 'ASC'
-        
-        # Map sort parameters to SQL columns
+
         sort_mapping = {
             'title': 'v.filename',
-            'filename': 'v.filename', 
+            'filename': 'v.filename',
             'date': 'v.added_date',
             'added_date': 'v.added_date',
             'rating': 'COALESCE(r.rating, 0)',
-            'views': 'COALESCE(view.view_count, 0)'
+            'views': 'COALESCE(view.view_count, 0)',
+            'last_played': 'COALESCE(view.last_viewed, "1970-01-01 00:00:00")',
+            'last_viewed': 'COALESCE(view.last_viewed, "1970-01-01 00:00:00")',
+            # Recommendation is route-specific, but keep a distinct fallback score so
+            # it never silently collapses to a generic date sort.
+            'recommendation': '(COALESCE(r.rating, 0) * 1000000) + (COALESCE(view.view_count, 0) * 1000) + CAST(strftime("%s", COALESCE(view.last_viewed, "1970-01-01 00:00:00")) AS INTEGER)',
         }
-        
-        sort_column = sort_mapping.get(sort_by, 'v.added_date')
-        
+
+        sort_column = sort_mapping.get(sort_by.lower(), 'v.added_date')
+
         limit_clause = ""
         params: list = []
         if limit is not None:
@@ -373,8 +407,10 @@ class VideoDatabase:
                     v.filename,
                     v.added_date,
                     v.file_size,
+                    v.duration,
                     COALESCE(r.rating, 0) as rating,
                     COALESCE(view.view_count, 0) as views,
+                    view.last_viewed as last_played,
                     GROUP_CONCAT(vt.tag) as tags,
                     CASE WHEN f.filename IS NOT NULL THEN 1 ELSE 0 END as is_favorite
                 FROM videos v
@@ -382,10 +418,10 @@ class VideoDatabase:
                 LEFT JOIN views view ON v.filename = view.filename
                 LEFT JOIN video_tags vt ON v.filename = vt.filename
                 LEFT JOIN favorites f ON v.filename = f.filename
-                GROUP BY v.filename, v.added_date, v.file_size, r.rating, view.view_count, f.filename
+                GROUP BY v.filename, v.added_date, v.file_size, v.duration, r.rating, view.view_count, view.last_viewed, f.filename
                 ORDER BY {sort_column} {order_clause}{limit_clause}
             """, params)
-            
+
             videos = []
             for row in cursor:
                 tags = row['tags'].split(',') if row['tags'] else []
@@ -393,12 +429,14 @@ class VideoDatabase:
                     'filename': row['filename'],
                     'added_date': row['added_date'],
                     'file_size': row['file_size'],
+                    'duration': row['duration'],
                     'rating': row['rating'],
                     'views': row['views'],
+                    'last_played': row['last_played'],
                     'tags': tags,
                     'is_favorite': bool(row['is_favorite'])
                 })
-            
+
             return videos
     
     def delete_video_by_filename(self, filename: str) -> None:
@@ -415,8 +453,10 @@ class VideoDatabase:
                     v.filename,
                     v.added_date,
                     v.file_size,
+                    v.duration,
                     COALESCE(r.rating, 0) as rating,
                     COALESCE(view.view_count, 0) as views,
+                    view.last_viewed as last_played,
                     GROUP_CONCAT(vt.tag) as tags,
                     CASE WHEN f.filename IS NOT NULL THEN 1 ELSE 0 END as is_favorite
                 FROM videos v
@@ -425,9 +465,9 @@ class VideoDatabase:
                 LEFT JOIN video_tags vt ON v.filename = vt.filename
                 LEFT JOIN favorites f ON v.filename = f.filename
                 WHERE v.filename = ?
-                GROUP BY v.filename, v.added_date, v.file_size, r.rating, view.view_count, f.filename
+                GROUP BY v.filename, v.added_date, v.file_size, v.duration, r.rating, view.view_count, view.last_viewed, f.filename
             """, (filename,))
-            
+
             row = cursor.fetchone()
             if row:
                 tags = row['tags'].split(',') if row['tags'] else []
@@ -435,8 +475,10 @@ class VideoDatabase:
                     'filename': row['filename'],
                     'added_date': row['added_date'],
                     'file_size': row['file_size'],
+                    'duration': row['duration'],
                     'rating': row['rating'],
                     'views': row['views'],
+                    'last_played': row['last_played'],
                     'tags': tags,
                     'is_favorite': bool(row['is_favorite'])
                 }
@@ -646,45 +688,115 @@ class VideoDatabase:
         return tags
     
     def get_related_videos(self, filename: str, limit: int = 20) -> List[Dict]:
-        """Get related videos based on shared tags"""
+        """Get related videos ranked by behavior-aware prediction: shared tags, recent-view patterns, recency and popularity."""
+        target = self.get_video_by_filename(filename) or {'filename': filename, 'tags': self.get_video_tags(filename), 'last_played': None, 'duration': None}
+        target_tags = self._normalize_tag_tokens(','.join(target.get('tags', [])))
+        target_subject = self._video_subject_tokens(filename)
+        target_duration = float(target.get('duration') or 0.0) if target.get('duration') is not None else None
+
+        recent_rows = self.get_all_videos(sort_by='last_played', order='desc', limit=8)
+        recent_history_tags: set[str] = set()
+        recent_history_subjects: set[str] = set()
+        recent_history_names: set[str] = set()
+        for row in recent_rows:
+            if row.get('filename') == filename:
+                continue
+            recent_history_names.add(row.get('filename', ''))
+            recent_history_tags |= self._normalize_tag_tokens(','.join(row.get('tags', [])))
+            recent_history_subjects |= self._video_subject_tokens(row.get('filename', ''))
+
         with self.get_connection() as conn:
             cursor = conn.execute("""
-                SELECT DISTINCT
+                SELECT
                     v.filename,
                     v.added_date,
+                    v.duration,
                     COALESCE(r.rating, 0) as rating,
                     COALESCE(view.view_count, 0) as views,
-                    COUNT(shared_tags.tag) as tag_overlap
+                    view.last_viewed as last_played,
+                    GROUP_CONCAT(vt.tag) as tags
                 FROM videos v
-                JOIN video_tags vt ON v.filename = vt.filename
-                JOIN video_tags shared_tags ON vt.tag = shared_tags.tag
                 LEFT JOIN ratings r ON v.filename = r.filename
                 LEFT JOIN views view ON v.filename = view.filename
-                WHERE shared_tags.filename = ? AND v.filename != ?
-                GROUP BY v.filename, v.added_date, r.rating, view.view_count
-                ORDER BY tag_overlap DESC, r.rating DESC
-                LIMIT ?
-            """, (filename, filename, limit))
-            
-            videos = []
+                LEFT JOIN video_tags vt ON v.filename = vt.filename
+                WHERE v.filename != ?
+                GROUP BY v.filename, v.added_date, v.duration, r.rating, view.view_count, view.last_viewed
+                ORDER BY v.filename COLLATE NOCASE
+            """, (filename,))
+
+            ranked = []
             for row in cursor:
-                # Get tags for this video
-                tag_cursor = conn.execute(
-                    "SELECT tag FROM video_tags WHERE filename = ?", 
-                    (row['filename'],)
-                )
-                tags = [t['tag'] for t in tag_cursor]
-                
-                videos.append({
+                candidate_tags = self._normalize_tag_tokens(row['tags'])
+                candidate_subject = self._video_subject_tokens(row['filename'])
+                tag_overlap = len(target_tags & candidate_tags)
+                recent_tag_overlap = len(recent_history_tags & candidate_tags)
+                subject_overlap = len(target_subject & candidate_subject)
+                recent_subject_overlap = len(recent_history_subjects & candidate_subject)
+                recency_bonus = 0.0
+                raw_last_played = row['last_played']
+                if raw_last_played:
+                    try:
+                        if isinstance(raw_last_played, str):
+                            dt = datetime.fromisoformat(raw_last_played.replace('Z', '+00:00'))
+                        else:
+                            dt = datetime.fromisoformat(str(raw_last_played).replace('Z', '+00:00'))
+                        age_hours = max(0.0, (time.time() - dt.timestamp()) / 3600.0)
+                        recency_bonus = max(0.0, 1.0 - min(age_hours / 720.0, 1.0)) * 7.5
+                    except (TypeError, ValueError):
+                        recency_bonus = 0.0
+
+                rating_value = float(row['rating'] or 0.0)
+                view_value = float(row['views'] or 0.0)
+                popularity_bonus = min(math.log1p(view_value) / 3.0, 5.0)
+                rating_bonus = min(rating_value * 1.4, 7.0)
+                favorite_bonus = 0.0
+                if row['filename'] in recent_history_names:
+                    favorite_bonus = 4.5
+
+                score = 0.0
+                score += tag_overlap * 32.0
+                score += recent_tag_overlap * 18.0
+                score += subject_overlap * 22.0
+                score += recent_subject_overlap * 12.0
+                score += rating_bonus
+                score += popularity_bonus
+                score += recency_bonus
+                score += favorite_bonus
+
+                if target_duration and row['duration']:
+                    duration_gap = abs(float(row['duration']) - target_duration)
+                    if duration_gap <= 0:
+                        score += 5.5
+                    else:
+                        duration_score = max(0.0, 1.0 - (duration_gap / max(target_duration, 60.0)))
+                        score += duration_score * 5.0
+
+                if tag_overlap == 0 and recent_tag_overlap == 0 and subject_overlap == 0 and recent_subject_overlap == 0 and score < 8.0:
+                    continue
+
+                ranked.append({
                     'filename': row['filename'],
                     'added_date': row['added_date'],
+                    'duration': row['duration'],
                     'rating': row['rating'],
                     'views': row['views'],
-                    'tags': tags,
-                    'tag_overlap': row['tag_overlap']
+                    'last_played': row['last_played'],
+                    'tags': sorted(set((row['tags'] or '').split(',') if row['tags'] else [])),
+                    'tag_overlap': tag_overlap,
+                    'recent_tag_overlap': recent_tag_overlap,
+                    'subject_overlap': subject_overlap,
+                    'recent_subject_overlap': recent_subject_overlap,
+                    'recommendation_score': round(score, 3),
                 })
-            
-            return videos
+
+            ranked.sort(key=lambda item: (
+                -float(item['recommendation_score']),
+                -int(item['tag_overlap'] + item['recent_tag_overlap']),
+                -int(item['subject_overlap'] + item['recent_subject_overlap']),
+                -(float(item['rating'] or 0.0)),
+                -(float(item['views'] or 0.0)),
+            ))
+            return ranked[:limit]
     
     def cleanup_orphaned_data(self):
         """Remove data for videos that no longer exist on disk"""
@@ -825,10 +937,11 @@ class VideoDatabase:
             ).fetchall()
             for row in preview_rows:
                 previews = previews_by_group.get(row["group_id"])
-                if previews is not None and len(previews) < 4:
+                if previews is not None:
                     previews.append(row["image_path"])
             for g in groups:
-                g["preview_images"] = previews_by_group.get(g["id"], [])
+                g["image_paths"] = previews_by_group.get(g["id"], [])
+                g["preview_images"] = g["image_paths"][:4]
             return groups
 
     def get_gallery_group_by_slug(self, slug: str) -> Optional[Dict]:

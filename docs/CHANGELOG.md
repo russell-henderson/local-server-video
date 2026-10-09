@@ -1,27 +1,34 @@
-# CHANGELOG
+# Changelog
+
+## 2026-10-09
+
+### Release-quality pass and gallery validation
+- verified the gallery page and image-serving routes are returning working live responses
+- stabilized gallery rendering and keyboard-triggered controls for a smoother interaction flow
+- completed the accessibility and performance polish milestone
+- refined the recommendation layer to better weigh behavior, tags, recency, and relevance
+- synced root documentation and task tracking with the current project state
 
 ## 2026-02-01
 
-### Cross-Device Enhancements
-- **Touch Targets**: Enlarged rating stars and favorite buttons to 44px minimum for mobile/VR accessibility.
-- **Interaction Styles**: Replaced hover-dependent styles with :active/:focus for touch compatibility.
-- **Favorites Page**: Added dedicated `/favorites` route with sorting, pagination, and responsive UI.
-- **Popular Page**: Added `/popular` route displaying videos sorted by view count.
-- **Video Player**: Added Picture-in-Picture support with keyboard shortcut (P).
-- **PWA Features**: Implemented service worker for caching static assets, improving mobile performance.
+### Cross-device enhancements
+- enlarged touch targets for ratings and favorites to a 44px minimum
+- removed hover-only interaction dependence in favor of touch and keyboard-friendly UI states
+- added a dedicated favorites page with sorting and pagination
+- added a popular page for view-count sorting
+- improved player interactions and PWA caching support
 
 ## 2025-12-09
 
-### Gallery UX and Favorites
-- Added favorites hearts to all gallery images (loose and grouped) with a Favorites filter that aggregates every favorited item.
-- Simplified gallery tiles by removing filename overlays for a cleaner visual grid.
-- Updated lightbox and selection handling to respect favorites filtering and maintain correct navigation/selection ranges.
+### Gallery UX and favorites
+- added favorites hearts to gallery images with aggregated favorites filtering
+- simplified gallery tiles for cleaner display
+- updated lightbox and selection state handling to better respect favorites and group context
 
 ## 2025-12-07
 
-### Search Enhancements
-
-- **Automated Search Re-indexing**: Real-time updates for video metadata, ensuring search results are always current.
-- **Advanced Search Filters**: Added filters for duration, rating, and date to refine search queries.
-- **Semantic Search Integration**: Introduced AI-powered semantic search capabilities using embeddings and a new AI gateway (mocked for now).
-- **Improved Search UI**: Enhanced the user interface for search results, including new filter options and better display of video metadata and relevance.
+### Search enhancements
+- added real-time search reindexing for metadata changes
+- introduced advanced search filter support for duration, rating, and date
+- improved search UI and metadata presentation
+- laid groundwork for semantic search and AI-assisted match behavior

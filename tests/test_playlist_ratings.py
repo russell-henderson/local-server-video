@@ -11,11 +11,11 @@ import tempfile
 import time
 
 @pytest.fixture
-def app_and_db():
+def app_and_db(monkeypatch):
     # Setup temporary database
     fd, temp_db = tempfile.mkstemp(suffix=".db")
     os.close(fd)
-    os.environ["LVS_DB_PATH"] = temp_db
+    monkeypatch.setenv("LVS_DB_PATH", temp_db)
     core_db._db_session = None # Reset global db session
     
     # Initialize DB
@@ -38,6 +38,7 @@ def app_and_db():
     yield app, db, temp_db
     
     # Teardown
+    core_db._db_session = None
     if os.path.exists(temp_db):
         os.remove(temp_db)
 

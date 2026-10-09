@@ -54,6 +54,10 @@ class VideoPlayer {
     this.loadSavedPosition();
     this.handleStartTime();
     this.configureForInputMode();
+    this.video.controls = false;
+    this.video.volume = parseFloat(this.volumeBar.value || 1);
+    this.updatePlayButton();
+    this.updateVolumeButton();
   }
   
   bindEvents() {
@@ -88,8 +92,8 @@ class VideoPlayer {
   setupKeyboardShortcuts() {
     document.addEventListener('keydown', (e) => {
       // Only handle shortcuts when the player is focused or no input is focused
-      if (document.activeElement.tagName === 'INPUT' || 
-          document.activeElement.tagName === 'TEXTAREA') {
+      if (document.activeElement.closest('input, textarea, select, button, a, [contenteditable]') ||
+          document.querySelector('dialog[open]')) {
         return;
       }
       
@@ -160,7 +164,8 @@ class VideoPlayer {
   loadSavedPosition() {
     if (!this.filename) return;
     
-    const savedPosition = localStorage.getItem(`video-position-${this.filename}`);
+    let savedPosition;
+    try { savedPosition = localStorage.getItem(`video-position-${this.filename}`); } catch { return; }
     if (savedPosition) {
       const position = parseFloat(savedPosition);
       if (position > 5) { // Only resume if more than 5 seconds in
@@ -179,12 +184,12 @@ class VideoPlayer {
       return;
     }
     
-    localStorage.setItem(`video-position-${this.filename}`, this.video.currentTime);
+    try { localStorage.setItem(`video-position-${this.filename}`, this.video.currentTime); } catch { /* Optional storage. */ }
   }
   
   togglePlay() {
     if (this.video.paused) {
-      this.video.play();
+      this.video.play().catch(() => { this.video.controls = true; });
     } else {
       this.video.pause();
     }
@@ -215,9 +220,12 @@ class VideoPlayer {
                       el.mozRequestFullScreen || 
                       el.msRequestFullscreen;
       if (request) {
-        request.call(el).catch(err => {
-          console.error(`Fullscreen error: ${err.message} (${err.name})`);
+        Promise.resolve(request.call(el)).catch(() => {
+          if (this.video.webkitEnterFullscreen) this.video.webkitEnterFullscreen();
+          else this.video.controls = true;
         });
+      } else if (this.video.webkitEnterFullscreen) {
+        this.video.webkitEnterFullscreen();
       }
     } else {
       const exit = document.exitFullscreen || 
@@ -248,17 +256,24 @@ class VideoPlayer {
   }
   
   updatePlayButton() {
-    this.playBtn.textContent = this.video.paused ? '▶️' : '⏸️';
+    const playIcon = this.video.paused ? '<i class="fas fa-play"></i>' : '<i class="fas fa-pause"></i>';
+    this.playBtn.innerHTML = playIcon;
     this.playBtn.setAttribute('aria-label', this.video.paused ? 'Play' : 'Pause');
   }
   
   updateVolumeButton() {
     if (this.video.muted || this.video.volume === 0) {
-      this.muteBtn.textContent = '🔇';
+      this.muteBtn.innerHTML = '<i class="fas fa-volume-mute"></i>';
+      this.muteBtn.setAttribute('aria-label', 'Unmute');
+      this.muteBtn.title = 'Unmute (M)';
     } else if (this.video.volume < 0.5) {
-      this.muteBtn.textContent = '🔉';
+      this.muteBtn.innerHTML = '<i class="fas fa-volume-down"></i>';
+      this.muteBtn.setAttribute('aria-label', 'Mute');
+      this.muteBtn.title = 'Mute (M)';
     } else {
-      this.muteBtn.textContent = '🔊';
+      this.muteBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
+      this.muteBtn.setAttribute('aria-label', 'Mute');
+      this.muteBtn.title = 'Mute (M)';
     }
   }
   
@@ -294,7 +309,7 @@ class VideoPlayer {
   onVideoEnded() {
     // Clear saved position when video ends
     if (this.filename) {
-      localStorage.removeItem(`video-position-${this.filename}`);
+      try { localStorage.removeItem(`video-position-${this.filename}`); } catch { /* Optional storage. */ }
     }
   }
 
@@ -367,19 +382,19 @@ class VideoPlayer {
     if (!this.loopBtn) return;
     switch (state) {
       case 'start':
-        this.loopBtn.textContent = 'Loop A…';
+        this.loopBtn.innerHTML = '<i class="fas fa-repeat"></i><span class="player-control-label">A…</span>';
         this.loopBtn.title = 'Set loop end (B)';
         this.loopBtn.setAttribute('aria-pressed', 'true');
         this.loopBtn.classList.add('active');
         break;
       case 'ab':
-        this.loopBtn.textContent = 'Loop A-B';
+        this.loopBtn.innerHTML = '<i class="fas fa-repeat"></i><span class="player-control-label">A-B</span>';
         this.loopBtn.title = 'Loop section (click to clear)';
         this.loopBtn.setAttribute('aria-pressed', 'true');
         this.loopBtn.classList.add('active');
         break;
       default:
-        this.loopBtn.textContent = 'Loop';
+        this.loopBtn.innerHTML = '<i class="fas fa-repeat"></i><span class="player-control-label">Loop</span>';
         this.loopBtn.title = 'Toggle loop (B)';
         this.loopBtn.setAttribute('aria-pressed', 'false');
         this.loopBtn.classList.remove('active');

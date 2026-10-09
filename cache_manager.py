@@ -70,7 +70,8 @@ class VideoCache:
         self.views_file = "views.json"
         self.tags_file = "tags.json"
         self.favorites_file = "favorites.json"
-        self.video_dir = "videos"
+        from config import get_config
+        self.video_dir = os.path.abspath(get_config().video_directory)
         
         if os.getenv('LVS_SKIP_INIT_REFRESH'):
             self._last_refresh = {key: 0 for key in self._last_refresh}
@@ -427,6 +428,7 @@ class VideoCache:
 
     def get_all_video_data(self, sort_by: str = 'date', reverse: bool = True, limit: Optional[int] = None, offset: int = 0) -> List[Dict]:
         """Get video data with optional pagination"""
+        sort_by = (sort_by or 'date').lower()
         if self.use_database and self.db:
             self._ensure_videos_in_database()
             order = 'desc' if reverse else 'asc'
@@ -434,10 +436,26 @@ class VideoCache:
         else:
             videos = self.get_video_list()
             video_data = [self.get_video_metadata(v) for v in videos if self.get_video_metadata(v)]
-            if sort_by == 'rating': video_data.sort(key=lambda x: x['rating'], reverse=reverse)
-            elif sort_by == 'title': video_data.sort(key=lambda x: x['filename'], reverse=reverse)
-            elif sort_by == 'views': video_data.sort(key=lambda x: x['views'], reverse=reverse)
-            else: video_data.sort(key=lambda x: x['added_date'], reverse=reverse)
+            if sort_by == 'rating':
+                video_data.sort(key=lambda x: x.get('rating', 0), reverse=reverse)
+            elif sort_by == 'title':
+                video_data.sort(key=lambda x: x.get('filename', ''), reverse=reverse)
+            elif sort_by == 'views':
+                video_data.sort(key=lambda x: x.get('views', 0), reverse=reverse)
+            elif sort_by in {'last_played', 'last_viewed'}:
+                video_data.sort(key=lambda x: x.get('last_played') or x.get('added_date', 0), reverse=reverse)
+            elif sort_by == 'recommendation':
+                video_data.sort(
+                    key=lambda x: (
+                        x.get('rating', 0),
+                        x.get('views', 0),
+                        x.get('last_played') or x.get('added_date', 0),
+                        x.get('added_date', 0),
+                    ),
+                    reverse=reverse,
+                )
+            else:
+                video_data.sort(key=lambda x: x.get('added_date', 0), reverse=reverse)
             if limit is not None: return video_data[offset:offset + max(1, limit)]
             return video_data
         

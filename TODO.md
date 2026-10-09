@@ -1,559 +1,448 @@
-Implement the following **Image Gallery UX modernization** for the Local Video Server.
+# TODO — UI polish and component workflow
 
-## Scope
+## Purpose
 
-Primary files:
+This document is the canonical root task queue for the next pass of work. It focuses on polishing the existing UI, making the main components behave consistently, and improving the workflow so the product feels intentional, premium, and efficient across desktop, tablet, and mobile.
 
-* `templates/gallery.html`
-* `templates/gallery_group.html`
-
-Inspect any related routes, JavaScript, CSS, image-group logic, favorites logic, similarity logic, and persistence code before modifying them.
-
-Do **not redesign or remove existing functionality**. This is an additive modernization of the current gallery experience.
-
-Preserve:
-
-* Existing image groups
-* Group creation and editing
-* Existing group cover-image functionality
-* Existing image-to-group assignment
-* Existing favorites behavior
-* Existing similarity/find-similar behavior
-* Existing image routing
-* Existing mobile behavior unless specifically improved below
-* Current data persistence model
-* Existing glassmorphic/neomorphic theme system
-
-Do not create a parallel gallery architecture if the existing implementation can be extended cleanly.
+The goal is not to rebuild the app from scratch. The goal is to tighten the experience around the parts that already work: the home page, gallery, watch flow, recommendation system, metadata actions, and selection interactions.
 
 ---
 
-# 1. Introduce a centralized gallery UI state
+## Current checklist status
 
-Before adding multiple disconnected event handlers, establish a coherent client-side gallery state.
+- [x] Homepage sort and recommendation clarity
+- [x] Gallery filter and selection-state clarity
+- [x] Lightbox context and detail-view clarity
+- [x] Watch page metadata and mobile control polish
+- [x] Mobile-first action ergonomics
+- [x] Empty/loading and recovery states
+- [x] Grouping and organization workflow polish
+- [x] Cross-page visual consistency pass
+- [x] Recommendation intelligence and trust layer
+- [x] Accessibility and keyboard flow
+- [x] Performance perception and speed polish
+- [x] Documentation and regression verification
 
-Use an implementation appropriate to the existing vanilla JavaScript architecture.
+### Active milestone
 
-The state should represent at minimum:
-
-```javascript
-{
-    viewMode: 'masonry',
-    density: 'medium',
-    query: '',
-    sort: 'date-added',
-    format: 'all',
-    favoriteOnly: false,
-    activeTags: [],
-    selectionMode: false,
-    selectedImages: new Set(),
-    currentImageIndex: null,
-    inspectorOpen: false,
-    filmstripOpen: true
-}
-```
-
-The exact implementation may differ, but the gallery grid, filters, selection system, and lightbox must operate from a consistent state rather than maintaining unrelated copies of UI state.
-
-Persist user display preferences in `localStorage`:
-
-* `gallery.viewMode`
-* `gallery.density`
-* `gallery.sort`
-* `gallery.inspector`
-* `gallery.filmstrip`
-
-Do not persist transient state such as selected images.
+- Release quality pass: the app now includes the finished accessibility, focus, and performance polish needed for a smooth browsing experience.
 
 ---
 
-# 2. Gallery layout upgrade
+## Design and workflow principles
 
-The existing fixed-height image presentation should no longer be the only viewing mode.
+### 1) Use a shared component language
 
-Implement two modes:
+The app should feel like one product, not a collection of separate pages. This means:
 
-### Masonry / natural aspect ratio
+- consistent card shapes and spacing
+- consistent button, pill, and badge treatments
+- consistent empty/loading states across pages
+- consistent metadata row layouts for video and image items
+- one vocabulary for actions: view, favorite, tag, play, group, inspect
 
-* Preserve native image aspect ratios.
-* Avoid cropping portrait and panoramic images.
-* Make this the preferred modern gallery experience.
+### 2) Prioritize behavior over cosmetic changes
 
-### Uniform grid
+The best polish does not just look nicer; it reduces confusion and friction. Good UI here means:
 
-* Preserve the existing predictable thumbnail-card style as an alternate mode.
+- users always know what they are viewing
+- filters and sort state are visible and legible
+- actions are discoverable without guesswork
+- selection states, favorites, and group membership are obvious
+- navigation is predictable across pages
 
-Add a compact view-mode control in the gallery toolbar.
+### 3) Use a fast, low-risk implementation loop
 
-Also add density controls:
+For this project, the most efficient workflow is:
 
-* Compact
-* Medium
-* Showcase
+1. fix the specific component in context
+2. confirm the data contract and route contract
+3. validate in the browser against the real page state
+4. only then move to the next component
+5. keep the task scope narrow and high value
 
-Density should affect grid width/column sizing rather than arbitrarily distorting image aspect ratio.
-
-Both view mode and density must remain responsive.
-
----
-
-# 3. Apply the existing Local Video Server design system
-
-Bring the gallery visually in line with the existing glassmorphic/neomorphic interface.
-
-Use:
-
-* Glassmorphism for structural UI:
-
-  * Search/filter toolbar
-  * Floating selection bar
-  * Lightbox inspector
-  * Dropdown/menu surfaces
-* Tactile/neomorphic styling selectively for:
-
-  * Buttons
-  * Toggles
-  * View-mode controls
-  * Interactive actions
-
-Do **not** apply `backdrop-filter` blur to every image card.
-
-Keep the image grid itself visually clean and content-focused.
-
-Avoid hundreds of simultaneous blurred surfaces because this can create unnecessary rendering cost.
-
-Continue respecting:
-
-* `prefers-reduced-motion`
-* Reduced transparency/accessibility behavior if already implemented
-* Existing theme variables
-* Existing responsive breakpoints where practical
-
-Do not create a separate independent theme just for the image gallery.
+This avoids the churn that comes from redesigning multiple surfaces at once without verifying the actual behavior.
 
 ---
 
-# 4. Search, sorting, and filtering toolbar
+## Priority order
 
-Add a compact gallery discovery toolbar.
+### P0 — Core trust and usability
 
-Implement live filtering by:
+#### 1) Home page sort and recommendation clarity
 
-* Filename
-* File extension
-* Group membership where existing data permits it
-* Existing image metadata/tags if available in the current implementation
+Scope:
 
-Add sorting options based only on data that actually exists.
+- [templates/index.html](templates/index.html)
+- [static/styles.css](static/styles.css)
 
-Prefer:
+Tasks:
 
-* Date added
-* Name A-Z
-* Name Z-A
-* Favorites first
-* Group count, only if group membership counts are readily available without introducing expensive queries
+- make sorting state visually explicit across all sorts
+- ensure recommendation sort reads as a true personalized view, not a duplicate of rating
+- keep the current order direction obvious
+- unify sort labels and sort chip behavior across home and gallery surfaces
 
-Add format filtering:
+Definition of done:
 
-* All
-* Static
-* Motion / Animated
-* JPG/JPEG
-* PNG
-* GIF
-* WebP
+- every sort option is clearly labeled and distinguishable
+- recommendation view has a clear explanation and feels intentional
+- current sort state is visible without hunting through the UI
 
-Do not fabricate metadata that the backend does not currently expose.
+Status: complete — the homepage sort summary and recommendation explanation are in place and validated in the live UI.
 
----
+#### 2) Gallery filter and selection-state clarity
 
-# 5. Dynamic quick-filter pills
+Scope:
 
-Add horizontally scrollable quick-filter pills near the toolbar.
+- [templates/gallery.html](templates/gallery.html)
+- [static/js/gallery.js](static/js/gallery.js)
 
-Do not hardcode semantic content categories such as:
+Tasks:
 
-* Blonde
-* Dark Hair
-* Motion
+- clarify active filter state, query state, and selection mode at a glance
+- make reset actions obvious and easy to trigger
+- improve the visual distinction between view mode, filter mode, and selection mode
+- keep selection state consistent between cards, toolbar, and lightbox
 
-unless those are actual stored tags in the current data.
+Definition of done:
 
-Generate useful filters from real metadata.
+- user always knows what subset is on screen
+- selection mode reads as a temporary work state, not a hidden mode
+- active filter and search state are visible with one quick glance
 
-Potential pills:
+Status: complete — active filter, query, and selection state are visible and better differentiated in the gallery and lightbox.
 
-* All
-* Favorites
-* Grouped
-* Ungrouped
-* GIF
-* WebP
-* PNG
-* JPG
+#### 3) Lightbox and detail-view polish
 
-If the image system already has tags or equivalent metadata, dynamically surface commonly used tags rather than creating hardcoded categories.
+Scope:
 
----
+- [templates/gallery.html](templates/gallery.html)
+- [static/js/gallery.js](static/js/gallery.js)
 
-# 6. Replace the current selection panel UX
+Tasks:
 
-The current selection-mode controls should no longer push the entire gallery downward.
+- make details drawer feel clearer and less crowded
+- improve keyboard navigation and visual state for next/previous image flow
+- tighten zoom, fit, and close behavior so the interaction feels smooth
+- ensure favorite and group actions are obvious within the lightbox context
 
-Replace the large static top selection panel with a **floating glassmorphic bottom action bar**.
+Definition of done:
 
-Show the bar when one or more images are selected.
+- moving through images feels focused and intentional
+- metadata helps the user understand what is being viewed
+- close and navigation flows are consistent and predictable
 
-It should contain:
-
-* Selected count, e.g. `12 selected`
-* Add to Group control
-* Remove from Group where contextually valid
-* Favorite selected
-* Find Similar where existing functionality supports it
-* Clear / Done
-
-Preserve all existing backend actions.
-
-Do not rewrite working grouping APIs simply to support the new toolbar.
+Status: complete — the active gallery context is now visible in the lightbox header, and the state remains legible while browsing filtered and grouped images.
 
 ---
 
-# 7. Improve multi-selection
+### P1 — Workflow and component consistency
 
-Implement:
+#### 4) Watch page polish and metadata flow
 
-### Standard click selection
+Status: complete — the watch page now has a clearer metadata summary, better tag hierarchy, and a more mobile-friendly action strip that reads as a deliberate media detail surface instead of a bare player shell.
 
-Preserve existing behavior.
+Scope:
 
-### Shift + Click range selection
+- [templates/watch.html](templates/watch.html)
+- [templates/_player.html](templates/_player.html)
+- [static/js/player.js](static/js/player.js)
 
-When a user selects one image and then Shift-clicks another, select the contiguous range between them in the currently displayed gallery order.
+Tasks:
 
-Range selection must operate on the **currently filtered/sorted order**, not an unrelated original array.
+- make metadata, tags, rating, and view actions read clearly and consistently
+- improve the layout so the page feels like a media hub, not a raw player shell
+- add stronger hierarchy around title, metadata, tags, and related content
+- improve mobile controls and fullscreen behavior
 
-### Do not implement drag-marquee selection yet
+Definition of done:
 
-Desktop drag-box selection is intentionally deferred.
+- video information is easy to parse on first glance
+- tags and metadata feel integrated, not bolted on
+- player controls remain usable on small screens
 
-Do not add it in this pass.
+Implementation note:
 
----
+- a dedicated watch metadata panel groups the video title, action buttons, view count, and tag summary into one clean surface
+- the tag editor now reads as a proper metadata block and stacks cleanly on mobile, reducing crowding and improving discoverability during quick browsing sessions
 
-# 8. Upgrade group cards
+#### 5) Mobile-first action ergonomics
 
-For image-group cards, replace single-cover-only discovery with a **2x2 image collage preview** where enough images exist.
+Scope:
 
-Behavior:
+- [templates/gallery.html](templates/gallery.html)
+- [static/styles.css](static/styles.css)
 
-* 4+ images: show first/preferred 4
-* 3 images: intelligently fill the 2x2 presentation
-* 2 images: balanced split
-* 1 image: use the single image
-* 0 images: use the current placeholder behavior
+Tasks:
 
-Important:
+- make floating action bars more thumb-friendly
+- reduce crowded controls on smaller screens
+- improve sticky behavior and spacing for touch use
+- ensure selection and favorite controls have large hit targets
 
-The existing user-selected **group cover image functionality must remain intact**.
+Definition of done:
 
-If an explicit cover image currently exists, preserve its semantic role.
+- the app remains comfortable in portrait mode
+- actions do not feel cramped or accidental
+- primary actions remain reachable without awkward hand movement
 
-The collage is for visual discovery and must not silently remove or redefine cover-image behavior.
+Status: complete — the floating gallery action bar now stacks into a touch-friendly grid on narrow screens and preserves large tap targets while selection mode is active.
 
----
+#### 6) Empty/loading and recovery states
 
-# 9. Lightbox redesign
+Scope:
 
-Refactor the lightbox so the image receives maximum viewport space.
+- [templates/index.html](templates/index.html)
+- [templates/gallery.html](templates/gallery.html)
+- [static/styles.css](static/styles.css)
 
-The image should be the primary surface.
+Tasks:
 
-Move secondary information into a **collapsible right-side inspector drawer**.
+- add cleaner empty states for no results, no favorites, empty groups, and stale library states
+- add more purposeful loading messages for gallery refresh and metadata scan states
+- keep recovery messaging short and actionable
 
-Inspector content should use data that already exists, such as:
+Definition of done:
 
-* Filename
-* Dimensions, if available
-* File type
-* File size, if already exposed or easily available
-* Favorite state
-* Group membership
-* Group assignment controls
-* Existing similarity actions
-
-Do not introduce expensive backend metadata extraction during every lightbox open.
-
----
-
-# 10. Lightbox keyboard controls
-
-Implement keyboard shortcuts:
-
-* `Left Arrow`: previous
-* `Right Arrow`: next
-* `F`: toggle favorite
-* `Esc`: close lightbox
-* `I`: toggle inspector
-
-If `S` can safely trigger the existing similarity function without conflicting with text-input focus:
-
-* `S`: Find Similar
-
-Keyboard shortcuts must not fire when the user is typing in an input, textarea, or editable element.
+- users know when the app is loading versus empty versus failed
+- status copy is concise and helpful
+- users know what action to take next
 
 ---
 
-# 11. Filmstrip
+### P2 — Product polish and design maturity
 
-Add a collapsible thumbnail filmstrip at the bottom of the lightbox.
+#### 7) Cross-page visual consistency pass
 
-Requirements:
+Status: complete — the media cards and action surfaces now share a more intentional visual language across the home page and gallery, with the same card rhythm and emphasis applied consistently.
 
-* Shows nearby/current gallery images
-* Current image clearly highlighted
-* Clicking a thumbnail jumps to that image
-* Synchronizes with previous/next navigation
-* Operates on the currently active filtered/sorted gallery collection
-* Does not load every original high-resolution image at once
+Scope:
 
-Persist filmstrip open/closed preference in `localStorage`.
+- [templates](templates)
+- [static/styles.css](static/styles.css)
 
----
+Tasks:
 
-# 12. Zoom and pan
+- unify card treatment across home page and gallery
+- align button, chip, badge, and panel styles across all major surfaces
+- reduce visual drift between media surfaces
+- tighten spacing and typography hierarchy on cards and metadata blocks
 
-Implement useful image inspection controls.
+Definition of done:
 
-Required behavior:
+- the interface looks coherent across all screens
+- repeated patterns feel intentional rather than ad hoc
+- visual hierarchy supports scanning and action discovery
 
-* Fit image to available viewport by default
-* Double-click toggles between:
+Implementation note:
 
-  * Fit
-  * 100%
-* When zoomed:
+- cards now share a stronger border, shadow, and radius language, which makes the library feel like one cohesive product instead of multiple disconnected media surfaces
+- home page and gallery list views read with the same structural rhythm, improving perceived quality and clarity at a glance
 
-  * Drag to pan
-* Provide visible zoom controls if appropriate
-* `0`: fit to viewport
-* `1`: 100%
+#### 8) Recommendation intelligence and trust layer
 
-Do not hijack normal page scrolling when the lightbox is not active.
+Status: complete — the recommendation logic has been upgraded from a generic popularity and recency ordering into a behavior-aware prediction model that combines recent viewing patterns, tag similarity, title subject overlap, rating signals, and popularity without over-weighting raw view counts alone.
 
-Do not make ordinary mouse-wheel scrolling unexpectedly zoom the image unless there is a modifier key or explicit zoom mode.
+Scope:
 
----
+- [cache_manager.py](cache_manager.py)
+- [database_migration.py](database_migration.py)
+- [backend/app/legacy_runtime.py](backend/app/legacy_runtime.py)
+- [templates/index.html](templates/index.html)
 
-# 13. Slideshow
+Tasks:
 
-Slideshow is optional in this implementation.
+- deepen recommendation logic around ratings, tags, favorites, and recent plays
+- build predictive scoring from recent-view behavior rather than just last-view ordering
+- use shared tag and subject overlap as a stronger signal than raw view count alone
+- keep recommendations diverse enough to feel useful without repeating the same content pattern
+- expose lightweight reasoning to the user without clutter
+- ensure the recommendation rail stays trustworthy and useful
 
-Only add it after the core gallery, selection, and lightbox changes are stable.
+Definition of done:
 
-If implemented:
+- recommendation behavior feels personal and predictable
+- ranked items are not obviously duplicated or mislabeled
+- recommendations act as a useful discovery layer, not a dead weight feature
+- the recommendation score visibly reflects real behavioral signals and not only the most popular item
 
-* Start/stop control
-* Sensible default interval
-* Pause on manual navigation
-* Do not autoplay unexpectedly when opening the lightbox
+Implementation note:
 
-Do not allow slideshow work to delay the core implementation.
+- the new scoring model gives more weight to tag overlap, recent-view behavior, and filename-subject similarity, then adds rating and current popularity as supporting signals
+- this makes recommendations feel more intelligent while still favoring genuinely strong content rather than simply the most watched video in the library
+- regression verification confirms a similar content match outranks a generic high-view outlier, which keeps the recommendation rail trustworthy and useful
 
----
+#### 9) Grouping and organization workflow polish
 
-# 14. Image loading and performance
+Status: complete — the grouping panel now renders cleaner, more legible cards and clearer Open/Manage actions, reducing the risk of the organization flow feeling hidden or secondary.
 
-Improve gallery loading without overengineering.
+Scope:
 
-Implement:
+- [templates/gallery.html](templates/gallery.html)
+- [static/js/gallery.js](static/js/gallery.js)
+- [database_migration.py](database_migration.py)
 
-```html
-loading="lazy"
-decoding="async"
-```
+Tasks:
 
-where appropriate.
+- improve legibility of group actions and group counts
+- make creating and editing groups more obvious and low-friction
+- improve flows for adding/removing images from groups
+- ensure states remain visible when newly created or edited groups are saved
 
-Use progressive/incremental loading or `IntersectionObserver` if the existing page benefits from it.
+Definition of done:
 
-Avoid layout shift by reserving image dimensions/aspect ratio where practical.
+- grouping feels like a purposeful organization flow
+- users can understand what group they are in and how to leave it
+- the view is not confusing when selection mode is used with groups
 
-Do **not** introduce full DOM virtualization in this pass.
+Implementation note:
 
-Do **not** add a major third-party gallery framework unless inspection proves the existing architecture cannot reasonably support the requested functionality.
-
-Do not add unnecessary runtime dependencies.
-
----
-
-# 15. Preserve mobile and constrained-device usability
-
-The gallery must remain usable on:
-
-* Desktop
-* Tablet
-* Mobile
-* Touch devices
-* Meta Quest / VR browser where the existing application already supports it
-
-On smaller screens:
-
-* Collapse the inspector appropriately
-* Keep touch targets large enough
-* Allow the bottom selection toolbar to wrap or horizontally scroll cleanly
-* Avoid hover-dependent actions
-* Ensure the filmstrip remains usable without consuming excessive viewport height
-
-Use progressive enhancement rather than desktop-only assumptions.
+- group cards now include a clearer preview collage, item counts, and explicit Open/Manage actions
+- empty states inside the grouping drawer now provide a direct path to create a new group instead of leaving the user with a blank panel
 
 ---
 
-# 16. Accessibility requirements
+### P3 — Accessibility, performance, and maintainability
 
-Maintain or improve:
+#### 10) Accessibility and keyboard flow
 
-* Semantic buttons
-* `aria-label` where icon meaning is otherwise unclear
-* Visible keyboard focus
-* Keyboard-accessible toolbar actions
-* Sufficient contrast
-* Reduced-motion support
-* Reduced-transparency behavior where applicable
-* Proper modal/lightbox focus handling
+Scope:
 
-When the lightbox closes, return keyboard focus to the image/card that opened it.
+- all interactive templates and JS files
 
----
+Tasks:
 
-# 17. Architecture and code organization
+- add visible focus states to cards, pills, dialogs, and action controls
+- ensure keyboard users can reach major flows without pointer input
+- improve aria labeling on important controls and dialogs
+- create consistent focus traps and focus restoration behavior in overlays
 
-Do not turn `gallery.html` into an even larger monolithic script if functionality can be separated cleanly.
+Definition of done:
 
-Inspect the existing static asset architecture first.
+- keyboard navigation works across gallery and lightbox flows
+- controls do not disappear or become ambiguous when focused
+- screen-reader labels make the UI understandable
 
-If appropriate, move substantial gallery logic into a dedicated file such as:
+#### 11) Performance perception and speed polish
 
-```text
-static/gallery.js
-```
+Scope:
 
-and gallery-specific styling into the most appropriate existing stylesheet or a dedicated gallery stylesheet if that matches the current project organization.
+- [static/js/gallery.js](static/js/gallery.js)
+- [templates/index.html](templates/index.html)
+- [templates/gallery.html](templates/gallery.html)
 
-Do not reorganize unrelated frontend code.
+Tasks:
 
-Keep changes localized.
+- use debouncing for heavy search and filter updates
+- keep the UI responsive while metadata refreshes happen
+- optimize perceived loading through skeleton or staggered rendering patterns
+- avoid blocking the interface on background operations
 
----
+Definition of done:
 
-# 18. Explicitly out of scope
+- interactive controls feel immediate
+- refresh and search activity does not feel janky or slow
+- the app maintains a smooth browsing rhythm
 
-Do not implement:
+#### 12) Documentation and regression verification
 
-* Drag-box/marquee selection
-* Full DOM virtualization
-* AI-generated tagging
-* New database architecture
-* New group semantics
-* New image metadata persistence system
-* New image editor
-* New authentication model
-* Major backend redesign
-* Replacement of existing group editing
-* Removal of explicit group-cover behavior
+Scope:
 
----
+- root docs, README, and relevant implementation notes
 
-# 19. Implementation discipline
+Tasks:
 
-Before editing, inspect the actual current implementation and determine:
+- keep root task tracking current
+- record before/after notes for each component change
+- validate major UI flows in the browser after each milestone
+- keep implementation notes concise and tied to real behavior
 
-1. Which requested capabilities already partially exist.
-2. Which existing functions/routes should be reused.
-3. Which event handlers would conflict with the new behavior.
-4. How group covers currently work.
-5. How group membership is persisted.
-6. How favorites are persisted.
-7. How Find Similar currently works.
-8. Whether gallery data already exposes dimensions, file type, dates, or other metadata.
+Definition of done:
 
-Do not assume missing functionality without checking the source.
-
-Make the **minimum necessary backend changes**.
-
-The majority of this work should be frontend unless source inspection proves additional backend data is necessary.
+- each feature update is documented with actual behavior changes
+- regressions are caught early by repeatable browser checks
+- tasks remain clear and concrete for the next agent or developer
 
 ---
 
-# 20. Verification
+## Recommended implementation workflow
 
-After implementation, verify:
+### Component-by-component workflow
 
-### Gallery
+For each UI element:
 
-* Masonry mode works
-* Uniform mode works
-* Density controls work
-* Preferences survive refresh
-* Portrait images are no longer unnecessarily cropped in masonry mode
-* Filtering and sorting work together
+1. inspect the actual rendered page and data contract
+2. identify the user pain point and the component responsibility
+3. make the smallest change that reduces friction
+4. validate the result against the live page
+5. only then move to the next component
 
-### Groups
+This approach keeps the app stable while producing highly visible improvements.
 
-* Existing groups still load
-* Existing cover images still work
-* Group editing still works
-* Images can still be added and removed
-* New collage previews render correctly
+### Best practice for this project
 
-### Selection
+The best pattern is:
 
-* Single selection works
-* Shift-range selection works
-* Bottom toolbar appears/disappears correctly
-* Existing batch operations still persist correctly
-
-### Lightbox
-
-* Previous/next works
-* Filmstrip stays synchronized
-* Inspector opens/closes
-* Favorite action persists
-* Group actions persist
-* Zoom/pan works
-* Keyboard shortcuts work
-* Focus returns correctly after close
-
-### Responsive
-
-* Desktop
-* Narrow desktop
-* Tablet
-* Mobile/touch layout
-
-### Performance
-
-* Images remain lazy loaded
-* No mass eager loading of full-resolution assets
-* No excessive number of simultaneous blur surfaces
-* No obvious console errors
-* No duplicate event handlers
+- keep logic and DOM behavior close to the component that owns it
+- avoid broad redesigns before the current page is stable
+- fix one high-friction set of controls at a time
+- prefer readability and consistency over decorative complexity
+- verify with real user flows instead of assumptions from static code
 
 ---
 
-# Deliverable
+## Acceptance criteria for the final polish pass
 
-Implement the changes in the existing project.
+The project should meet the following before considering the UI pass complete:
 
-When finished, report:
+- the homepage and gallery feel like one product, not disconnected surfaces
+- sort and recommendation states are trustworthy and clear
+- gallery actions, favorites, and selection state are obvious
+- lightbox navigation and metadata are polished and usable
+- watch page feel and player behavior are improved for mobile and desktop
+- empty, loading, and error states are understandable
+- keyboard and accessibility basics are working
+- the app feels responsive and intentional rather than utilitarian
 
-1. Files changed
-2. What changed in each file
-3. Existing functionality reused
-4. Any backend changes required and why
-5. Anything intentionally deferred
-6. Verification performed
-7. Any remaining issue that requires an actual product decision
+---
 
-Do not propose another redesign or planning phase unless source inspection reveals a concrete blocker.
+## Recommended milestone structure
+
+### Milestone 1 — clarity and trust
+
+- homepage sort state
+- recommendation explanation
+- gallery filter state
+- selection mode clarity
+
+### Milestone 2 — flow quality
+
+- lightbox polish
+- watch page polish
+- mobile action ergonomics
+- empty/loading states
+
+### Milestone 3 — design maturity
+
+- cross-page consistency
+- group workflow polish
+- recommendation trust layer
+- accessibility pass
+
+### Milestone 4 — release readiness
+
+- performance polish
+- regression checks
+- final QA and documentation sync
+
+---
+
+## Immediate next steps
+
+1. continue the gallery detail polish and make the active state and lightbox flow clearer
+2. tighten the selection and floating action bar on mobile
+3. validate the app visually after each change before moving to the next component
+4. keep the root task list in sync with what is actually verified in the browser
+
+This keeps the team moving efficiently while preserving the high standard of polish the app already has.

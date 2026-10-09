@@ -162,6 +162,18 @@
   transition: all 0.2s ease;
 }
 
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible,
+.gallery-item:focus-visible {
+  outline: 2px solid rgba(56, 189, 248, 0.95);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.18);
+}
+
 .gallery-btn-pill:hover {
   background: rgba(255, 255, 255, 0.1);
   color: #fff;
@@ -172,6 +184,13 @@
   background: rgba(14, 165, 233, 0.2);
   border-color: var(--gallery-accent);
   color: #38bdf8;
+}
+
+.gallery-page-container.selection-mode #selectionToggle {
+  background: rgba(14, 165, 233, 0.18);
+  border-color: rgba(56, 189, 248, 0.7);
+  box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.2), 0 12px 24px rgba(14, 165, 233, 0.12);
+  color: #7dd3fc;
 }
 
 /* Quick-Filter Pills Shelf */
@@ -219,6 +238,10 @@
   border-color: rgba(14, 165, 233, 0.5);
   color: #38bdf8;
   box-shadow: 0 0 12px rgba(14, 165, 233, 0.2);
+}
+
+.gallery-filter-pill[hidden] {
+  display: none;
 }
 
 /* ────────────────────────────────────────────────────────────────────────
@@ -614,6 +637,10 @@
   flex-wrap: nowrap;
 }
 
+.gallery-floating-action-bar > * {
+  min-height: 44px;
+}
+
 .gallery-floating-action-bar.active {
   transform: translateX(-50%) translateY(0);
   opacity: 1;
@@ -682,6 +709,92 @@
   max-width: 170px;
 }
 
+#destinationSearch {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #f8fafc;
+  padding: 0.38rem 0.65rem;
+  border-radius: 999px;
+  min-width: 120px;
+  max-width: 180px;
+  font-size: 0.8rem;
+}
+
+#destinationSearch::placeholder {
+  color: #94a3b8;
+}
+
+.gallery-status {
+  margin: 0 0 0.85rem;
+  min-height: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #cbd5e1;
+  font-size: 0.8rem;
+  letter-spacing: 0.01em;
+}
+
+.gallery-status.is-loading::before {
+  content: "";
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  border: 2px solid rgba(148, 163, 184, 0.4);
+  border-top-color: var(--gallery-accent);
+  animation: gallery-spin 0.8s linear infinite;
+}
+
+.gallery-status.gallery-error {
+  color: #fda4af;
+}
+
+.gallery-empty-state {
+  display: grid;
+  place-items: center;
+  text-align: center;
+  gap: 0.75rem;
+  min-height: 260px;
+  padding: 2.25rem 1.5rem;
+  border-radius: var(--radius-lg);
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px dashed rgba(148, 163, 184, 0.28);
+  color: #e2e8f0;
+}
+
+.gallery-empty-state__icon {
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(14, 165, 233, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.24);
+  font-size: 1.4rem;
+  color: #7dd3fc;
+}
+
+.gallery-empty-state h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #f8fafc;
+}
+
+.gallery-empty-state p {
+  margin: 0;
+  max-width: 520px;
+  line-height: 1.6;
+  color: #cbd5e1;
+}
+
+.gallery-empty-state .gallery-btn-pill {
+  margin-top: 0.25rem;
+}
+
+@keyframes gallery-spin {
+  to { transform: rotate(360deg); }
+}
+
 /* ────────────────────────────────────────────────────────────────────────
    5. LIGHTBOX & COLLAPSIBLE INSPECTOR DRAWER
    ──────────────────────────────────────────────────────────────────────── */
@@ -719,6 +832,7 @@
 .lightbox-topbar-meta {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 0.75rem;
   min-width: 0;
 }
@@ -731,6 +845,19 @@
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 320px;
+}
+
+.lightbox-context-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #7dd3fc;
+  background: rgba(14, 165, 233, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.28);
+  border-radius: 999px;
+  padding: 0.18rem 0.5rem;
+  white-space: nowrap;
 }
 
 .lightbox-index-badge {
@@ -760,6 +887,15 @@
   align-items: center;
   gap: 0.35rem;
   transition: all 0.18s ease;
+}
+
+.lightbox-tool-btn:focus-visible,
+.lightbox-close-btn:focus-visible,
+.lightbox-nav-btn:focus-visible,
+.lightbox-filmstrip-toggle-btn:focus-visible {
+  outline: 2px solid rgba(56, 189, 248, 0.9);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.18);
 }
 
 .lightbox-tool-btn:hover {
@@ -838,10 +974,18 @@
   cursor: zoom-in;
 }
 
+.lightbox-image-wrapper img:hover {
+  cursor: zoom-in;
+}
+
 .lightbox-image-wrapper.zoomed img {
   cursor: grab;
   max-width: none;
   max-height: none;
+}
+
+.lightbox-image-wrapper.zoomed img:hover {
+  cursor: zoom-out;
 }
 
 .lightbox-image-wrapper.zoomed.panning img {
@@ -1085,10 +1229,22 @@
     justify-content: space-between;
   }
   .gallery-floating-action-bar {
-    width: 95%;
+    width: min(95vw, 520px);
     flex-wrap: wrap;
     justify-content: center;
     border-radius: var(--radius-lg);
+    padding: 0.75rem;
+    gap: 0.55rem;
+  }
+  .selection-count-pill {
+    width: 100%;
+    text-align: center;
+  }
+  .floating-group-select,
+  #destinationSearch,
+  .floating-action-btn {
+    flex: 1 1 140px;
+    min-width: 140px;
   }
   .lightbox-filename-badge {
     max-width: 160px;
@@ -1096,6 +1252,31 @@
 }
 
 @media (max-width: 576px) {
+  .gallery-floating-action-bar {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    justify-items: stretch;
+    align-items: stretch;
+    width: min(94vw, 440px);
+    border-radius: 18px;
+    padding: 0.7rem;
+  }
+  .gallery-floating-action-bar > * {
+    width: 100%;
+  }
+  .selection-count-pill {
+    grid-column: 1 / -1;
+  }
+  #destinationSearch,
+  .floating-group-select,
+  .floating-action-btn {
+    width: 100%;
+    min-width: 0;
+    justify-content: center;
+  }
+  #destinationSearch {
+    grid-column: 1 / -1;
+  }
   .lightbox-nav-btn.prev { left: 8px; }
   .lightbox-nav-btn.next { right: 8px; }
   .lightbox-inspector { width: 100%; }

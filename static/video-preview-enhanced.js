@@ -157,8 +157,8 @@ window.VideoPreviewManager = VideoPreviewManager;
         let hoverTimer = null;
         if (supportsHover) { card.addEventListener('mouseenter', () => { hoverTimer = setTimeout(() => card.dispatchEvent(new CustomEvent('preview:start',{bubbles:true})), getDelay(card)); }); card.addEventListener('mouseleave', () => { if (hoverTimer) clearTimeout(hoverTimer); card.dispatchEvent(new CustomEvent('preview:stop',{bubbles:true})); }); return; }
         let touchActive = false;
-        const onTap = (e) => { e.stopPropagation(); if (!touchActive) { touchActive = true; setTimeout(() => card.dispatchEvent(new CustomEvent('preview:start',{bubbles:true})), getDelay(card)); } else { touchActive = false; card.dispatchEvent(new CustomEvent('preview:stop',{bubbles:true})); } };
-        card.addEventListener('touchstart', onTap, { passive:true }); card.addEventListener('click', onTap); document.addEventListener('touchstart', (e)=> { if (!card.contains(e.target)) { touchActive = false; card.dispatchEvent(new CustomEvent('preview:stop',{bubbles:true})); } }, { passive:true });
+        const onTap = (e) => { if (e.target.closest('a,button,input,select,label,[role=button]')) return; if (!touchActive) { touchActive = true; setTimeout(() => card.dispatchEvent(new CustomEvent('preview:start',{bubbles:true})), getDelay(card)); } else { touchActive = false; card.dispatchEvent(new CustomEvent('preview:stop',{bubbles:true})); } };
+        card.addEventListener('click', onTap); document.addEventListener('pointerdown', (e)=> { if (!card.contains(e.target)) { touchActive = false; card.dispatchEvent(new CustomEvent('preview:stop',{bubbles:true})); } }, { passive:true });
     };
     document.addEventListener('DOMContentLoaded', () => { document.querySelectorAll('[data-role="video-card"]').forEach(bindCard); });
 })();

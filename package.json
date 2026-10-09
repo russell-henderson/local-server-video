@@ -1,0 +1,17 @@
+{
+  "name": "local-video-server-ui-tests",
+  "private": true,
+  "scripts": {
+    "vendor": "node scripts/vendor-assets.mjs",
+    "test:ui": "playwright test",
+    "test:ui:visual": "playwright test --grep @visual",
+    "test:ui:update": "playwright test --grep @visual --update-snapshots"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.58.2",
+    "@axe-core/playwright": "4.11.1",
+    "bootstrap": "5.1.3",
+    "@fortawesome/fontawesome-free": "6.0.0",
+    "@fontsource/roboto": "5.2.9"
+  }
+}

@@ -24,6 +24,11 @@
     </div>
 
     <!-- Sorting controls -->
+    <div class="sort-summary" aria-live="polite">
+      <span class="sort-summary-label">Current view</span>
+      <strong>{{ current_sort|replace('_', ' ')|title }}</strong>
+      <span class="sort-summary-direction">{{ 'High to low' if current_order == 'desc' else 'Low to high' }}</span>
+    </div>
     <div class="sorting-shelf">
       <span class="sort-label">Sort</span>
       {% set next_order = 'asc' if current_order == 'desc' else 'desc' %}
@@ -43,8 +48,47 @@
          href="{{ url_for('index', sort='date', order=next_order if current_sort == 'date' else 'desc', page=1, per_page=per_page) }}">
         <i class="fas fa-clock me-1"></i> Date Added
       </a>
+      <a class="sort-chip {% if current_sort == 'last_played' %}active{% endif %}"
+         href="{{ url_for('index', sort='last_played', order=next_order if current_sort == 'last_played' else 'desc', page=1, per_page=per_page) }}">
+        <i class="fas fa-history me-1"></i> Last Played
+      </a>
+      <a class="sort-chip {% if current_sort == 'recommendation' %}active{% endif %}"
+         href="{{ url_for('index', sort='recommendation', order='desc', page=1, per_page=per_page) }}">
+        <i class="fas fa-lightbulb me-1"></i> Recommendation
+      </a>
     </div>
   </div>
+
+  {% if recommended_videos %}
+  <div class="mt-4 mb-3">
+    <div class="d-flex align-items-center justify-content-between mb-2">
+      <h2 class="h4 mb-0">Recommended for you</h2>
+      <span class="subtle-text recommendation-explainer">Based on ratings, tags, and recent plays</span>
+    </div>
+    <div class="video-grid mb-3">
+      {% for video in recommended_videos %}
+        <article class="card video-card h-100" data-role="video-card" data-preview-delay="500">
+          <a href="{{ url_for('watch_video', filename=video.filename) }}" class="video-thumb-link">
+            <div class="video-preview-container">
+              {% set thumb_stem = video.filename.rsplit('.',1)[0] %}
+              {% set thumbnail = 'thumbnails/' ~ thumb_stem ~ '.jpg' %}
+              <img class="card-img-top video-thumbnail"
+                   src="{{ url_for('static', filename=thumbnail) | safe }}"
+                   alt="{{ video.filename }}"
+                   onerror="this.onerror=null;this.src='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';">
+            </div>
+          </a>
+          <div class="card-body p-3 d-flex flex-column">
+            <h5 class="card-title text-truncate mb-2">{{ video.filename }}</h5>
+            {% with current_rating=video.rating, current_views=video.views, filename=video.filename, media_hash=video.media_hash or video.filename, favorites_list=favorites_list %}
+              {% include 'partials/video_metadata_row.html' %}
+            {% endwith %}
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
 
   <!-- Pagination controls -->
   <div class="d-flex align-items-center gap-3 mt-3 pagination-compact">

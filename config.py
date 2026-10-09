@@ -29,6 +29,9 @@ class ServerConfig:
     # Database settings
     metadata_db: str = "data/video_metadata.db"
     cache_db: str = "data/video_search.db"
+    gallery_directory: str = "images/gallery"
+    gallery_thumbnail_directory: str = "static/gallery-thumbnails"
+    gallery_index_db: str = "data/gallery_index.db"
 
     # Performance settings
     cache_timeout: int = 3600  # 1 hour

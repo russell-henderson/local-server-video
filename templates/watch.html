@@ -8,33 +8,43 @@
 {% endblock %}
 
 {% block content %}
-<!-- Video info row -->
-<div class="video-info mb-4 d-flex flex-wrap align-items-center">
-  <h2 class="video-title me-3 mb-2 mb-sm-0">{{ filename }}</h2>
+<!-- Watch-page metadata and action summary -->
+<div class="watch-meta-panel mb-4">
+  <div class="watch-meta-header">
+    <div class="watch-meta-copy">
+      <p class="eyebrow text-uppercase mb-1">Now playing</p>
+      <h2 class="video-title mb-0">{{ filename }}</h2>
+    </div>
 
-  {% with current_rating=ratings.get(filename, 0), filename=filename, media_hash=media_hash, favorites_list=favorites_list %}
-    {% include 'partials/video_metadata_controls.html' %}
-  {% endwith %}
-
-  <!-- View count -->
-  <div id="video-view-count" class="view-count me-3 mb-2 mb-sm-0">
-    Views: {{ views.get(filename, 0) }}
+    <div class="watch-meta-actions">
+      {% with current_rating=ratings.get(filename, 0), filename=filename, media_hash=media_hash, favorites_list=favorites_list %}
+        {% include 'partials/video_metadata_controls.html' %}
+      {% endwith %}
+    </div>
   </div>
 
-  <!-- Tags -->
-  <div class="tags-container grow">
-    <div id="existing-tags" class="mb-2" data-filename="{{ filename }}" data-tags='{{ tags|tojson|safe }}'>
+  <div class="watch-meta-row">
+    <span class="watch-meta-pill"><i class="fas fa-eye me-2"></i><span id="video-view-count">Views: {{ views.get(filename, 0) }}</span></span>
+    <span class="watch-meta-pill"><i class="fas fa-tag me-2"></i>{{ tags|length }} tag{% if tags|length != 1 %}s{% endif %}</span>
+    <span class="watch-meta-pill"><i class="fas fa-signal me-2"></i>Ready to play</span>
+  </div>
+
+  <div class="watch-tag-editor">
+    <div class="watch-tag-label">Tags</div>
+    <div id="existing-tags" class="watch-tags-stack" data-filename="{{ filename }}" data-tags='{{ tags|tojson|safe }}'>
       {% for tag in tags %}
         <span class="badge tag-badge" data-tag="{{ tag }}">
           {{ tag }} <span class="delete-tag">&times;</span>
         </span>
       {% endfor %}
     </div>
-    <input id="new-tag"
-           class="form-control new-tag-input"
-           placeholder="Add tag"
-           list="tag-suggestions">
-    <datalist id="tag-suggestions"></datalist>
+    <div class="watch-tag-input-row">
+      <input id="new-tag"
+             class="form-control new-tag-input"
+             placeholder="Add tag"
+             list="tag-suggestions">
+      <datalist id="tag-suggestions"></datalist>
+    </div>
   </div>
 </div>
 

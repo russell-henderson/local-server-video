@@ -12,10 +12,13 @@
     function show() {
       container.classList.add('controls-visible');
       if (idleTimer) clearTimeout(idleTimer);
-      idleTimer = setTimeout(() => { container.classList.remove('controls-visible'); }, IDLE_MS);
+      idleTimer = setTimeout(() => {
+        if (!container.classList.contains('controls-persistent') && !container.contains(document.activeElement)) container.classList.remove('controls-visible');
+      }, IDLE_MS);
     }
 
     function hide() {
+      if (container.classList.contains('controls-persistent') || container.contains(document.activeElement)) return;
       container.classList.remove('controls-visible');
       if (idleTimer) { clearTimeout(idleTimer); idleTimer = null; }
     }
@@ -33,6 +36,7 @@
     container.addEventListener('mouseenter', onMouseEnter);
     container.addEventListener('mouseleave', onMouseLeave);
     container.addEventListener('touchstart', onTouchStart, { passive: true });
+    container.addEventListener('focusin', show);
 
     document.addEventListener('fullscreenchange', onFullscreenChange);
     document.addEventListener('webkitfullscreenchange', onFullscreenChange);

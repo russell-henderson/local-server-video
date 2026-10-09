@@ -87,6 +87,9 @@ def test_tags_db_authoritative_read_write_path(client):
 
 
 def test_favorites_page_rating_widget_present(client):
+    filename = _get_any_video(client)
+    assert filename, 'Synthetic library must contain a video'
+    legacy_runtime.cache.update_favorites([filename])
     page = client.get("/favorites")
     assert page.status_code == 200
     assert b'class="rating"' in page.data
@@ -148,6 +151,9 @@ def test_gallery_image_membership_and_item_delete_are_group_scoped(client):
     db = VideoDatabase()
     suffix = uuid4().hex
     image_path = f"phase1-{suffix}.jpg"
+    from PIL import Image
+    Image.new('RGB', (32, 32), 'blue').save(legacy_runtime.GALLERY_DIR / image_path)
+    legacy_runtime.gallery_index.refresh(force=True, wait=True)
     first_group = db.create_gallery_group(f"phase1 first {suffix}", image_path)
     second_group = db.create_gallery_group(f"phase1 second {suffix}", image_path)
     db.add_images_to_group(first_group, [image_path])
@@ -461,6 +467,189 @@ def test_search_tag_case_and_multi_token_and(monkeypatch):
     assert "scene_a.mp4" in body
     assert "scene_b.mp4" not in body
     assert "scene_c.mp4" not in body
+
+
+def test_last_played_sort_uses_views_last_viewed_metadata(tmp_path):
+    db = VideoDatabase(str(tmp_path / "sort.db"))
+    with db.get_connection() as conn:
+        for filename, added_date in [
+            ("zeta.mp4", 1000),
+            ("alpha.mp4", 2000),
+            ("middle.mp4", 3000),
+        ]:
+            conn.execute(
+                "INSERT OR REPLACE INTO videos (filename, added_date) VALUES (?, ?)",
+                (filename, added_date),
+            )
+
+        conn.execute(
+            "INSERT OR REPLACE INTO views (filename, view_count, last_viewed) VALUES (?, ?, ?)",
+            ("zeta.mp4", 7, "2024-03-01 00:00:00"),
+        )
+        conn.execute(
+            "INSERT OR REPLACE INTO views (filename, view_count, last_viewed) VALUES (?, ?, ?)",
+            ("alpha.mp4", 2, "2024-05-01 00:00:00"),
+        )
+        conn.execute(
+            "INSERT OR REPLACE INTO views (filename, view_count, last_viewed) VALUES (?, ?, ?)",
+            ("middle.mp4", 4, "2024-04-01 00:00:00"),
+        )
+        conn.commit()
+
+    rows = db.get_all_videos(sort_by="last_played", order="desc")
+    assert [row["filename"] for row in rows] == ["alpha.mp4", "middle.mp4", "zeta.mp4"]
+
+
+def test_sort_keys_produce_distinct_orders(tmp_path):
+    db = VideoDatabase(str(tmp_path / "distinct_sort.db"))
+    with db.get_connection() as conn:
+        for filename, added_date in [
+            ("newest.mp4", 10),
+            ("highest_views.mp4", 5),
+            ("highest_rating.mp4", 20),
+        ]:
+            conn.execute(
+                "INSERT OR REPLACE INTO videos (filename, added_date) VALUES (?, ?)",
+                (filename, added_date),
+            )
+
+        conn.execute(
+            "INSERT OR REPLACE INTO ratings (filename, rating) VALUES (?, ?)",
+            ("newest.mp4", 1),
+        )
+        conn.execute(
+            "INSERT OR REPLACE INTO ratings (filename, rating) VALUES (?, ?)",
+            ("highest_views.mp4", 2),
+        )
+        conn.execute(
+            "INSERT OR REPLACE INTO ratings (filename, rating) VALUES (?, ?)",
+            ("highest_rating.mp4", 5),
+        )
+
+        conn.execute(
+            "INSERT OR REPLACE INTO views (filename, view_count, last_viewed) VALUES (?, ?, ?)",
+            ("newest.mp4", 10, "2024-02-01 00:00:00"),
+        )
+        conn.execute(
+            "INSERT OR REPLACE INTO views (filename, view_count, last_viewed) VALUES (?, ?, ?)",
+            ("highest_views.mp4", 90, "2024-04-01 00:00:00"),
+        )
+        conn.execute(
+            "INSERT OR REPLACE INTO views (filename, view_count, last_viewed) VALUES (?, ?, ?)",
+            ("highest_rating.mp4", 40, "2024-01-01 00:00:00"),
+        )
+        conn.commit()
+
+    rating_rows = db.get_all_videos(sort_by="rating", order="desc")
+    views_rows = db.get_all_videos(sort_by="views", order="desc")
+    date_rows = db.get_all_videos(sort_by="date", order="desc")
+    last_played_rows = db.get_all_videos(sort_by="last_played", order="desc")
+
+    assert [row["filename"] for row in rating_rows][:3] == ["highest_rating.mp4", "highest_views.mp4", "newest.mp4"]
+    assert [row["filename"] for row in views_rows][:3] == ["highest_views.mp4", "highest_rating.mp4", "newest.mp4"]
+    assert [row["filename"] for row in date_rows][:3] == ["highest_rating.mp4", "newest.mp4", "highest_views.mp4"]
+    assert [row["filename"] for row in last_played_rows][:3] == ["highest_views.mp4", "newest.mp4", "highest_rating.mp4"]
+    assert rating_rows[0]["filename"] != views_rows[0]["filename"]
+    assert views_rows[0]["filename"] != date_rows[0]["filename"]
+    assert date_rows[0]["filename"] != last_played_rows[0]["filename"]
+
+
+def test_related_videos_rank_subject_overlap_before_unrelated_tag_matches(tmp_path):
+    db = VideoDatabase(str(tmp_path / "rec.db"))
+    with db.get_connection() as conn:
+        for filename, added_date in [
+            ("camping-trip.mp4", 10),
+            ("camping-night-drive.mp4", 11),
+            ("downtown-traffic.mp4", 12),
+        ]:
+            conn.execute(
+                "INSERT OR REPLACE INTO videos (filename, added_date) VALUES (?, ?)",
+                (filename, added_date),
+            )
+
+        conn.execute(
+            "INSERT OR REPLACE INTO video_tags (filename, tag) VALUES (?, ?)",
+            ("camping-trip.mp4", "#camping"),
+        )
+        conn.execute(
+            "INSERT OR REPLACE INTO video_tags (filename, tag) VALUES (?, ?)",
+            ("camping-night-drive.mp4", "#travel"),
+        )
+        conn.execute(
+            "INSERT OR REPLACE INTO video_tags (filename, tag) VALUES (?, ?)",
+            ("downtown-traffic.mp4", "#camping"),
+        )
+
+        conn.execute(
+            "INSERT OR REPLACE INTO ratings (filename, rating) VALUES (?, ?)",
+            ("camping-trip.mp4", 4),
+        )
+        conn.execute(
+            "INSERT OR REPLACE INTO ratings (filename, rating) VALUES (?, ?)",
+            ("camping-night-drive.mp4", 4),
+        )
+        conn.execute(
+            "INSERT OR REPLACE INTO ratings (filename, rating) VALUES (?, ?)",
+            ("downtown-traffic.mp4", 5),
+        )
+
+        conn.execute(
+            "INSERT OR REPLACE INTO views (filename, view_count, last_viewed) VALUES (?, ?, ?)",
+            ("camping-trip.mp4", 15, "2024-06-01 00:00:00"),
+        )
+        conn.execute(
+            "INSERT OR REPLACE INTO views (filename, view_count, last_viewed) VALUES (?, ?, ?)",
+            ("camping-night-drive.mp4", 10, "2024-05-01 00:00:00"),
+        )
+        conn.execute(
+            "INSERT OR REPLACE INTO views (filename, view_count, last_viewed) VALUES (?, ?, ?)",
+            ("downtown-traffic.mp4", 20, "2024-04-01 00:00:00"),
+        )
+        conn.commit()
+
+    related = db.get_related_videos("camping-trip.mp4", limit=5)
+    assert related[0]["filename"] == "camping-night-drive.mp4"
+
+
+def test_related_videos_prioritize_tag_overlap_and_recency_over_raw_views(tmp_path):
+    db = VideoDatabase(str(tmp_path / "rec_predictive.db"))
+    with db.get_connection() as conn:
+        for filename, added_date in [
+            ("night-drive.mp4", 10),
+            ("coastal-roadtrip.mp4", 11),
+            ("viral-pop.mp4", 12),
+        ]:
+            conn.execute(
+                "INSERT OR REPLACE INTO videos (filename, added_date) VALUES (?, ?)",
+                (filename, added_date),
+            )
+
+        for filename, tag in [
+            ("night-drive.mp4", "#roadtrip"),
+            ("night-drive.mp4", "#travel"),
+            ("coastal-roadtrip.mp4", "#roadtrip"),
+            ("coastal-roadtrip.mp4", "#travel"),
+            ("coastal-roadtrip.mp4", "#sunset"),
+            ("viral-pop.mp4", "#comedy"),
+            ("viral-pop.mp4", "#viral"),
+        ]:
+            conn.execute(
+                "INSERT OR REPLACE INTO video_tags (filename, tag) VALUES (?, ?)",
+                (filename, tag),
+            )
+
+        conn.execute("INSERT OR REPLACE INTO ratings (filename, rating) VALUES (?, ?)", ("night-drive.mp4", 4))
+        conn.execute("INSERT OR REPLACE INTO ratings (filename, rating) VALUES (?, ?)", ("coastal-roadtrip.mp4", 5))
+        conn.execute("INSERT OR REPLACE INTO ratings (filename, rating) VALUES (?, ?)", ("viral-pop.mp4", 5))
+
+        conn.execute("INSERT OR REPLACE INTO views (filename, view_count, last_viewed) VALUES (?, ?, ?)", ("night-drive.mp4", 32, "2024-07-01 00:00:00"))
+        conn.execute("INSERT OR REPLACE INTO views (filename, view_count, last_viewed) VALUES (?, ?, ?)", ("coastal-roadtrip.mp4", 12, "2024-08-02 00:00:00"))
+        conn.execute("INSERT OR REPLACE INTO views (filename, view_count, last_viewed) VALUES (?, ?, ?)", ("viral-pop.mp4", 5000, "2023-01-01 00:00:00"))
+        conn.commit()
+
+    related = db.get_related_videos("night-drive.mp4", limit=5)
+    assert related[0]["filename"] == "coastal-roadtrip.mp4"
+    assert related[0]["recommendation_score"] > related[1]["recommendation_score"]
 
 
 def test_search_result_cards_keep_shared_contract(monkeypatch):

@@ -11,17 +11,19 @@
   <div class="player-controls" data-controls>
     <!-- Skip back 10 seconds -->
     <button data-action="back10" aria-label="Back 10 seconds" title="Back 10s (J)">
-      ⟲10
+      <i class="fas fa-backward"></i>
+      <span class="player-control-label">10s</span>
     </button>
     
     <!-- Play/Pause -->
     <button data-action="play" aria-label="Play/Pause" title="Play/Pause (K or Space)">
-      ⏯
+      <i class="fas fa-play"></i>
     </button>
     
     <!-- Skip forward 10 seconds -->
     <button data-action="fwd10" aria-label="Forward 10 seconds" title="Forward 10s (L)">
-      10⟳
+      <span class="player-control-label">10s</span>
+      <i class="fas fa-forward"></i>
     </button>
     
     <!-- Seek bar -->
@@ -43,7 +45,7 @@
     
     <!-- Mute button -->
     <button data-action="mute" aria-label="Mute" title="Mute (M)">
-      🔇
+      <i class="fas fa-volume-up"></i>
     </button>
     
     <!-- Volume control -->
@@ -60,14 +62,15 @@
 
     <!-- Speed controls -->
     <div class="speed-controls ms-2" aria-label="Playback speed">
-      <button data-action="speed-down" title="Slow down ([)">-</button>
+      <button data-action="speed-down" title="Slow down ([)"><i class="fas fa-minus"></i></button>
       <span data-speed-display title="Current speed">1.0x</span>
-      <button data-action="speed-up" title="Speed up (])">+</button>
+      <button data-action="speed-up" title="Speed up (])"><i class="fas fa-plus"></i></button>
     </div>
 
     <!-- Loop toggle -->
     <button data-action="loop" aria-pressed="false" title="Toggle loop (B)">
-      Loop
+      <i class="fas fa-repeat"></i>
+      <span class="player-control-label">Loop</span>
     </button>
     
     <!-- Player controls (no subtitle system) -->
@@ -78,7 +81,7 @@
     {% endwith %}
 
     <button data-action="fullscreen" aria-label="Fullscreen" title="Fullscreen (F)">
-      ⛶
+      <i class="fas fa-expand"></i>
     </button>
   </div>
 </div>

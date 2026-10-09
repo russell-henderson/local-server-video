@@ -64,6 +64,8 @@ def create_app() -> Flask:
     app.add_url_rule("/gallery/thumb/<int:size>/<path:filename>", endpoint="serve_gallery_thumbnail", view_func=legacy.serve_gallery_thumbnail)
     app.add_url_rule("/gallery/groups/<slug>", endpoint="gallery_group", view_func=legacy.gallery_group)
     app.add_url_rule("/api/gallery", endpoint="api_gallery_images", view_func=legacy.api_gallery_images, methods=["GET"])
+    app.add_url_rule("/api/gallery/refresh", endpoint="api_gallery_refresh", view_func=legacy.api_gallery_refresh, methods=["POST"])
+    app.add_url_rule("/api/gallery/groups/<int:group_id>/images/remove", endpoint="api_remove_group_images", view_func=legacy.api_remove_group_images, methods=["POST"])
     app.add_url_rule("/api/gallery/validate", endpoint="api_gallery_validate", view_func=legacy.api_gallery_validate, methods=["POST"])
     app.add_url_rule("/api/gallery/groups", endpoint="api_gallery_groups", view_func=legacy.api_gallery_groups, methods=["GET", "POST"])
     app.add_url_rule("/api/gallery/images/<path:filename>/groups", endpoint="api_gallery_image_groups", view_func=legacy.api_gallery_image_groups, methods=["GET"])
@@ -80,5 +82,21 @@ def create_app() -> Flask:
     app.add_url_rule("/analytics/get/<path:filename>", endpoint="get_analytics", view_func=legacy.get_analytics)
     app.add_url_rule("/analytics/export", endpoint="export_analytics", view_func=legacy.export_analytics)
     app.add_url_rule("/analytics/stats", endpoint="analytics_stats", view_func=legacy.analytics_stats)
+
+    @app.url_defaults
+    def version_static(endpoint, values):
+        if endpoint == 'static' and 'filename' in values:
+            asset = Path(app.static_folder) / values['filename']
+            try:
+                values.setdefault('v', asset.stat().st_mtime_ns)
+            except OSError:
+                pass
+
+    @app.errorhandler(400)
+    @app.errorhandler(404)
+    def api_error(error):
+        if __import__('flask').request.path.startswith('/api/gallery'):
+            return {'error': error.description}, error.code
+        return error
 
     return app

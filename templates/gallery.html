@@ -20,6 +20,7 @@
       </div>
 
       <div class="d-flex align-items-center gap-2">
+        <button type="button" class="gallery-btn-pill groups-drawer-toggle" id="openGroupsBtn">Groups</button>
         <button type="button" class="gallery-btn-pill" id="selectionToggle" aria-label="Toggle selection mode">
           <i class="fas fa-check-double"></i> <span>Select Mode</span>
         </button>
@@ -87,7 +88,7 @@
     <button type="button" class="gallery-filter-pill" data-filter-pill="ungrouped">
       <i class="fas fa-folder-open"></i> Ungrouped
     </button>
-    <button type="button" class="gallery-filter-pill" data-filter-pill="gif">
+    <button type="button" class="gallery-filter-pill" data-filter-pill="motion">
       <i class="fas fa-film text-warning"></i> GIF / Motion
     </button>
     <button type="button" class="gallery-filter-pill" data-filter-pill="webp">
@@ -100,6 +101,18 @@
       <i class="fas fa-file-image text-primary"></i> JPG
     </button>
   </nav>
+  <p id="galleryStatus" class="gallery-status" role="status" aria-live="polite"></p>
+  <div class="gallery-active-filters" aria-live="polite">
+    <span class="gallery-state-pill gallery-state-pill--primary" id="activeGalleryFilter">All images</span>
+    <span class="gallery-state-pill" id="galleryStateQuery">No search</span>
+    <span class="gallery-state-pill" id="galleryStateSelection">No selection</span>
+    <div class="gallery-state-actions">
+      <button type="button" class="gallery-btn-pill" id="resetGalleryFilters">Reset filters</button>
+      <button type="button" class="gallery-btn-pill" id="selectLoadedBtn">Select loaded</button>
+      <button type="button" class="gallery-btn-pill" id="selectMatchingBtn">Select all matching</button>
+    </div>
+  </div>
+  <div class="gallery-workspace">
 
   <!-- 3. My Groups Section -->
   <section class="groups-section" id="groupsSection">
@@ -111,11 +124,13 @@
         <i class="fas fa-rotate"></i> Refresh
       </button>
     </div>
+    <label for="groupSearch">Search groups</label>
+    <input id="groupSearch" type="search" class="gallery-select" placeholder="Group name…">
+    <button type="button" class="gallery-btn-pill" id="createEmptyGroupBtn">New group</button>
     <div class="groups-grid" id="groupsGrid">
       <!-- Populated dynamically with 2x2 collage cards -->
     </div>
   </section>
-
   <!-- 4. All Images Grid Section -->
   <section class="gallery-section">
     <div class="gallery-section-header">
@@ -131,12 +146,17 @@
   </section>
 
   <!-- 5. Floating Glassmorphic Bottom Action Bar -->
+  </div>
+  <dialog id="groupsDrawer" aria-label="Groups"><button type="button" id="closeGroupsBtn" class="gallery-btn-pill">Close groups</button></dialog>
+  <dialog id="galleryActionDialog" aria-labelledby="galleryDialogTitle"></dialog>
   <div class="gallery-floating-action-bar" id="galleryFloatingActionBar" role="toolbar" aria-label="Selection actions">
     <span class="selection-count-pill" id="floatingSelectedCount">0 selected</span>
 
     <select id="floatingGroupSelect" class="floating-group-select" aria-label="Select destination group">
       <option value="">Add to group…</option>
     </select>
+    <input id="destinationSearch" type="search" aria-label="Search destination groups" placeholder="Find group…">
+    <button type="button" class="floating-action-btn" id="floatingRemoveBtn">Remove from this group</button>
     
     <button type="button" class="floating-action-btn primary" id="floatingAddToGroupBtn">
       <i class="fas fa-plus"></i> <span>Add</span>
@@ -160,16 +180,20 @@
   </div>
 
   <!-- 6. Lightbox & Collapsible Inspector Drawer -->
-  <div class="lightbox-overlay" id="galleryLightbox" role="dialog" aria-modal="true" aria-label="Image lightbox viewer">
+  <dialog class="lightbox-overlay" id="galleryLightbox" aria-label="Image lightbox viewer">
     
     <!-- Lightbox Topbar -->
     <header class="lightbox-topbar">
       <div class="lightbox-topbar-meta">
         <span class="lightbox-filename-badge" id="lightboxFilename">image.jpg</span>
+        <span class="lightbox-context-badge" id="lightboxContextBadge">All images</span>
         <span class="lightbox-index-badge" id="lightboxIndexBadge">1 / 1</span>
       </div>
 
       <div class="lightbox-topbar-tools">
+        <button type="button" class="lightbox-tool-btn" id="lightboxOriginalBtn">Original resolution</button>
+        <button type="button" class="lightbox-tool-btn" id="lightboxAnimationBtn" hidden>Play animation</button>
+        <button type="button" class="lightbox-tool-btn" id="lightboxRetryBtn" hidden>Retry image</button>
         <!-- Zoom controls -->
         <button type="button" class="lightbox-tool-btn" id="lightboxZoomOutBtn" title="Zoom out" aria-label="Zoom out">
           <i class="fas fa-search-minus"></i>
@@ -215,7 +239,7 @@
         </button>
         
         <div class="lightbox-image-wrapper" id="lightboxImageWrapper">
-          <img id="lightboxImg" src="" alt="" draggable="false">
+          <img id="lightboxImg" alt="" draggable="false">
         </div>
 
         <button type="button" class="lightbox-nav-btn next" id="lightboxNextBtn" title="Next [Right Arrow]" aria-label="Next image">
@@ -283,7 +307,7 @@
         <!-- Filmstrip thumbnails -->
       </div>
     </footer>
-  </div>
+  </dialog>
 
 </div>
 {% endblock %}
@@ -292,8 +316,7 @@
 <script src="{{ url_for('static', filename='js/gallery.js') }}"></script>
 <script>
   document.addEventListener('DOMContentLoaded', () => {
-    const initialImages = {{ images|tojson }};
-    window.initGallery(initialImages);
+    window.initGallery({{ initial_group|default(none)|tojson }});
   });
 </script>
 {% endblock %}
