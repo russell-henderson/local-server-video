@@ -1,605 +1,559 @@
-You are beginning **P04: Responsive Multi-Screen UI Validation** for the Local Video Server.
+Implement the following **Image Gallery UX modernization** for the Local Video Server.
 
-This phase is **inspection and evidence collection only**.
+## Scope
 
-Do not redesign the interface.
-Do not make code changes.
-Do not invent breakpoints or responsive behavior before inspecting the actual implementation.
+Primary files:
 
-# Objective
+* `templates/gallery.html`
+* `templates/gallery_group.html`
 
-Inspect the real Local Video Server templates, CSS, JavaScript, and runtime assumptions to determine where responsiveness currently succeeds, where it fails, and where behavior is uncertain across:
+Inspect any related routes, JavaScript, CSS, image-group logic, favorites logic, similarity logic, and persistence code before modifying them.
 
-- small phones
-- large phones
-- tablets
-- laptops
-- standard desktops
-- large desktops
-- ultrawide displays
-- televisions / large-format displays
-- Meta Quest 2 browser
+Do **not redesign or remove existing functionality**. This is an additive modernization of the current gallery experience.
 
-The goal is to return a **responsive-gap report grounded in the current source and runtime**, with no speculative redesign assumptions.
+Preserve:
 
-# Canonical P04 Status
+* Existing image groups
+* Group creation and editing
+* Existing group cover-image functionality
+* Existing image-to-group assignment
+* Existing favorites behavior
+* Existing similarity/find-similar behavior
+* Existing image routing
+* Existing mobile behavior unless specifically improved below
+* Current data persistence model
+* Existing glassmorphic/neomorphic theme system
 
-Project: P04 Responsive Multi-Screen UI
-Status: IN PROGRESS
-Phase: Responsive implementation inspection
+Do not create a parallel gallery architecture if the existing implementation can be extended cleanly.
 
-Current authority boundary:
+---
 
-- inspection: AUTHORIZED
-- runtime validation: AUTHORIZED
-- source modification: NOT AUTHORIZED
-- redesign: NOT AUTHORIZED
-- breakpoint redesign: NOT AUTHORIZED
-- component replacement: NOT AUTHORIZED
-- major UX/layout decisions: require Russell only if inspection proves they are materially necessary
+# 1. Introduce a centralized gallery UI state
 
-# Required Inspection Scope
-
-Inspect the current versions of the relevant project files.
+Before adding multiple disconnected event handlers, establish a coherent client-side gallery state.
 
-At minimum inspect:
+Use an implementation appropriate to the existing vanilla JavaScript architecture.
 
-templates/_base.html
-templates/index.html
-templates/watch.html
-templates/playlist_view.html
-templates/playlists_hub.html
-templates/tags.html
-templates/favorites.html
-templates/gallery.html
-templates/gallery_group.html
+The state should represent at minimum:
 
-static/styles.css
-static/css/*.css
+```javascript
+{
+    viewMode: 'masonry',
+    density: 'medium',
+    query: '',
+    sort: 'date-added',
+    format: 'all',
+    favoriteOnly: false,
+    activeTags: [],
+    selectionMode: false,
+    selectedImages: new Set(),
+    currentImageIndex: null,
+    inspectorOpen: false,
+    filmstripOpen: true
+}
+```
 
-static/js/player.js
-static/js/playlists.js
-static/js/ratings.js
+The exact implementation may differ, but the gallery grid, filters, selection system, and lightbox must operate from a consistent state rather than maintaining unrelated copies of UI state.
 
-docker-compose.yml
-docker-compose.override.yml if present
+Persist user display preferences in `localStorage`:
 
-Also inspect any additional template, stylesheet, JavaScript, or configuration file that materially affects layout, navigation, viewport behavior, player sizing, grids, or responsive interaction.
+* `gallery.viewMode`
+* `gallery.density`
+* `gallery.sort`
+* `gallery.inspector`
+* `gallery.filmstrip`
 
-Do not assume the listed files are exhaustive.
+Do not persist transient state such as selected images.
 
-# What to Inspect
+---
 
-## 1. Global layout behavior
+# 2. Gallery layout upgrade
 
-Identify:
+The existing fixed-height image presentation should no longer be the only viewing mode.
 
-- body/page width rules
-- max-width containers
-- full-width regions
-- gutters
-- margins
-- horizontal padding
-- vertical spacing
-- centered vs left-aligned page regions
-- fixed-position elements
-- sticky elements
-- viewport-height assumptions
-- `overflow-x`
-- `overflow-y`
-- hard-coded dimensions
-- layout rules that behave differently across viewport widths
+Implement two modes:
 
-Flag anything likely to produce:
+### Masonry / natural aspect ratio
 
-- horizontal scrolling
-- clipped content
-- excessive empty space
-- content stretched too wide
-- content compressed too tightly
-- unusable viewport-height layouts
+* Preserve native image aspect ratios.
+* Avoid cropping portrait and panoramic images.
+* Make this the preferred modern gallery experience.
 
-## 2. Existing responsive breakpoints
+### Uniform grid
 
-Inventory every meaningful:
+* Preserve the existing predictable thumbnail-card style as an alternate mode.
 
-- `@media`
-- `min-width`
-- `max-width`
-- `min-height`
-- `max-height`
-- orientation rule
-- aspect-ratio rule
-- container-query rule if any
+Add a compact view-mode control in the gallery toolbar.
 
-For each breakpoint identify:
+Also add density controls:
 
-file:
-selector/component:
-condition:
-behavior changed:
+* Compact
+* Medium
+* Showcase
 
-Also identify overlapping or conflicting media queries.
+Density should affect grid width/column sizing rather than arbitrarily distorting image aspect ratio.
 
-Do not recommend replacing breakpoints yet.
+Both view mode and density must remain responsive.
 
-## 3. Fixed-size assumptions
+---
 
-Identify important uses of:
+# 3. Apply the existing Local Video Server design system
 
-- fixed `px` widths
-- fixed heights
-- `min-width`
-- `min-height`
-- absolute positioning
-- large fixed margins
-- fixed font sizes
-- fixed thumbnail sizes
-- fixed control widths
-- `100vh`
-- `100vw`
-- hard-coded player dimensions
+Bring the gallery visually in line with the existing glassmorphic/neomorphic interface.
 
-Distinguish between:
+Use:
 
-- harmless fixed values
-- intentional design constraints
-- potentially problematic responsive assumptions
+* Glassmorphism for structural UI:
 
-Do not label every pixel value as a defect.
-
-## 4. Navigation
-
-Inspect the current navigation and header system.
-
-Determine:
-
-- how it behaves on small widths
-- whether menu items wrap
-- whether there is mobile collapse behavior
-- whether content remains centered
-- whether branding collides with navigation
-- whether controls become too small
-- whether there are hover-only interactions
-- whether keyboard focus remains visible
-- whether large-screen layouts stretch awkwardly
-
-Report actual implementation behavior, not preferred design behavior.
-
-## 5. Video player and watch experience
-
-Inspect the video player layout carefully.
+  * Search/filter toolbar
+  * Floating selection bar
+  * Lightbox inspector
+  * Dropdown/menu surfaces
+* Tactile/neomorphic styling selectively for:
 
-Determine:
-
-- width behavior
-- height behavior
-- aspect-ratio behavior
-- portrait phone behavior
-- landscape phone behavior
-- tablet behavior
-- desktop behavior
-- large-screen behavior
-- fullscreen assumptions
-- surrounding metadata layout
-- control wrapping
-- overlays
-- player container constraints
+  * Buttons
+  * Toggles
+  * View-mode controls
+  * Interactive actions
 
-Identify any JS calculations that depend on viewport dimensions.
+Do **not** apply `backdrop-filter` blur to every image card.
 
-Do not change playback logic.
+Keep the image grid itself visually clean and content-focused.
 
-## 6. Playlist viewer
+Avoid hundreds of simultaneous blurred surfaces because this can create unnecessary rendering cost.
 
-Inspect:
+Continue respecting:
 
-- player/queue relationship
-- queue width
-- queue height
-- scrolling behavior
-- thumbnails
-- titles
-- rating controls
-- metadata
-- current-playing state
-- touch/click targets
-- keyboard targets
-- narrow viewport behavior
-- wide viewport behavior
+* `prefers-reduced-motion`
+* Reduced transparency/accessibility behavior if already implemented
+* Existing theme variables
+* Existing responsive breakpoints where practical
 
-The recently completed P03 rating architecture is canonical and must not be redesigned.
+Do not create a separate independent theme just for the image gallery.
 
-Only report responsive issues involving those controls.
+---
 
-## 7. Content grids and cards
+# 4. Search, sorting, and filtering toolbar
 
-Inspect:
+Add a compact gallery discovery toolbar.
 
-- main video grid
-- playlist cards
-- favorites
-- tags
-- gallery
-- gallery groups
-- search/results where applicable
+Implement live filtering by:
 
-For each determine:
+* Filename
+* File extension
+* Group membership where existing data permits it
+* Existing image metadata/tags if available in the current implementation
 
-- how columns are selected
-- minimum card width
-- wrapping behavior
-- image sizing
-- text truncation
-- overflow
-- extreme-wide behavior
-- extreme-narrow behavior
+Add sorting options based only on data that actually exists.
 
-## 8. Component-level responsiveness
+Prefer:
 
-Inspect significant shared components such as:
+* Date added
+* Name A-Z
+* Name Z-A
+* Favorites first
+* Group count, only if group membership counts are readily available without introducing expensive queries
 
-- buttons
-- rating stars
-- tags/chips
-- forms
-- dropdowns
-- modals
-- cards
-- search fields
-- metadata rows
-- playlist controls
-- thumbnails
-- headers
-- empty states
+Add format filtering:
 
-Flag components that materially risk unusable layout or interaction at certain viewport sizes.
+* All
+* Static
+* Motion / Animated
+* JPG/JPEG
+* PNG
+* GIF
+* WebP
 
-## 9. Input-method assumptions
+Do not fabricate metadata that the backend does not currently expose.
 
-Inspect whether interactions depend on:
+---
 
-- hover
-- precise mouse positioning
-- tiny targets
-- mouse-specific events
-- touch-specific events
-- keyboard access
-- focus states
+# 5. Dynamic quick-filter pills
 
-Consider intended environments:
+Add horizontally scrollable quick-filter pills near the toolbar.
 
-desktop:
-mouse + keyboard
+Do not hardcode semantic content categories such as:
 
-phone/tablet:
-touch
+* Blonde
+* Dark Hair
+* Motion
 
-TV / large display:
-mouse, keyboard, remote-like or pointer-based input may be used
+unless those are actual stored tags in the current data.
 
-Quest 2:
-browser/controller pointer interaction
+Generate useful filters from real metadata.
 
-Do not claim Quest 2 compatibility from CSS inspection alone.
+Potential pills:
 
-## 10. JavaScript responsive assumptions
+* All
+* Favorites
+* Grouped
+* Ungrouped
+* GIF
+* WebP
+* PNG
+* JPG
 
-Inspect JS for behavior dependent on:
+If the image system already has tags or equivalent metadata, dynamically surface commonly used tags rather than creating hardcoded categories.
 
-- `window.innerWidth`
-- `window.innerHeight`
-- resize events
-- orientation events
-- hard-coded dimensions
-- CSS class changes by viewport size
-- dynamic player sizing
-- touch detection
-- hover detection
-- mobile user-agent assumptions
+---
 
-Report any fragile or duplicated responsive logic.
+# 6. Replace the current selection panel UX
 
-# Runtime Inspection
+The current selection-mode controls should no longer push the entire gallery downward.
 
-Use the existing Docker environment.
+Replace the large static top selection panel with a **floating glassmorphic bottom action bar**.
 
-Do not modify source.
+Show the bar when one or more images are selected.
 
-Confirm the running application and use the real UI where practical.
+It should contain:
 
-Evaluate representative viewport classes such as:
+* Selected count, e.g. `12 selected`
+* Add to Group control
+* Remove from Group where contextually valid
+* Favorite selected
+* Find Similar where existing functionality supports it
+* Clear / Done
 
-Small phone:
-approximately 360 × 800
+Preserve all existing backend actions.
 
-Modern phone:
-approximately 390 × 844
+Do not rewrite working grouping APIs simply to support the new toolbar.
 
-Large phone:
-approximately 430 × 932
+---
 
-Tablet portrait:
-approximately 768 × 1024
+# 7. Improve multi-selection
 
-Tablet landscape:
-approximately 1024 × 768
+Implement:
 
-Laptop:
-approximately 1366 × 768
+### Standard click selection
 
-Desktop:
-approximately 1920 × 1080
+Preserve existing behavior.
 
-Large desktop:
-approximately 2560 × 1440
+### Shift + Click range selection
 
-Ultrawide:
-approximately 3440 × 1440
+When a user selects one image and then Shift-clicks another, select the contiguous range between them in the currently displayed gallery order.
 
-4K / TV:
-approximately 3840 × 2160
+Range selection must operate on the **currently filtered/sorted order**, not an unrelated original array.
 
-These are inspection targets, not authorized CSS breakpoint definitions.
+### Do not implement drag-marquee selection yet
 
-If browser tooling allows viewport emulation, use it for evidence collection.
+Desktop drag-box selection is intentionally deferred.
 
-# Quest 2 Boundary
+Do not add it in this pass.
 
-Quest 2 is explicitly in scope, but desktop emulation must not be reported as actual Quest 2 runtime validation.
+---
 
-During this inspection classify Quest-related findings as one of:
+# 8. Upgrade group cards
 
-SOURCE-VERIFIED
-DESKTOP-EMULATION-OBSERVED
-ACTUAL-QUEST-2-VALIDATION-REQUIRED
+For image-group cards, replace single-cover-only discovery with a **2x2 image collage preview** where enough images exist.
 
-Identify which behaviors will eventually require testing on the physical Quest 2 browser.
+Behavior:
 
-# Evidence Standard
+* 4+ images: show first/preferred 4
+* 3 images: intelligently fill the 2x2 presentation
+* 2 images: balanced split
+* 1 image: use the single image
+* 0 images: use the current placeholder behavior
 
-For every reported gap, provide evidence.
+Important:
 
-Good evidence includes:
+The existing user-selected **group cover image functionality must remain intact**.
 
-- exact file
-- selector or component
-- relevant code excerpt
-- viewport where observed
-- actual runtime behavior
-- screenshot reference if available
-- why it is a responsiveness problem
+If an explicit cover image currently exists, preserve its semantic role.
 
-Avoid statements such as:
+The collage is for visual discovery and must not silently remove or redefine cover-image behavior.
 
-"this should probably be more responsive"
+---
 
-Instead use:
+# 9. Lightbox redesign
 
-"At 390px width, `.example` retains `min-width: 600px`, producing horizontal document overflow."
+Refactor the lightbox so the image receives maximum viewport space.
 
-# Gap Classification
+The image should be the primary surface.
 
-Classify every meaningful finding as:
+Move secondary information into a **collapsible right-side inspector drawer**.
 
-CONFIRMED GAP
-POTENTIAL GAP
-WORKING AS INTENDED
-RUNTIME VALIDATION REQUIRED
-RUSSELL DECISION MAY BE REQUIRED
+Inspector content should use data that already exists, such as:
 
-Use `RUSSELL DECISION MAY BE REQUIRED` only when source/runtime inspection proves that there is a genuine UX or layout choice with materially different valid options.
+* Filename
+* Dimensions, if available
+* File type
+* File size, if already exposed or easily available
+* Favorite state
+* Group membership
+* Group assignment controls
+* Existing similarity actions
 
-Do not escalate ordinary implementation choices unnecessarily.
+Do not introduce expensive backend metadata extraction during every lightbox open.
 
-# Severity
+---
 
-For confirmed gaps, assign:
+# 10. Lightbox keyboard controls
 
-CRITICAL
-HIGH
-MEDIUM
-LOW
+Implement keyboard shortcuts:
 
-Use severity based on actual usability impact.
+* `Left Arrow`: previous
+* `Right Arrow`: next
+* `F`: toggle favorite
+* `Esc`: close lightbox
+* `I`: toggle inspector
 
-Examples:
+If `S` can safely trigger the existing similarity function without conflicting with text-input focus:
 
-CRITICAL:
-core page or player unusable at intended screen class
+* `S`: Find Similar
 
-HIGH:
-major controls inaccessible, clipped, or functionally broken
+Keyboard shortcuts must not fire when the user is typing in an input, textarea, or editable element.
 
-MEDIUM:
-significant layout degradation but functionality remains available
+---
 
-LOW:
-minor spacing, visual balance, or polish issue
+# 11. Filmstrip
 
-# Required Return Format
+Add a collapsible thumbnail filmstrip at the bottom of the lightbox.
 
-Return exactly this structure.
+Requirements:
 
-## P04 Responsive Gap Report
+* Shows nearby/current gallery images
+* Current image clearly highlighted
+* Clicking a thumbnail jumps to that image
+* Synchronizes with previous/next navigation
+* Operates on the currently active filtered/sorted gallery collection
+* Does not load every original high-resolution image at once
 
-### 1. Environment
+Persist filmstrip open/closed preference in `localStorage`.
 
-machine:
-repository path:
-Docker service:
-container:
-application URL:
-runtime status:
+---
 
-### 2. Files Inspected
+# 12. Zoom and pan
 
-List every relevant file inspected.
+Implement useful image inspection controls.
 
-### 3. Existing Responsive Architecture
+Required behavior:
 
-Summarize the responsive system that actually exists.
+* Fit image to available viewport by default
+* Double-click toggles between:
 
-Include:
+  * Fit
+  * 100%
+* When zoomed:
 
-- layout approach
-- breakpoint strategy
-- shared containers
-- grid behavior
-- player behavior
-- navigation behavior
-- responsive JS behavior
+  * Drag to pan
+* Provide visible zoom controls if appropriate
+* `0`: fit to viewport
+* `1`: 100%
 
-Do not propose changes in this section.
+Do not hijack normal page scrolling when the lightbox is not active.
 
-### 4. Breakpoint Inventory
+Do not make ordinary mouse-wheel scrolling unexpectedly zoom the image unless there is a modifier key or explicit zoom mode.
 
-For each meaningful breakpoint:
+---
 
-file:
-condition:
-affected component:
-actual behavior:
+# 13. Slideshow
 
-### 5. Confirmed Working Areas
+Slideshow is optional in this implementation.
 
-List responsive behavior that inspection shows is already functioning acceptably.
+Only add it after the core gallery, selection, and lightbox changes are stable.
 
-This is important so later implementation does not unnecessarily rewrite working behavior.
+If implemented:
 
-### 6. Confirmed Responsive Gaps
+* Start/stop control
+* Sensible default interval
+* Pause on manual navigation
+* Do not autoplay unexpectedly when opening the lightbox
 
-For each gap use:
+Do not allow slideshow work to delay the core implementation.
 
-ID:
-severity:
-screen class:
-page/component:
-file:
-selector/code:
-evidence:
-observed behavior:
-expected functional outcome:
-scope of likely correction:
+---
 
-Do not prescribe redesign unless the correction is obvious and purely technical.
+# 14. Image loading and performance
 
-### 7. Potential Gaps Requiring More Validation
+Improve gallery loading without overengineering.
 
-For each:
+Implement:
 
-ID:
-screen/environment:
-reason uncertain:
-validation needed:
+```html
+loading="lazy"
+decoding="async"
+```
 
-### 8. Large-Screen / TV Findings
+where appropriate.
 
-Report specifically on:
+Use progressive/incremental loading or `IntersectionObserver` if the existing page benefits from it.
 
-- 1920×1080
-- 2560×1440
-- ultrawide
-- 3840×2160 / TV-class layouts
+Avoid layout shift by reserving image dimensions/aspect ratio where practical.
 
-Identify excessive stretching, undersized UI, poor content density, or large-format interaction concerns only where observed.
+Do **not** introduce full DOM virtualization in this pass.
 
-### 9. Phone and Tablet Findings
+Do **not** add a major third-party gallery framework unless inspection proves the existing architecture cannot reasonably support the requested functionality.
 
-Report separately on:
+Do not add unnecessary runtime dependencies.
 
-- small phone
-- modern phone
-- large phone
-- tablet portrait
-- tablet landscape
+---
 
-### 10. Quest 2 Findings
+# 15. Preserve mobile and constrained-device usability
 
-Separate:
+The gallery must remain usable on:
 
-SOURCE-VERIFIED:
-DESKTOP-EMULATION-OBSERVED:
-ACTUAL-QUEST-2-VALIDATION-REQUIRED:
+* Desktop
+* Tablet
+* Mobile
+* Touch devices
+* Meta Quest / VR browser where the existing application already supports it
 
-Do not claim actual Quest 2 validation unless performed on the physical device.
+On smaller screens:
 
-### 11. Input and Accessibility Findings
+* Collapse the inspector appropriately
+* Keep touch targets large enough
+* Allow the bottom selection toolbar to wrap or horizontally scroll cleanly
+* Avoid hover-dependent actions
+* Ensure the filmstrip remains usable without consuming excessive viewport height
 
-Report responsive interaction concerns involving:
+Use progressive enhancement rather than desktop-only assumptions.
 
-- touch targets
-- hover dependency
-- keyboard focus
-- pointer/controller suitability
-- clipping or inaccessible controls
+---
 
-### 12. Proposed Change Categories
+# 16. Accessibility requirements
 
-Do not implement anything.
+Maintain or improve:
 
-Group validated gaps into likely categories such as:
+* Semantic buttons
+* `aria-label` where icon meaning is otherwise unclear
+* Visible keyboard focus
+* Keyboard-accessible toolbar actions
+* Sufficient contrast
+* Reduced-motion support
+* Reduced-transparency behavior where applicable
+* Proper modal/lightbox focus handling
 
-- global layout correction
-- navigation correction
-- player sizing correction
-- grid correction
-- component reflow
-- large-format scaling
-- input-target correction
-- Quest-specific validation
+When the lightbox closes, return keyboard focus to the image/card that opened it.
 
-For each category list the validated gaps it would address.
+---
 
-### 13. Russell Decisions Potentially Required
+# 17. Architecture and code organization
 
-If none:
+Do not turn `gallery.html` into an even larger monolithic script if functionality can be separated cleanly.
 
-None.
+Inspect the existing static asset architecture first.
 
-If genuine decisions are required, provide:
+If appropriate, move substantial gallery logic into a dedicated file such as:
 
-decision ID:
-validated reason:
-option A:
-option B:
-material tradeoff:
+```text
+static/gallery.js
+```
 
-Do not ask Russell to decide implementation details that can be resolved technically.
+and gallery-specific styling into the most appropriate existing stylesheet or a dedicated gallery stylesheet if that matches the current project organization.
 
-### 14. Risks
+Do not reorganize unrelated frontend code.
 
-Identify any implementation risks discovered by inspection.
+Keep changes localized.
 
-Do not invent risks without evidence.
+---
 
-### 15. Recommended Implementation Boundary
+# 18. Explicitly out of scope
 
-Provide the smallest evidence-based implementation scope that would address the confirmed gaps.
+Do not implement:
 
-Do not begin implementation.
+* Drag-box/marquee selection
+* Full DOM virtualization
+* AI-generated tagging
+* New database architecture
+* New group semantics
+* New image metadata persistence system
+* New image editor
+* New authentication model
+* Major backend redesign
+* Replacement of existing group editing
+* Removal of explicit group-cover behavior
 
-### 16. Final Inspection Status
+---
 
-Use exactly one:
+# 19. Implementation discipline
 
-INSPECTION COMPLETE
-INSPECTION COMPLETE WITH RUNTIME GAPS
-BLOCKED
+Before editing, inspect the actual current implementation and determine:
 
-# Stop Condition
+1. Which requested capabilities already partially exist.
+2. Which existing functions/routes should be reused.
+3. Which event handlers would conflict with the new behavior.
+4. How group covers currently work.
+5. How group membership is persisted.
+6. How favorites are persisted.
+7. How Find Similar currently works.
+8. Whether gallery data already exposes dimensions, file type, dates, or other metadata.
 
-Do not modify any source file.
+Do not assume missing functionality without checking the source.
 
-Do not begin responsive implementation.
+Make the **minimum necessary backend changes**.
 
-Do not redesign.
+The majority of this work should be frontend unless source inspection proves additional backend data is necessary.
 
-Return the inspection evidence to CoS for reconciliation first.
+---
 
-The next authorized step after this report will be:
+# 20. Verification
 
-CoS reconciliation
-→ Russell decisions only if genuinely necessary
-→ approved P04 implementation scope
-→ implementation
+After implementation, verify:
+
+### Gallery
+
+* Masonry mode works
+* Uniform mode works
+* Density controls work
+* Preferences survive refresh
+* Portrait images are no longer unnecessarily cropped in masonry mode
+* Filtering and sorting work together
+
+### Groups
+
+* Existing groups still load
+* Existing cover images still work
+* Group editing still works
+* Images can still be added and removed
+* New collage previews render correctly
+
+### Selection
+
+* Single selection works
+* Shift-range selection works
+* Bottom toolbar appears/disappears correctly
+* Existing batch operations still persist correctly
+
+### Lightbox
+
+* Previous/next works
+* Filmstrip stays synchronized
+* Inspector opens/closes
+* Favorite action persists
+* Group actions persist
+* Zoom/pan works
+* Keyboard shortcuts work
+* Focus returns correctly after close
+
+### Responsive
+
+* Desktop
+* Narrow desktop
+* Tablet
+* Mobile/touch layout
+
+### Performance
+
+* Images remain lazy loaded
+* No mass eager loading of full-resolution assets
+* No excessive number of simultaneous blur surfaces
+* No obvious console errors
+* No duplicate event handlers
+
+---
+
+# Deliverable
+
+Implement the changes in the existing project.
+
+When finished, report:
+
+1. Files changed
+2. What changed in each file
+3. Existing functionality reused
+4. Any backend changes required and why
+5. Anything intentionally deferred
+6. Verification performed
+7. Any remaining issue that requires an actual product decision
+
+Do not propose another redesign or planning phase unless source inspection reveals a concrete blocker.

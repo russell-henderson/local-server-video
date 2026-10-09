@@ -1,1453 +1,299 @@
 {% extends "_base.html" %}
 
-{% block title %}Gallery - Local Video Server{% endblock %}
+{% block title %}Image Gallery - Local Video Server{% endblock %}
 
 {% block extra_head %}
-<style>
-  /* ────────────────────────────────────────────────────────────────────────
-     GALLERY LAYOUT & SIZING
-     ──────────────────────────────────────────────────────────────────────── */
-  
-  /* Gallery Header */
-  .gallery-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
-    flex-wrap: wrap;
-    gap: 16px;
-  }
-  
-  .gallery-header h1 {
-    margin: 0;
-    color: var(--text-color);
-  }
-  
-  .gallery-controls {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
-  
-  .selection-toggle-btn {
-    padding: 8px 16px;
-    background: var(--primary-color);
-    color: white;
-    border: none;
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    font-size: 0.9rem;
-    transition: all var(--transition-fast);
-  }
-  
-  .selection-toggle-btn:hover {
-    opacity: 0.9;
-    transform: translateY(-1px);
-  }
-  
-  .selection-toggle-btn.active {
-    background: var(--accent-color);
-  }
-
-  .favorites-toggle-btn {
-    padding: 8px 16px;
-    background: transparent;
-    border: 1px solid rgba(255,255,255,0.2);
-    color: var(--text-color);
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    font-size: 0.9rem;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    transition: all var(--transition-fast);
-  }
-
-  .favorites-toggle-btn:hover {
-    opacity: 0.9;
-    transform: translateY(-1px);
-  }
-
-  .favorites-toggle-btn.active {
-    background: rgba(255,255,255,0.08);
-    border-color: var(--accent-color);
-    color: var(--accent-color);
-  }
-  
-  .selection-info {
-    font-size: 0.9rem;
-    color: var(--text-color);
-    opacity: 0;
-    transition: opacity var(--transition-normal);
-  }
-  
-  .selection-info.active {
-    opacity: 1;
-  }
-  
-  /* Selection Actions Panel */
-  .selection-actions {
-    display: none;
-    background: var(--card-background);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: var(--radius-lg);
-    padding: 20px;
-    margin-bottom: 24px;
-    gap: 20px;
-  }
-  
-  .selection-actions.active {
-    display: flex;
-    flex-wrap: wrap;
-  }
-  
-  .action-section {
-    flex: 1;
-    min-width: 200px;
-  }
-  
-  .action-section h3 {
-    font-size: 0.9rem;
-    margin: 0 0 12px 0;
-    color: var(--text-color);
-    opacity: 0.8;
-  }
-  
-  .action-inputs {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 8px;
-  }
-  
-  .action-inputs input,
-  .action-inputs select {
-    flex: 1;
-    padding: 8px 12px;
-    background: var(--background-color);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: var(--radius-sm);
-    color: var(--text-color);
-    font-size: 0.9rem;
-  }
-  
-  .action-btn {
-    padding: 8px 16px;
-    background: var(--accent-color);
-    color: white;
-    border: none;
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    font-size: 0.9rem;
-    white-space: nowrap;
-    transition: all var(--transition-fast);
-  }
-  
-  .action-btn:hover {
-    opacity: 0.9;
-  }
-  
-  .action-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  .inline-helper {
-    display: block;
-    color: #9fb3d9;
-    font-size: 0.8rem;
-    margin-top: 4px;
-  }
-
-  .action-btn.clear {
-    background: #dc3545;
-  }
-  
-  /* Base Grid Helper */
-  .gallery-grid {
-    display: grid;
-    gap: 20px;
-    padding: 16px 0;
-  }
-  
-  /* My Groups Layout */
-  #groupsGrid {
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 16px;
-    padding-bottom: 24px;
-  }
-  
-  /* All Images Layout */
-  #galleryGrid {
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 16px;
-    padding-bottom: 40px;
-  }
-  
-  /* Section Separation */
-  #groupsSection {
-    margin-bottom: 16px;
-  }
-  
-  #groupsSection h2,
-  .gallery-section h2 {
-    font-size: 1.5rem;
-    margin: 32px 0 16px 0;
-    color: var(--text-color);
-  }
-  
-  /* Group Cards */
-  .group-card {
-    background: var(--card-background);
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    cursor: pointer;
-    transition: all var(--transition-fast);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  }
-  
-  .group-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-  }
-  
-  .group-card-image {
-    width: 100%;
-    height: 200px;
-    overflow: hidden;
-    border-radius: 12px 12px 0 0;
-    background: var(--background-color);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .group-card-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-  
-  .group-card-image.no-image {
-    color: rgba(255, 255, 255, 0.3);
-    font-size: 3rem;
-  }
-  
-  .group-card-info {
-    padding: 12px;
-    background: rgba(25, 25, 25, 0.8);
-  }
-  
-  .group-card-info h3 {
-    margin: 0 0 4px;
-    font-size: 1rem;
-    color: var(--text-color);
-  }
-  
-  .group-card-info small {
-    font-size: 0.85rem;
-    color: #aaa;
-  }
-  
-  /* Image Gallery Items */
-.gallery-item {
-  position: relative;
-  background: var(--card-background);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-}
-  
-  .gallery-item:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  }
-  
-.gallery-item img {
-  width: 100%;
-  height: 200px;
-  object-fit: cover;
-  display: block;
-}
-
-.image-fav-btn {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  background: rgba(0,0,0,0.55);
-  color: #fff;
-  border: none;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  cursor: pointer;
-  opacity: 0;
-  transition: all var(--transition-fast);
-  z-index: 11;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.gallery-item:hover .image-fav-btn {
-  opacity: 1;
-}
-
-.image-fav-btn.active {
-  background: #e63972;
-  opacity: 1;
-}
-
-.image-fav-btn i {
-  pointer-events: none;
-}
-
-  
-  .gallery-item-checkbox {
-    position: absolute;
-    top: 8px;
-    left: 8px;
-    width: 24px;
-    height: 24px;
-    cursor: pointer;
-    opacity: 0;
-    z-index: 10;
-    transition: opacity var(--transition-fast);
-    pointer-events: none;
-  }
-  
-  .gallery-item-checkbox:checked {
-    opacity: 1;
-  }
-  
-  .gallery-item.selection-mode .gallery-item-checkbox {
-    opacity: 0.7;
-    pointer-events: auto;
-  }
-  
-  .gallery-item.selection-mode .gallery-item-checkbox:hover {
-    opacity: 1;
-  }
-  
-  .gallery-item.selected {
-    outline: 3px solid var(--accent-color);
-    outline-offset: -3px;
-  }
-  
-  /* Lightbox */
-  .lightbox {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.95);
-    z-index: 9999;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    overflow: auto;
-  }
-  
-  .lightbox.active {
-    display: flex;
-  }
-  
-  .lightbox-content {
-    width: min(1100px, 92vw);
-    max-height: calc(100vh - 40px);
-    position: relative;
-    background: rgba(15, 15, 15, 0.9);
-    padding: 16px;
-    border-radius: 12px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
-    overflow-y: auto;
-    overscroll-behavior: contain;
-  }
-  
-  .lightbox-content img {
-    display: block;
-    max-width: 100%;
-    max-height: min(62vh, 680px);
-    margin: 0 auto;
-    object-fit: contain;
-    border-radius: 10px;
-  }
-
-  .lightbox-toolbar {
-    position: sticky;
-    top: 0;
-    z-index: 2;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto auto;
-    gap: 10px;
-    align-items: start;
-    margin-bottom: 12px;
-    padding-bottom: 10px;
-    background: rgba(15, 15, 15, 0.96);
-  }
-
-  .lightbox-meta {
-    color: #fff;
-    min-width: 0;
-  }
-
-  .lightbox-filename {
-    font-weight: 600;
-    word-break: break-word;
-  }
-
-  .lightbox-submeta,
-  .lightbox-groups,
-  .lightbox-status {
-    color: #b9c7df;
-    font-size: 0.85rem;
-    margin-top: 4px;
-  }
-
-  .lightbox-status {
-    min-height: 1.2em;
-  }
-
-  .lightbox-tool-btn {
-    padding: 8px 12px;
-    border: none;
-    border-radius: 6px;
-    background: rgba(255, 255, 255, 0.12);
-    color: #fff;
-    cursor: pointer;
-    transition: opacity 0.2s ease, transform 0.2s ease;
-    white-space: nowrap;
-  }
-
-  .lightbox-tool-btn:hover {
-    opacity: 0.9;
-    transform: translateY(-1px);
-  }
-
-  .lightbox-tool-btn.active {
-    background: #e63972;
-  }
-
-  .lightbox-nav {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    background: rgba(0, 0, 0, 0.4);
-    color: #fff;
-    border: none;
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-    transition: background 0.2s ease, transform 0.2s ease;
-  }
-
-  .lightbox-nav:hover {
-    background: rgba(0, 0, 0, 0.6);
-    transform: translateY(-50%) scale(1.05);
-  }
-
-  .lightbox-nav.prev { left: -56px; }
-  .lightbox-nav.next { right: -56px; }
-  
-  .lightbox-close {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    background: rgba(255, 255, 255, 0.2);
-    border: none;
-    color: white;
-    font-size: 2rem;
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all var(--transition-fast);
-  }
-  
-  .lightbox-close:hover {
-    background: rgba(255, 255, 255, 0.3);
-  }
-
-  .lightbox-actions {
-    position: sticky;
-    bottom: 0;
-    z-index: 2;
-    margin-top: 16px;
-    padding-top: 10px;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 10px;
-    align-items: center;
-    background: rgba(15, 15, 15, 0.96);
-  }
-
-  .lightbox-actions select,
-  .lightbox-actions input {
-    padding: 6px 10px;
-    background: rgba(0, 0, 0, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 6px;
-    color: white;
-    min-width: 180px;
-    height: 38px;
-  }
-
-  .lightbox-actions select[multiple] {
-    height: 96px;
-  }
-
-  .lightbox-actions button {
-    padding: 10px 14px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    color: #fff;
-    transition: opacity 0.2s ease, transform 0.2s ease;
-  }
-
-  .lightbox-actions button:hover {
-    opacity: 0.9;
-    transform: translateY(-1px);
-  }
-
-  .lightbox-actions .primary {
-    background: var(--accent-color);
-  }
-
-  .lightbox-actions .secondary {
-    background: #2fa36b;
-  }
-
-  @media (max-width: 640px) {
-    .lightbox {
-      padding: 10px;
-      align-items: flex-start;
-    }
-    .lightbox-content {
-      width: 100%;
-      max-height: calc(100vh - 20px);
-      padding: 12px;
-    }
-    .lightbox-content img {
-      max-height: 50vh;
-    }
-    .lightbox-toolbar {
-      grid-template-columns: 1fr;
-    }
-    .lightbox-actions {
-      grid-template-columns: 1fr;
-    }
-  }
-  
-  /* Empty State */
-  .empty-state {
-    text-align: center;
-    padding: 60px 20px;
-    color: rgba(255, 255, 255, 0.5);
-  }
-  
-  .empty-state i {
-    font-size: 4rem;
-    margin-bottom: 16px;
-    opacity: 0.3;
-  }
-  
-  .empty-state p {
-    font-size: 1.1rem;
-    margin: 0;
-  }
-  
-  /* Responsive Adjustments */
-  @media (max-width: 768px) {
-    .gallery-header {
-      flex-direction: column;
-      align-items: flex-start;
-    }
-    
-    .selection-actions {
-      flex-direction: column;
-    }
-    
-    #groupsGrid {
-      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-      gap: 12px;
-    }
-    
-    #galleryGrid {
-      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-      gap: 12px;
-    }
-    
-    .group-card-image {
-      height: 150px;
-    }
-    
-    .gallery-item img {
-      height: 150px;
-    }
-    
-    .selection-toggle-btn {
-      font-size: 0.85rem;
-      padding: 6px 12px;
-    }
-    
-    .selection-info {
-      font-size: 0.85rem;
-    }
-  }
-  
-  @media (max-width: 480px) {
-    #groupsGrid,
-    #galleryGrid {
-      grid-template-columns: 1fr;
-    }
-  }
-</style>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/gallery.css') }}">
 {% endblock %}
 
 {% block content %}
-<div class="gallery-container">
-  <!-- Header -->
-  <div class="gallery-header">
-    <h1 class="mb-0">Gallery</h1>
-    <div class="gallery-controls">
-      <button class="selection-toggle-btn" id="selectionToggle">
-        Selection Mode
-      </button>
-      <button class="favorites-toggle-btn" id="favoritesToggle">
-        <i class="fas fa-heart"></i> Favorites
-      </button>
-      <span class="selection-info" id="selectionInfo">
-        Selected: <strong id="selectedCount">0</strong>
-      </span>
-    </div>
-  </div>
+<div class="gallery-page-container">
   
-  <!-- Selection Actions Panel -->
-  <div class="selection-actions" id="selectionActions">
-    <div class="action-section">
-      <h3>Create Group</h3>
-      <div class="action-inputs">
-        <input type="text" id="newGroupName" placeholder="Group name...">
-        <button class="action-btn" id="createGroupBtn" disabled>Create</button>
+  <!-- 1. Hero & Controls Toolbar -->
+  <section class="gallery-hero">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+      <div>
+        <h1 class="h3 mb-1 font-weight-bold text-white d-flex align-items-center gap-2">
+          <i class="fas fa-images text-info"></i> Image Gallery
+        </h1>
+        <p class="text-muted small mb-0">Browse, organize, cluster, and discover your visual collection</p>
+      </div>
+
+      <div class="d-flex align-items-center gap-2">
+        <button type="button" class="gallery-btn-pill" id="selectionToggle" aria-label="Toggle selection mode">
+          <i class="fas fa-check-double"></i> <span>Select Mode</span>
+        </button>
       </div>
     </div>
-    
-    <div class="action-section">
-      <h3>Add to Group</h3>
-      <div class="action-inputs">
-        <select id="existingGroupSelect" disabled>
-          <option value="">Select a group...</option>
+
+    <!-- Discovery Toolbar -->
+    <div class="gallery-toolbar">
+      <!-- Live Search -->
+      <div class="gallery-search-wrap">
+        <i class="fas fa-search gallery-search-icon"></i>
+        <input type="text" id="gallerySearchInput" class="gallery-search-input" placeholder="Search filenames..." aria-label="Search images">
+        <button type="button" id="gallerySearchClear" class="gallery-search-clear" aria-label="Clear search">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <!-- Segmented View Mode & Density & Sort -->
+      <div class="gallery-controls-group">
+        <!-- View Mode: Masonry vs Uniform -->
+        <div class="gallery-segmented" role="group" aria-label="View mode">
+          <button type="button" data-view-mode="masonry" title="Masonry (Natural Aspect Ratios)">
+            <i class="fas fa-columns"></i> <span>Masonry</span>
+          </button>
+          <button type="button" data-view-mode="uniform" title="Uniform Grid">
+            <i class="fas fa-th-large"></i> <span>Grid</span>
+          </button>
+        </div>
+
+        <!-- Density: Compact, Medium, Showcase -->
+        <div class="gallery-segmented" role="group" aria-label="Grid density">
+          <button type="button" data-density="compact" title="Compact layout">
+            <i class="fas fa-th"></i>
+          </button>
+          <button type="button" data-density="medium" title="Medium layout">
+            <i class="fas fa-grip-horizontal"></i>
+          </button>
+          <button type="button" data-density="showcase" title="Showcase / Large cards">
+            <i class="fas fa-square"></i>
+          </button>
+        </div>
+
+        <!-- Sort Select -->
+        <select id="gallerySortSelect" class="gallery-select" aria-label="Sort images">
+          <option value="date-added">Date Added</option>
+          <option value="name-asc">Name (A → Z)</option>
+          <option value="name-desc">Name (Z → A)</option>
+          <option value="favorites-first">Favorites First</option>
         </select>
-        <button class="action-btn" id="addToGroupBtn" disabled>Add</button>
       </div>
+    </div>
+  </section>
+
+  <!-- 2. Dynamic Quick-Filter Pills Shelf -->
+  <nav class="gallery-pills-shelf" aria-label="Filter presets">
+    <button type="button" class="gallery-filter-pill active" data-filter-pill="all">
+      <i class="fas fa-layer-group"></i> All
+    </button>
+    <button type="button" class="gallery-filter-pill" data-filter-pill="favorites">
+      <i class="fas fa-heart text-danger"></i> Favorites
+    </button>
+    <button type="button" class="gallery-filter-pill" data-filter-pill="grouped">
+      <i class="fas fa-folder"></i> Grouped
+    </button>
+    <button type="button" class="gallery-filter-pill" data-filter-pill="ungrouped">
+      <i class="fas fa-folder-open"></i> Ungrouped
+    </button>
+    <button type="button" class="gallery-filter-pill" data-filter-pill="gif">
+      <i class="fas fa-film text-warning"></i> GIF / Motion
+    </button>
+    <button type="button" class="gallery-filter-pill" data-filter-pill="webp">
+      <i class="fas fa-file-image text-info"></i> WebP
+    </button>
+    <button type="button" class="gallery-filter-pill" data-filter-pill="png">
+      <i class="fas fa-file-image text-success"></i> PNG
+    </button>
+    <button type="button" class="gallery-filter-pill" data-filter-pill="jpg">
+      <i class="fas fa-file-image text-primary"></i> JPG
+    </button>
+  </nav>
+
+  <!-- 3. My Groups Section -->
+  <section class="groups-section" id="groupsSection">
+    <div class="groups-section-header">
+      <h2 class="h5 mb-0 text-white d-flex align-items-center gap-2">
+        <i class="fas fa-folder text-warning"></i> Image Groups
+      </h2>
+      <button type="button" class="gallery-btn-pill gallery-groups-refresh" id="refreshGroupsBtn" title="Refresh image and group cache">
+        <i class="fas fa-rotate"></i> Refresh
+      </button>
+    </div>
+    <div class="groups-grid" id="groupsGrid">
+      <!-- Populated dynamically with 2x2 collage cards -->
+    </div>
+  </section>
+
+  <!-- 4. All Images Grid Section -->
+  <section class="gallery-section">
+    <div class="gallery-section-header">
+      <h2 class="h5 mb-0 text-white d-flex align-items-center gap-2">
+        <i class="fas fa-photo-video text-info"></i> Collection
+      </h2>
+      <span class="badge bg-secondary font-weight-normal" id="galleryTotalCount">0 items</span>
     </div>
     
-    <div class="action-section">
-      <h3>Group Similar</h3>
-      <div class="action-inputs">
-        <input type="text" id="similarGroupName" placeholder="Optional name...">
-        <button class="action-btn" id="groupSimilarBtn" disabled>Find & Group</button>
-      </div>
-      <span class="inline-helper">Uses pHash to cluster images close to the first selected.</span>
+    <div class="gallery-container-grid view-masonry density-medium" id="galleryGrid">
+      <!-- Populated dynamically by gallery.js -->
     </div>
+  </section>
 
-    <div class="action-section">
-      <h3>Selection</h3>
-      <button class="action-btn clear" id="clearSelectionBtn" disabled>Clear Selection</button>
-    </div>
-  </div>
-  
-  <!-- My Groups Section -->
-  <div id="groupsSection">
-    <h2 class="mt-4 mb-3">My Groups</h2>
-    <div class="gallery-grid" id="groupsGrid">
-      <!-- Group cards will be inserted here by JavaScript -->
-    </div>
-  </div>
-  
-  <!-- All Images Section -->
-  <div class="gallery-section">
-    <h2 class="mt-4 mb-3">All Images</h2>
-    <div class="gallery-grid" id="galleryGrid">
-      <!-- Image cards will be inserted here by JavaScript -->
-    </div>
-  </div>
+  <!-- 5. Floating Glassmorphic Bottom Action Bar -->
+  <div class="gallery-floating-action-bar" id="galleryFloatingActionBar" role="toolbar" aria-label="Selection actions">
+    <span class="selection-count-pill" id="floatingSelectedCount">0 selected</span>
 
-  <!-- Lightbox -->
-<div class="lightbox" id="lightbox">
-  <button class="lightbox-close" id="lightboxClose">&times;</button>
-  <div class="lightbox-content">
-    <button class="lightbox-nav prev" id="lightboxPrev" aria-label="Previous image">
-      <i class="fas fa-chevron-left"></i>
+    <select id="floatingGroupSelect" class="floating-group-select" aria-label="Select destination group">
+      <option value="">Add to group…</option>
+    </select>
+    
+    <button type="button" class="floating-action-btn primary" id="floatingAddToGroupBtn">
+      <i class="fas fa-plus"></i> <span>Add</span>
     </button>
-    <button class="lightbox-nav next" id="lightboxNext" aria-label="Next image">
-      <i class="fas fa-chevron-right"></i>
-    </button>
-    <div class="lightbox-toolbar">
-      <div class="lightbox-meta">
-        <div class="lightbox-filename" id="lightboxFilename"></div>
-        <div class="lightbox-submeta" id="lightboxIndex"></div>
-        <div class="lightbox-groups" id="lightboxGroups">Groups: loading...</div>
-        <div class="lightbox-status" id="lightboxStatus" aria-live="polite"></div>
-      </div>
-      <button class="lightbox-tool-btn" id="lightboxFavoriteBtn" type="button">
-        <span class="icon favorite-icon"></span> Favorite
-      </button>
-      <button class="lightbox-tool-btn" id="lightboxSimilarBtn" type="button">
-        <i class="fas fa-layer-group"></i> Find Similar
-      </button>
-    </div>
-    <img id="lightboxImage" src="" alt="">
-    <div class="lightbox-actions">
-      <select id="lightboxGroupSelect" multiple size="4" aria-label="Add current image to groups">
-        <option value="">Add to group...</option>
-      </select>
-      <button class="primary" id="lightboxAddToGroupBtn" disabled>Add</button>
-      <input type="text" id="lightboxNewGroupName" placeholder="New group name">
-      <button class="secondary" id="lightboxCreateGroupBtn" disabled>Create</button>
-    </div>
-  </div>
-</div>
-</div>
 
+    <button type="button" class="floating-action-btn" id="floatingCreateGroupBtn">
+      <i class="fas fa-folder-plus"></i> <span>New Group</span>
+    </button>
+
+    <button type="button" class="floating-action-btn" id="floatingFavBtn" title="Favorite all selected">
+      <i class="fas fa-heart text-danger"></i>
+    </button>
+
+    <button type="button" class="floating-action-btn" id="floatingSimilarBtn" title="Find images visually similar to first selected">
+      <i class="fas fa-wand-magic-sparkles"></i> <span>Find Similar</span>
+    </button>
+
+    <button type="button" class="floating-action-btn danger" id="floatingClearBtn" title="Clear selection">
+      <i class="fas fa-times"></i> <span>Done</span>
+    </button>
+  </div>
+
+  <!-- 6. Lightbox & Collapsible Inspector Drawer -->
+  <div class="lightbox-overlay" id="galleryLightbox" role="dialog" aria-modal="true" aria-label="Image lightbox viewer">
+    
+    <!-- Lightbox Topbar -->
+    <header class="lightbox-topbar">
+      <div class="lightbox-topbar-meta">
+        <span class="lightbox-filename-badge" id="lightboxFilename">image.jpg</span>
+        <span class="lightbox-index-badge" id="lightboxIndexBadge">1 / 1</span>
+      </div>
+
+      <div class="lightbox-topbar-tools">
+        <!-- Zoom controls -->
+        <button type="button" class="lightbox-tool-btn" id="lightboxZoomOutBtn" title="Zoom out" aria-label="Zoom out">
+          <i class="fas fa-search-minus"></i>
+        </button>
+        <button type="button" class="lightbox-tool-btn" id="lightboxZoomFitBtn" title="Fit to window [0]" aria-label="Fit image">
+          Fit
+        </button>
+        <button type="button" class="lightbox-tool-btn" id="lightboxZoom100Btn" title="100% Zoom [1]" aria-label="100% Zoom">
+          100%
+        </button>
+        <button type="button" class="lightbox-tool-btn" id="lightboxZoomInBtn" title="Zoom in" aria-label="Zoom in">
+          <i class="fas fa-search-plus"></i>
+        </button>
+
+        <!-- Slideshow -->
+        <button type="button" class="lightbox-tool-btn" id="lightboxSlideshowBtn" title="Play Slideshow [Space]" aria-label="Slideshow">
+          <i class="fas fa-play"></i> <span>Slideshow</span>
+        </button>
+
+        <!-- Favorite -->
+        <button type="button" class="lightbox-tool-btn favorite" id="lightboxFavBtn" title="Toggle favorite [F]" aria-label="Favorite">
+          <i class="fas fa-heart"></i>
+        </button>
+
+        <!-- Inspector Toggle -->
+        <button type="button" class="lightbox-tool-btn" id="lightboxInspectorBtn" title="Toggle Inspector Drawer [I]" aria-label="Toggle Details">
+          <i class="fas fa-info-circle"></i> <span>Details</span>
+        </button>
+
+        <!-- Close -->
+        <button type="button" class="lightbox-close-btn" id="lightboxCloseBtn" title="Close [Esc]" aria-label="Close lightbox">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Lightbox Center Body (Main Stage + Inspector) -->
+    <div class="lightbox-stage-container">
+      <main class="lightbox-main-stage" id="lightboxMainStage">
+        <!-- Nav chevrons -->
+        <button type="button" class="lightbox-nav-btn prev" id="lightboxPrevBtn" title="Previous [Left Arrow]" aria-label="Previous image">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+        
+        <div class="lightbox-image-wrapper" id="lightboxImageWrapper">
+          <img id="lightboxImg" src="" alt="" draggable="false">
+        </div>
+
+        <button type="button" class="lightbox-nav-btn next" id="lightboxNextBtn" title="Next [Right Arrow]" aria-label="Next image">
+          <i class="fas fa-chevron-right"></i>
+        </button>
+      </main>
+
+      <!-- Collapsible Right Inspector Drawer -->
+      <aside class="lightbox-inspector" id="lightboxInspector" aria-label="Image metadata inspector">
+        <div class="inspector-section">
+          <h4><i class="fas fa-info-circle text-info"></i> Metadata</h4>
+          <div class="inspector-meta-row">
+            <span class="inspector-meta-label">File:</span>
+            <span class="inspector-meta-val" id="inspectorFilename">--</span>
+          </div>
+          <div class="inspector-meta-row">
+            <span class="inspector-meta-label">Format:</span>
+            <span class="inspector-meta-val" id="inspectorFormat">--</span>
+          </div>
+          <div class="inspector-meta-row">
+            <span class="inspector-meta-label">Resolution:</span>
+            <span class="inspector-meta-val" id="inspectorDimensions">Loading…</span>
+          </div>
+        </div>
+
+        <div class="inspector-section">
+          <h4><i class="fas fa-folder text-warning"></i> Groups</h4>
+          <div class="inspector-group-tags" id="inspectorGroupsList">
+            <!-- Group tags inserted here -->
+          </div>
+
+          <div class="d-flex flex-column gap-2 mt-2">
+            <div class="d-flex gap-2">
+              <select id="inspectorGroupSelect" class="gallery-select flex-grow-1" aria-label="Add to group">
+                <option value="">Add to group…</option>
+              </select>
+              <button type="button" class="btn btn-sm btn-info" id="inspectorAddGroupBtn">Add</button>
+            </div>
+
+            <div class="d-flex gap-2">
+              <input type="text" id="inspectorNewGroupName" class="form-control form-control-sm bg-dark text-white border-secondary" placeholder="New group name…">
+              <button type="button" class="btn btn-sm btn-outline-info" id="inspectorCreateGroupBtn">Create</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="inspector-section">
+          <h4><i class="fas fa-wand-magic-sparkles text-primary"></i> Similarity Discovery</h4>
+          <p class="small text-muted mb-2">Cluster visually similar images using perceptual hashing.</p>
+          <button type="button" class="btn btn-sm btn-primary w-100" id="inspectorSimilarBtn">
+            <i class="fas fa-layer-group"></i> Find & Group Similar
+          </button>
+        </div>
+      </aside>
+    </div>
+
+    <!-- Lightbox Bottom Filmstrip -->
+    <footer class="lightbox-filmstrip-tray" id="lightboxFilmstripTray">
+      <div class="lightbox-filmstrip-toggle-bar">
+        <button type="button" class="lightbox-filmstrip-toggle-btn" id="lightboxFilmstripToggleBtn" aria-label="Toggle filmstrip">
+          <i class="fas fa-film"></i> Filmstrip
+        </button>
+      </div>
+      <div class="lightbox-filmstrip-track" id="lightboxFilmstripTrack">
+        <!-- Filmstrip thumbnails -->
+      </div>
+    </footer>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/gallery.js') }}"></script>
 <script>
-// Gallery State
-let selectionMode = false;
-let showFavoritesOnly = false;
-let selectedImages = new Set();
-let favoriteImages = new Set(loadFavoriteImages());
-let allGroups = [];
-let allImages = {{ images|tojson }};
-let fullImageListAll = [...allImages]; // includes grouped images once fetched
-let currentRenderList = [];
-let lastSelectedIndex = null;
-
-// DOM Elements
-const selectionToggle = document.getElementById('selectionToggle');
-const favoritesToggle = document.getElementById('favoritesToggle');
-const selectionInfo = document.getElementById('selectionInfo');
-const selectionActions = document.getElementById('selectionActions');
-const selectedCount = document.getElementById('selectedCount');
-const galleryGrid = document.getElementById('galleryGrid');
-const groupsGrid = document.getElementById('groupsGrid');
-const newGroupName = document.getElementById('newGroupName');
-const createGroupBtn = document.getElementById('createGroupBtn');
-const existingGroupSelect = document.getElementById('existingGroupSelect');
-const addToGroupBtn = document.getElementById('addToGroupBtn');
-const clearSelectionBtn = document.getElementById('clearSelectionBtn');
-const groupSimilarBtn = document.getElementById('groupSimilarBtn');
-const similarGroupName = document.getElementById('similarGroupName');
-const lightbox = document.getElementById('lightbox');
-const lightboxImage = document.getElementById('lightboxImage');
-const lightboxClose = document.getElementById('lightboxClose');
-const lightboxFilename = document.getElementById('lightboxFilename');
-const lightboxIndex = document.getElementById('lightboxIndex');
-const lightboxGroups = document.getElementById('lightboxGroups');
-const lightboxStatus = document.getElementById('lightboxStatus');
-const lightboxFavoriteBtn = document.getElementById('lightboxFavoriteBtn');
-const lightboxSimilarBtn = document.getElementById('lightboxSimilarBtn');
-const lightboxGroupSelect = document.getElementById('lightboxGroupSelect');
-const lightboxAddToGroupBtn = document.getElementById('lightboxAddToGroupBtn');
-const lightboxNewGroupName = document.getElementById('lightboxNewGroupName');
-const lightboxCreateGroupBtn = document.getElementById('lightboxCreateGroupBtn');
-let lightboxCurrentImage = null;
-let lightboxCurrentIndex = -1;
-const lightboxPrev = document.getElementById('lightboxPrev');
-const lightboxNext = document.getElementById('lightboxNext');
-
-// Initialize
-async function init() {
-  await loadGroups();
-  await loadAllImages();
-  renderGroups();
-  renderImages();
-  setupEventListeners();
-}
-
-// Fetch all gallery images (including those in groups) for favorites view
-async function loadAllImages() {
-  try {
-    const resp = await fetch('/api/gallery');
-    const data = await resp.json();
-    if (Array.isArray(data.images)) {
-      fullImageListAll = [...data.images].sort().reverse();
-      // If currently showing favorites, re-render to include grouped favorites
-      if (showFavoritesOnly) {
-        renderImages();
-      }
-    }
-  } catch (err) {
-    console.error('Failed to load full image list for favorites', err);
-    fullImageListAll = [...allImages];
-  }
-}
-
-// Load groups from API
-async function loadGroups() {
-  try {
-    const response = await fetch('/api/gallery/groups');
-    allGroups = await response.json();
-    updateGroupSelect();
-  } catch (error) {
-    console.error('Failed to load groups:', error);
-    allGroups = [];
-  }
-}
-
-// Update group select dropdown
-function updateGroupSelect() {
-  existingGroupSelect.innerHTML = '<option value="">Select a group...</option>';
-  allGroups.forEach(group => {
-    const option = document.createElement('option');
-    option.value = group.id;
-    option.textContent = `${group.name} (${group.image_count} images)`;
-    existingGroupSelect.appendChild(option);
+  document.addEventListener('DOMContentLoaded', () => {
+    const initialImages = {{ images|tojson }};
+    window.initGallery(initialImages);
   });
-
-  // Lightbox select mirrors existing groups and supports multi-add.
-  lightboxGroupSelect.innerHTML = '';
-  allGroups.forEach(group => {
-    const option = document.createElement('option');
-    option.value = group.id;
-    option.textContent = `${group.name} (${group.image_count} images)`;
-    lightboxGroupSelect.appendChild(option);
-  });
-}
-
-// Render group cards
-function renderGroups() {
-  if (allGroups.length === 0) {
-    groupsGrid.innerHTML = '<div class="empty-state"><i class="fas fa-folder-open"></i><p>No groups yet. Create one by selecting images!</p></div>';
-    return;
-  }
-  
-  groupsGrid.innerHTML = '';
-  allGroups.forEach(group => {
-    const card = document.createElement('div');
-    card.className = 'group-card';
-    card.onclick = () => window.location.href = `/gallery/groups/${group.slug}`;
-    
-    const imageDiv = document.createElement('div');
-    imageDiv.className = 'group-card-image';
-    
-    if (group.cover_image) {
-      const img = document.createElement('img');
-      img.src = `/gallery/image/${group.cover_image}`;
-      img.alt = group.name;
-      imageDiv.appendChild(img);
-    } else {
-      imageDiv.classList.add('no-image');
-      imageDiv.innerHTML = '<i class="fas fa-images"></i>';
-    }
-    
-    const info = document.createElement('div');
-    info.className = 'group-card-info';
-    info.innerHTML = `
-      <h3>${escapeHtml(group.name)}</h3>
-      <small>${group.image_count} ${group.image_count === 1 ? 'image' : 'images'}</small>
-    `;
-    
-    card.appendChild(imageDiv);
-    card.appendChild(info);
-    groupsGrid.appendChild(card);
-  });
-}
-
-// Central selection handler that supports Shift ranges
-function handleSelectionClick(event, index, image, renderList = currentRenderList) {
-  if (!selectionMode) {
-    // Fallback: open lightbox when not in selection mode
-    openLightbox(image);
-    return;
-  }
-
-  const isShift = event.shiftKey;
-  const list = renderList && renderList.length ? renderList : allImages;
-  const resolvedIndex = index ?? list.indexOf(image);
-
-  if (isShift && lastSelectedIndex !== null) {
-    const start = Math.min(lastSelectedIndex, resolvedIndex);
-    const end = Math.max(lastSelectedIndex, resolvedIndex);
-
-    const clickedIsSelected = selectedImages.has(image);
-    const shouldSelect = !clickedIsSelected;
-
-    console.log('Shift range selection', { start, end, shouldSelect });
-
-    for (let i = start; i <= end; i++) {
-      const name = list[i];
-      if (shouldSelect) {
-        selectedImages.add(name);
-      } else {
-        selectedImages.delete(name);
-      }
-    }
-  } else {
-    const clickedIsSelected = selectedImages.has(image);
-    if (clickedIsSelected) {
-      selectedImages.delete(image);
-    } else {
-      selectedImages.add(image);
-    }
-    lastSelectedIndex = resolvedIndex;
-    console.log('Single selection', { index: resolvedIndex, image, selected: selectedImages.has(image) });
-  }
-
-  updateSelectionUI();
-}
-
-// Render image cards
-function renderImages() {
-  const baseList = showFavoritesOnly ? fullImageListAll : allImages;
-  const renderList = showFavoritesOnly
-    ? baseList.filter(img => favoriteImages.has(img))
-    : baseList;
-  currentRenderList = renderList;
-
-  if (renderList.length === 0) {
-    galleryGrid.innerHTML = '<div class="empty-state"><i class="fas fa-image"></i><p>No images found in gallery.</p></div>';
-    return;
-  }
-
-  galleryGrid.innerHTML = '';
-  renderList.forEach((image, index) => {
-    const item = document.createElement('div');
-    item.className = 'gallery-item';
-    item.dataset.image = image;
-
-    const checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    checkbox.className = 'gallery-item-checkbox';
-    checkbox.addEventListener('click', (e) => {
-      // Click directly on checkbox in selection mode
-      e.stopPropagation();
-      handleSelectionClick(e, index, image, renderList);
-    });
-    
-    const img = document.createElement('img');
-    img.src = `/gallery/image/${image}`;
-    img.alt = image;
-    img.loading = 'lazy';
-    
-    const favBtn = document.createElement('button');
-    favBtn.className = 'image-fav-btn';
-    favBtn.innerHTML = '<span class="icon favorite-icon"></span>';
-    if (favoriteImages.has(image)) {
-      favBtn.querySelector('.icon').classList.add('is-on');
-    }
-    favBtn.onclick = (e) => {
-      e.stopPropagation();
-      toggleFavoriteImage(image, favBtn);
-    };
-    
-    item.appendChild(checkbox);
-    item.appendChild(favBtn);
-    item.appendChild(img);
-
-    item.onclick = (e) => {
-      // Ignore direct clicks on the checkbox itself
-      if (e.target === checkbox || e.target === favBtn || favBtn.contains(e.target)) {
-        return;
-      }
-      handleSelectionClick(e, index, image, renderList);
-    };
-
-    galleryGrid.appendChild(item);
-  });
-}
-
-// Toggle image selection (kept for compatibility, not used by shift handler)
-function toggleImageSelection(image, selected) {
-  if (selected) {
-    selectedImages.add(image);
-  } else {
-    selectedImages.delete(image);
-  }
-  
-  updateSelectionUI();
-}
-
-function loadFavoriteImages() {
-  try {
-    const raw = localStorage.getItem('gallery-favorites');
-    if (!raw) return [];
-    return JSON.parse(raw);
-  } catch (e) {
-    console.error('Failed to load favorites', e);
-    return [];
-  }
-}
-
-function saveFavoriteImages() {
-  localStorage.setItem('gallery-favorites', JSON.stringify(Array.from(favoriteImages)));
-}
-
-function toggleFavoriteImage(image, btn) {
-  const span = btn.querySelector('.icon');
-  if (favoriteImages.has(image)) {
-    favoriteImages.delete(image);
-    span.classList.remove('is-on');
-  } else {
-    favoriteImages.add(image);
-    span.classList.add('is-on');
-  }
-  saveFavoriteImages();
-  if (showFavoritesOnly) {
-    renderImages();
-  }
-}
-
-// Update selection UI
-function updateSelectionUI() {
-  selectedCount.textContent = selectedImages.size;
-  
-  const hasSelection = selectedImages.size > 0;
-  createGroupBtn.disabled = !hasSelection || !newGroupName.value.trim();
-  addToGroupBtn.disabled = !hasSelection || !existingGroupSelect.value;
-  clearSelectionBtn.disabled = !hasSelection;
-  groupSimilarBtn.disabled = !hasSelection;
-  existingGroupSelect.disabled = !hasSelection;
-  
-  // Update visual state of gallery items
-  document.querySelectorAll('.gallery-item').forEach(item => {
-    if (selectionMode) {
-      item.classList.add('selection-mode');
-    } else {
-      item.classList.remove('selection-mode');
-    }
-    
-    const name = item.dataset.image;
-    const isSelected = selectedImages.has(name);
-    if (isSelected) {
-      item.classList.add('selected');
-      item.querySelector('.gallery-item-checkbox').checked = true;
-    } else {
-      item.classList.remove('selected');
-      item.querySelector('.gallery-item-checkbox').checked = false;
-    }
-  });
-}
-
-// Toggle selection mode
-function toggleSelectionMode() {
-  selectionMode = !selectionMode;
-  
-  if (selectionMode) {
-    selectionToggle.classList.add('active');
-    selectionInfo.classList.add('active');
-    selectionActions.classList.add('active');
-  } else {
-    selectionToggle.classList.remove('active');
-    selectionInfo.classList.remove('active');
-    selectionActions.classList.remove('active');
-    clearSelection();
-  }
-  
-  updateSelectionUI();
-}
-
-// Clear selection
-function clearSelection() {
-  selectedImages.clear();
-  lastSelectedIndex = null;
-  updateSelectionUI();
-}
-
-// Create new group
-async function createGroup() {
-  const name = newGroupName.value.trim();
-  if (!name || selectedImages.size === 0) return;
-  
-  const images = Array.from(selectedImages);
-  const coverImage = images[0];
-  
-  try {
-    const response = await fetch('/api/gallery/groups', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, images, cover_image: coverImage })
-    });
-    
-    if (response.ok) {
-      newGroupName.value = '';
-      clearSelection();
-      await loadGroups();
-      renderGroups();
-      
-      // Reload page to reflect ungrouped images
-      window.location.reload();
-    } else {
-      const error = await response.json();
-      alert(`Failed to create group: ${error.error}`);
-    }
-  } catch (error) {
-    console.error('Error creating group:', error);
-    alert('Failed to create group. Please try again.');
-  }
-}
-
-// Group similar based on first selected image using pHash endpoint
-async function groupSimilarFromSelection() {
-  const selection = Array.from(selectedImages);
-  if (selection.length === 0) return;
-  const seed = selection[0];
-  const name = similarGroupName.value.trim();
-  groupSimilarBtn.disabled = true;
-  groupSimilarBtn.textContent = 'Finding...';
-  try {
-    const resp = await fetch('/api/gallery/groups/similar', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        filename: seed,
-        name,
-        max_distance: 10,
-        limit: 12
-      })
-    });
-    const data = await resp.json();
-    if (!resp.ok) {
-      alert(data.error || 'Failed to group similar images');
-      return;
-    }
-    alert(`Created group "${data.group?.name || 'Similar'}" with ${data.added?.length || 0} images`);
-    await loadGroups();
-    if (data.added) {
-      data.added.forEach(img => selectedImages.delete(img));
-    }
-    renderImages();
-    updateSelectionUI();
-  } catch (err) {
-    console.error('Group similar failed', err);
-    alert('Failed to group similar images');
-  } finally {
-    groupSimilarBtn.disabled = false;
-    groupSimilarBtn.textContent = 'Find & Group';
-  }
-}
-
-// Add images to existing group
-async function addToGroup() {
-  const groupId = parseInt(existingGroupSelect.value);
-  if (!groupId || selectedImages.size === 0) return;
-  
-  const images = Array.from(selectedImages);
-  
-  try {
-    const response = await fetch(`/api/gallery/groups/${groupId}/images`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ images })
-    });
-    
-    if (response.ok) {
-      clearSelection();
-      await loadGroups();
-      renderGroups();
-      
-      // Reload page to reflect ungrouped images
-      window.location.reload();
-    } else {
-      const error = await response.json();
-      alert(`Failed to add images: ${error.error}`);
-    }
-  } catch (error) {
-    console.error('Error adding images to group:', error);
-    alert('Failed to add images. Please try again.');
-  }
-}
-
-// Open lightbox
-function openLightbox(image) {
-  lightboxCurrentIndex = currentRenderList.indexOf(image);
-  lightbox.classList.add('active');
-  showLightboxImage(image, 'Ready. Shortcuts: arrows navigate, F favorites, G focuses groups.');
-}
-
-function showLightboxImage(image, statusMessage = '') {
-  lightboxImage.src = `/gallery/image/${image}`;
-  lightboxImage.alt = image;
-  lightboxCurrentImage = image;
-  lightboxCurrentIndex = currentRenderList.indexOf(image);
-  updateLightboxMeta();
-  updateLightboxActions();
-  refreshLightboxFavoriteState();
-  loadLightboxMemberships(image);
-  setLightboxStatus(statusMessage);
-}
-
-// Close lightbox
-function closeLightbox() {
-  lightbox.classList.remove('active');
-  lightboxImage.src = '';
-  lightboxCurrentImage = null;
-  lightboxCurrentIndex = -1;
-  setLightboxStatus('');
-  lightboxGroups.textContent = 'Groups: loading...';
-}
-
-function updateLightboxMeta() {
-  lightboxFilename.textContent = lightboxCurrentImage || '';
-  const total = currentRenderList.length;
-  const current = lightboxCurrentIndex >= 0 ? lightboxCurrentIndex + 1 : 0;
-  lightboxIndex.textContent = total ? `Image ${current} of ${total}` : '';
-}
-
-function setLightboxStatus(message) {
-  lightboxStatus.textContent = message || '';
-}
-
-function getSelectedLightboxGroupIds() {
-  return Array.from(lightboxGroupSelect.selectedOptions)
-    .map(option => parseInt(option.value))
-    .filter(Boolean);
-}
-
-function updateLightboxActions() {
-  lightboxAddToGroupBtn.disabled = !lightboxCurrentImage || getSelectedLightboxGroupIds().length === 0;
-  lightboxCreateGroupBtn.disabled = !lightboxCurrentImage || !lightboxNewGroupName.value.trim();
-  lightboxSimilarBtn.disabled = !lightboxCurrentImage;
-}
-
-function refreshLightboxFavoriteState() {
-  const isFavorite = lightboxCurrentImage && favoriteImages.has(lightboxCurrentImage);
-  lightboxFavoriteBtn.classList.toggle('active', Boolean(isFavorite));
-  const icon = lightboxFavoriteBtn.querySelector('.icon');
-  icon.classList.toggle('is-on', Boolean(isFavorite));
-  lightboxFavoriteBtn.setAttribute('aria-pressed', isFavorite ? 'true' : 'false');
-}
-
-async function loadLightboxMemberships(image) {
-  lightboxGroups.textContent = 'Groups: loading...';
-  try {
-    const response = await fetch(`/api/gallery/images/${encodeURIComponent(image)}/groups`);
-    const data = await response.json();
-    if (!response.ok) {
-      lightboxGroups.textContent = 'Groups: unavailable';
-      return;
-    }
-    const groups = Array.isArray(data.groups) ? data.groups : [];
-    lightboxGroups.textContent = groups.length
-      ? `Groups: ${groups.map(group => group.name).join(', ')}`
-      : 'Groups: none yet';
-  } catch (error) {
-    console.error('Failed to load image groups:', error);
-    lightboxGroups.textContent = 'Groups: unavailable';
-  }
-}
-
-// Setup event listeners
-function setupEventListeners() {
-  selectionToggle.onclick = toggleSelectionMode;
-  favoritesToggle.onclick = toggleFavoritesOnly;
-  createGroupBtn.onclick = createGroup;
-  addToGroupBtn.onclick = addToGroup;
-  clearSelectionBtn.onclick = clearSelection;
-  groupSimilarBtn.onclick = groupSimilarFromSelection;
-  lightboxClose.onclick = closeLightbox;
-  lightboxAddToGroupBtn.onclick = addCurrentToGroupFromLightbox;
-  lightboxCreateGroupBtn.onclick = createGroupFromLightbox;
-  lightboxFavoriteBtn.onclick = toggleCurrentFavoriteFromLightbox;
-  lightboxSimilarBtn.onclick = findSimilarFromLightbox;
-  lightboxPrev.onclick = showPrevImage;
-  lightboxNext.onclick = showNextImage;
-  
-  lightbox.onclick = (e) => {
-    if (e.target === lightbox) closeLightbox();
-  };
-  
-  newGroupName.oninput = () => {
-    createGroupBtn.disabled = !newGroupName.value.trim() || selectedImages.size === 0;
-  };
-  
-  existingGroupSelect.onchange = () => {
-    addToGroupBtn.disabled = !existingGroupSelect.value || selectedImages.size === 0;
-  };
-
-  lightboxGroupSelect.onchange = () => {
-    updateLightboxActions();
-  };
-  lightboxNewGroupName.oninput = () => {
-    updateLightboxActions();
-  };
-  
-  // Keyboard shortcuts
-  document.addEventListener('keydown', (e) => {
-    const isTyping = ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName);
-    if (e.key === 'Escape') {
-      if (lightbox.classList.contains('active')) {
-        closeLightbox();
-      } else if (selectionMode) {
-        toggleSelectionMode();
-      }
-    } else if (lightbox.classList.contains('active')) {
-      if (e.key === 'ArrowLeft') {
-        showPrevImage();
-      } else if (e.key === 'ArrowRight') {
-        showNextImage();
-      } else if (!isTyping && e.key.toLowerCase() === 'f') {
-        toggleCurrentFavoriteFromLightbox();
-      } else if (!isTyping && e.key.toLowerCase() === 'g') {
-        lightboxGroupSelect.focus();
-      }
-    }
-  });
-}
-
-function toggleFavoritesOnly() {
-  showFavoritesOnly = !showFavoritesOnly;
-  lastSelectedIndex = null;
-  favoritesToggle.classList.toggle('active', showFavoritesOnly);
-  favoritesToggle.innerHTML = showFavoritesOnly
-    ? '<span class="icon favorite-icon is-on"></span> Favorites (On)'
-    : '<span class="icon favorite-icon"></span> Favorites';
-  renderImages();
-}
-
-async function addCurrentToGroupFromLightbox() {
-  if (!lightboxCurrentImage) return;
-  const groupIds = getSelectedLightboxGroupIds();
-  if (groupIds.length === 0) return;
-  lightboxAddToGroupBtn.disabled = true;
-  setLightboxStatus('Adding to selected groups...');
-  try {
-    for (const groupId of groupIds) {
-      const response = await fetch(`/api/gallery/groups/${groupId}/images`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ images: [lightboxCurrentImage] })
-      });
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to add image');
-      }
-    }
-    setLightboxStatus(`Added to ${groupIds.length} ${groupIds.length === 1 ? 'group' : 'groups'}.`);
-    await loadGroups();
-    updateGroupSelect();
-    renderGroups();
-    await loadLightboxMemberships(lightboxCurrentImage);
-  } catch (error) {
-    console.error('Error adding to group from lightbox:', error);
-    setLightboxStatus(`Failed to add to group: ${error.message}`);
-  } finally {
-    updateLightboxActions();
-  }
-}
-
-async function createGroupFromLightbox() {
-  if (!lightboxCurrentImage) return;
-  const name = lightboxNewGroupName.value.trim();
-  if (!name) return;
-  lightboxCreateGroupBtn.disabled = true;
-  setLightboxStatus('Creating group...');
-  try {
-    const response = await fetch('/api/gallery/groups', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, images: [lightboxCurrentImage], cover_image: lightboxCurrentImage })
-    });
-    if (response.ok) {
-      lightboxNewGroupName.value = '';
-      setLightboxStatus('Group created.');
-      await loadGroups();
-      updateGroupSelect();
-      renderGroups();
-      await loadLightboxMemberships(lightboxCurrentImage);
-    } else {
-      const error = await response.json();
-      setLightboxStatus(`Failed to create group: ${error.error}`);
-    }
-  } catch (error) {
-    console.error('Error creating group from lightbox:', error);
-    setLightboxStatus('Failed to create group. Please try again.');
-  } finally {
-    updateLightboxActions();
-  }
-}
-
-function toggleCurrentFavoriteFromLightbox() {
-  if (!lightboxCurrentImage) return;
-  toggleFavoriteImage(lightboxCurrentImage, lightboxFavoriteBtn);
-  refreshLightboxFavoriteState();
-  setLightboxStatus(favoriteImages.has(lightboxCurrentImage) ? 'Added to favorites.' : 'Removed from favorites.');
-}
-
-async function findSimilarFromLightbox() {
-  if (!lightboxCurrentImage) return;
-  lightboxSimilarBtn.disabled = true;
-  setLightboxStatus('Finding similar images...');
-  try {
-    const response = await fetch('/api/gallery/groups/similar', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        filename: lightboxCurrentImage,
-        name: '',
-        max_distance: 10,
-        limit: 12
-      })
-    });
-    const data = await response.json();
-    if (!response.ok) {
-      setLightboxStatus(data.error || 'No similar images found.');
-      return;
-    }
-    const added = data.added || [];
-    setLightboxStatus(`Created "${data.group?.name || 'Similar'}" with ${added.length} images.`);
-    await loadGroups();
-    renderGroups();
-    await loadLightboxMemberships(lightboxCurrentImage);
-  } catch (error) {
-    console.error('Find similar from lightbox failed:', error);
-    setLightboxStatus('Failed to find similar images.');
-  } finally {
-    updateLightboxActions();
-  }
-}
-
-function showPrevImage() {
-  if (lightboxCurrentIndex <= 0) return;
-  const newIndex = lightboxCurrentIndex - 1;
-  const nextImg = currentRenderList[newIndex];
-  if (nextImg) {
-    showLightboxImage(nextImg);
-  }
-}
-
-function showNextImage() {
-  if (lightboxCurrentIndex === -1) return;
-  const newIndex = lightboxCurrentIndex + 1;
-  if (newIndex >= currentRenderList.length) return;
-  const nextImg = currentRenderList[newIndex];
-  if (nextImg) {
-    showLightboxImage(nextImg);
-  }
-}
-
-// Utility: Escape HTML
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
-
-// Initialize on page load
-init();
-
-// Also render videos after init uses fetched groups
 </script>
 {% endblock %}

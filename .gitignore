@@ -182,6 +182,7 @@ templates/links.html
 videos/
 images/
 static/thumbnails/
+static/gallery-thumbnails/
 
 # Generated thumbnails and cache
 static/thumbnails/*

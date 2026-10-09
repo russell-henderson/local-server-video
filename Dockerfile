@@ -20,7 +20,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Create directories
-RUN mkdir -p videos images static/thumbnails logs
+RUN mkdir -p videos images static/thumbnails static/gallery-thumbnails logs
 
 EXPOSE 5000
 

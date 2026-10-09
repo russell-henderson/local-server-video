@@ -1,796 +1,815 @@
 {% extends "_base.html" %}
 
-{% block title %}{{ group.name }} - Gallery - Local Video Server{% endblock %}
+{% block title %}{{ group.name }} — Gallery - Local Video Server{% endblock %}
 
 {% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/gallery.css') }}">
 <style>
-  /* Group View Styles */
-  .group-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 32px;
-    flex-wrap: wrap;
-    gap: 16px;
-  }
-  
-  .group-header h1 {
-    margin: 0;
-    color: var(--text-color);
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  
-  .back-link {
-    color: var(--accent-color);
-    text-decoration: none;
-    font-size: 1rem;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    transition: opacity var(--transition-fast);
-  }
-  
-  .back-link:hover {
-    opacity: 0.8;
-  }
-  
-  .group-actions {
-    display: flex;
-    gap: 12px;
-  }
-  
-  .action-btn {
-    padding: 8px 16px;
-    background: var(--accent-color);
-    color: white;
-    border: none;
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    font-size: 0.9rem;
-    transition: all var(--transition-fast);
-  }
-  
-  .action-btn:hover {
-    opacity: 0.9;
-  }
-  
-  .action-btn.danger {
-    background: #dc3545;
+  /* Group-specific styles layered on top of gallery.css */
+
+  .group-page-container { padding-bottom: 4rem; }
+
+  .group-hero {
+    background: radial-gradient(circle at 15% 30%, rgba(250, 204, 21, 0.08), transparent 40%),
+                radial-gradient(circle at 85% 10%, rgba(14, 165, 233, 0.08), transparent 40%),
+                rgba(22, 27, 34, 0.75);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
   }
 
-  .action-btn.cover {
-    background: #2fa36b; /* complementary green */
-    color: #fff;
+  .group-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: #94a3b8;
+    margin-bottom: 0.6rem;
   }
-  
+
+  .group-breadcrumb a {
+    color: #38bdf8;
+    text-decoration: none;
+    transition: opacity 0.2s;
+  }
+
+  .group-breadcrumb a:hover { opacity: 0.8; }
+
+  .group-hero-title {
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #f8fafc;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .group-hero-sub {
+    font-size: 0.85rem;
+    color: #94a3b8;
+    margin-top: 0.3rem;
+  }
+
+  .group-hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+
+  .group-action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.45rem 0.9rem;
+    border-radius: 8px;
+    font-size: 0.84rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
+  }
+
+  .group-action-btn.primary {
+    background: rgba(14, 165, 233, 0.18);
+    border-color: rgba(14, 165, 233, 0.4);
+    color: #38bdf8;
+  }
+
+  .group-action-btn.primary:hover {
+    background: rgba(14, 165, 233, 0.35);
+  }
+
+  .group-action-btn.success {
+    background: rgba(34, 197, 94, 0.18);
+    border-color: rgba(34, 197, 94, 0.4);
+    color: #4ade80;
+  }
+
+  .group-action-btn.success:hover {
+    background: rgba(34, 197, 94, 0.35);
+  }
+
+  .group-action-btn.success.active {
+    background: rgba(34, 197, 94, 0.35);
+    color: #4ade80;
+    box-shadow: 0 0 12px rgba(34, 197, 94, 0.3);
+  }
+
+  .group-action-btn.danger {
+    background: rgba(239, 68, 68, 0.18);
+    border-color: rgba(239, 68, 68, 0.4);
+    color: #f87171;
+  }
+
+  .group-action-btn.danger:hover {
+    background: rgba(239, 68, 68, 0.35);
+  }
+
   /* Group Image Grid */
   .group-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 16px;
-    padding: 16px 0;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1.25rem;
   }
-  
-  /* Image Item */
+
   .group-image-item {
     position: relative;
-    background: var(--card-background);
+    background: rgba(22, 27, 34, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: var(--radius-lg);
     overflow: hidden;
     cursor: pointer;
-    transition: all var(--transition-fast);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease;
   }
-  
+
   .group-image-item:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+    border-color: rgba(255, 255, 255, 0.18);
   }
-  
+
+  .group-image-item.is-cover {
+    border-color: rgba(250, 204, 21, 0.5);
+    box-shadow: 0 0 0 2px rgba(250, 204, 21, 0.2), 0 4px 16px rgba(0, 0, 0, 0.3);
+  }
+
   .group-image-item img {
     width: 100%;
     height: 200px;
     object-fit: cover;
     display: block;
+    transition: transform 0.3s ease;
   }
 
-  .image-fav-btn {
+  .group-image-item:hover img {
+    transform: scale(1.04);
+  }
+
+  .group-image-item .image-fav-btn {
     position: absolute;
     top: 8px;
     left: 8px;
-    background: rgba(0,0,0,0.55);
-    color: #fff;
-    border: none;
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    cursor: pointer;
-    opacity: 0;
-    transition: all var(--transition-fast);
-    z-index: 3;
+    background: rgba(15, 23, 42, 0.7);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #94a3b8;
     display: flex;
     align-items: center;
     justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    transition: all 0.2s ease;
+    z-index: 5;
   }
 
-  .group-image-item:hover .image-fav-btn {
+  .group-image-item:hover .image-fav-btn,
+  .group-image-item .image-fav-btn.active {
     opacity: 1;
   }
 
-  .image-fav-btn.active {
-    background: #e63972;
-    opacity: 1;
+  .group-image-item .image-fav-btn.active {
+    color: #f43f5e;
+    background: rgba(244, 63, 94, 0.18);
+    border-color: rgba(244, 63, 94, 0.4);
   }
-  
+
   .image-remove-btn {
     position: absolute;
     top: 8px;
     right: 8px;
-    background: rgba(220, 53, 69, 0.9);
-    color: white;
-    border: none;
-    width: 32px;
-    height: 32px;
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
-    cursor: pointer;
+    background: rgba(239, 68, 68, 0.85);
+    border: none;
+    color: #fff;
     display: flex;
     align-items: center;
     justify-content: center;
+    cursor: pointer;
     opacity: 0;
-    transition: all var(--transition-fast);
-    z-index: 2;
+    transition: all 0.2s ease;
+    z-index: 5;
   }
-  
+
   .group-image-item:hover .image-remove-btn {
     opacity: 1;
   }
-  
+
   .image-remove-btn:hover {
-    background: #dc3545;
+    background: #dc2626;
     transform: scale(1.1);
   }
-  
-  /* Lightbox */
-  .lightbox {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.95);
-    z-index: 9999;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    overflow: auto;
-  }
-  
-  .lightbox.active {
-    display: flex;
-  }
-  
-  .lightbox-content {
-    width: min(1100px, 92vw);
-    max-height: calc(100vh - 40px);
-    position: relative;
-    background: rgba(15, 15, 15, 0.9);
-    padding: 16px;
-    border-radius: 12px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
-    overflow-y: auto;
-    overscroll-behavior: contain;
-  }
-  
-  .lightbox-content img {
-    display: block;
-    max-width: 100%;
-    max-height: min(62vh, 680px);
-    margin: 0 auto;
-    object-fit: contain;
-    border-radius: 10px;
-  }
 
-  .lightbox-toolbar {
-    position: sticky;
-    top: 0;
-    z-index: 2;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto auto auto;
-    gap: 10px;
-    align-items: start;
-    margin-bottom: 12px;
-    padding-bottom: 10px;
-    background: rgba(15, 15, 15, 0.96);
-  }
-
-  .lightbox-meta {
-    color: #fff;
-    min-width: 0;
-  }
-
-  .lightbox-filename {
-    font-weight: 600;
-    word-break: break-word;
-  }
-
-  .lightbox-submeta,
-  .lightbox-status {
-    color: #b9c7df;
-    font-size: 0.85rem;
-    margin-top: 4px;
-  }
-
-  .lightbox-status {
-    min-height: 1.2em;
-  }
-
-  .lightbox-tool-btn {
-    padding: 8px 12px;
-    border: none;
-    border-radius: 6px;
-    background: rgba(255, 255, 255, 0.12);
-    color: #fff;
-    cursor: pointer;
-    transition: opacity 0.2s ease, transform 0.2s ease;
-    white-space: nowrap;
-  }
-
-  .lightbox-tool-btn:hover {
-    opacity: 0.9;
-    transform: translateY(-1px);
-  }
-
-  .lightbox-tool-btn.active {
-    background: #e63972;
-  }
-
-  .lightbox-tool-btn.cover {
-    background: #2fa36b;
-  }
-
-  .lightbox-tool-btn.danger {
-    background: #dc3545;
-  }
-
-  .lightbox-nav {
+  .cover-badge {
     position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    background: rgba(0, 0, 0, 0.4);
-    color: #fff;
-    border: none;
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    cursor: pointer;
+    bottom: 8px;
+    left: 8px;
+    background: rgba(250, 204, 21, 0.22);
+    border: 1px solid rgba(250, 204, 21, 0.5);
+    color: #fbbf24;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 0.2rem 0.5rem;
+    border-radius: 999px;
     display: flex;
     align-items: center;
-    justify-content: center;
-    font-size: 20px;
-    transition: background 0.2s ease, transform 0.2s ease;
+    gap: 0.3rem;
+    pointer-events: none;
   }
 
-  .lightbox-nav:hover {
-    background: rgba(0, 0, 0, 0.6);
-    transform: translateY(-50%) scale(1.05);
+  /* Cover select mode */
+  .group-grid.cover-select-mode .group-image-item {
+    cursor: crosshair;
+    border: 2px dashed rgba(250, 204, 21, 0.4);
   }
 
-  .lightbox-nav.prev { left: -56px; }
-  .lightbox-nav.next { right: -56px; }
-  
-  .lightbox-close {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    background: rgba(255, 255, 255, 0.2);
-    border: none;
-    color: white;
-    font-size: 2rem;
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all var(--transition-fast);
+  .group-grid.cover-select-mode .group-image-item:hover {
+    border-color: #fbbf24;
+    box-shadow: 0 0 18px rgba(250, 204, 21, 0.4);
   }
-  
-  .lightbox-close:hover {
-    background: rgba(255, 255, 255, 0.3);
-  }
-  
-  /* Empty State */
+
   .empty-state {
+    grid-column: 1 / -1;
     text-align: center;
-    padding: 60px 20px;
-    color: rgba(255, 255, 255, 0.5);
+    padding: 4rem 1rem;
+    color: rgba(255, 255, 255, 0.35);
   }
-  
-  .empty-state i {
-    font-size: 4rem;
-    margin-bottom: 16px;
-    opacity: 0.3;
+
+  .empty-state i { font-size: 3.5rem; display: block; margin-bottom: 1rem; }
+
+  /* Group Lightbox overrides — reuses lightbox-overlay from gallery.css */
+  .group-lightbox-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
   }
-  
-  .empty-state p {
-    font-size: 1.1rem;
-    margin: 0;
-  }
-  
+
   /* Responsive */
   @media (max-width: 768px) {
-    .group-header {
-      flex-direction: column;
-      align-items: flex-start;
-    }
-
-    .lightbox {
-      padding: 10px;
-      align-items: flex-start;
-    }
-
-    .lightbox-content {
-      width: 100%;
-      max-height: calc(100vh - 20px);
-      padding: 12px;
-    }
-
-    .lightbox-content img {
-      max-height: 50vh;
-    }
-
-    .lightbox-toolbar {
-      grid-template-columns: 1fr;
-    }
-    
     .group-grid {
       grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-      gap: 12px;
+      gap: 0.75rem;
     }
-    
-    .group-image-item img {
-      height: 150px;
-    }
+    .group-image-item img { height: 150px; }
+    .group-hero-title { font-size: 1.35rem; }
+    .group-hero-actions { gap: 0.4rem; }
   }
-  
+
   @media (max-width: 480px) {
     .group-grid {
-      grid-template-columns: 1fr;
+      grid-template-columns: repeat(2, 1fr);
     }
   }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="group-container">
-  <!-- Header -->
-  <div class="group-header">
-    <h1>
-      <a href="/gallery" class="back-link">
-        <i class="fas fa-arrow-left"></i> Gallery
-      </a>
-      / {{ group.name }}
-    </h1>
-    
-    <div class="group-actions">
-      <button class="action-btn" id="editGroupBtn">
-        <i class="fas fa-edit"></i> Edit Name
-      </button>
-      <button class="action-btn danger" id="deleteGroupBtn">
-        <i class="fas fa-trash"></i> Delete Group
-      </button>
-      <button class="action-btn cover" id="coverGroupBtn">
-        <i class="fas fa-image"></i> Set Cover
-      </button>
-    </div>
-  </div>
-  
-  <!-- Group Images Grid -->
-  <div class="group-grid" id="groupGrid">
-    <!-- Images will be inserted here by JavaScript -->
-  </div>
-  
-  <!-- Lightbox -->
-  <div class="lightbox" id="lightbox">
-    <button class="lightbox-close" id="lightboxClose">&times;</button>
-    <div class="lightbox-content">
-      <button class="lightbox-nav prev" id="lightboxPrev" aria-label="Previous image">
-        <i class="fas fa-chevron-left"></i>
-      </button>
-      <button class="lightbox-nav next" id="lightboxNext" aria-label="Next image">
-        <i class="fas fa-chevron-right"></i>
-      </button>
-      <div class="lightbox-toolbar">
-        <div class="lightbox-meta">
-          <div class="lightbox-filename" id="lightboxFilename"></div>
-          <div class="lightbox-submeta" id="lightboxIndex"></div>
-          <div class="lightbox-status" id="lightboxStatus" aria-live="polite"></div>
-        </div>
-        <button class="lightbox-tool-btn" id="lightboxFavoriteBtn" type="button">
-          <span class="icon favorite-icon"></span> Favorite
+<div class="group-page-container">
+
+  <!-- Group Hero Header -->
+  <section class="group-hero">
+    <nav class="group-breadcrumb" aria-label="Breadcrumb">
+      <a href="/gallery"><i class="fas fa-images"></i> Gallery</a>
+      <i class="fas fa-chevron-right" style="font-size: 0.7rem;"></i>
+      <span>{{ group.name }}</span>
+    </nav>
+
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+      <div>
+        <h1 class="group-hero-title">
+          <i class="fas fa-folder-open text-warning"></i>
+          {{ group.name }}
+        </h1>
+        <p class="group-hero-sub" id="groupImageCountLabel">
+          <span id="groupImageCountText">{{ images|length }}</span> image{% if images|length != 1 %}s{% endif %} in this group
+        </p>
+      </div>
+
+      <div class="group-hero-actions">
+        <button type="button" class="group-action-btn primary" id="editGroupBtn">
+          <i class="fas fa-pencil-alt"></i> Rename
         </button>
-        <button class="lightbox-tool-btn cover" id="lightboxSetCoverBtn" type="button">
-          <i class="fas fa-image"></i> Set Cover
+        <button type="button" class="group-action-btn success" id="coverGroupBtn">
+          <i class="fas fa-bookmark"></i> Set Cover
         </button>
-        <button class="lightbox-tool-btn danger" id="lightboxRemoveBtn" type="button">
-          <i class="fas fa-times"></i> Remove
+        <button type="button" class="group-action-btn danger" id="deleteGroupBtn">
+          <i class="fas fa-trash-alt"></i> Delete Group
         </button>
       </div>
-      <img id="lightboxImage" src="" alt="">
     </div>
+  </section>
+
+  <!-- Cover-select mode hint bar (hidden by default) -->
+  <div id="coverSelectHint" style="display:none; margin-bottom: 1rem; padding: 0.75rem 1rem; background: rgba(250, 204, 21, 0.1); border: 1px solid rgba(250, 204, 21, 0.4); border-radius: var(--radius-lg); color: #fbbf24; font-size: 0.9rem;">
+    <i class="fas fa-crosshairs"></i>
+    Click any image to set it as the group cover. Press <kbd>Esc</kbd> to cancel.
+    <button type="button" id="cancelCoverSelectBtn" class="group-action-btn danger ms-2" style="padding: 0.2rem 0.6rem; font-size: 0.8rem;">Cancel</button>
   </div>
+
+  <!-- Group Image Grid -->
+  <div class="group-grid" id="groupGrid">
+    <!-- Populated by JS init below -->
+  </div>
+
+  <!-- ───────────────────────────────────────────────────────────────────
+       LIGHTBOX — reuses gallery.css .lightbox-overlay system
+       ─────────────────────────────────────────────────────────────────── -->
+  <div class="lightbox-overlay" id="galleryLightbox" role="dialog" aria-modal="true" aria-label="Image viewer">
+
+    <!-- Topbar -->
+    <header class="lightbox-topbar">
+      <div class="lightbox-topbar-meta">
+        <span class="lightbox-filename-badge" id="lightboxFilename">image.jpg</span>
+        <span class="lightbox-index-badge" id="lightboxIndexBadge">1 / 1</span>
+      </div>
+
+      <div class="lightbox-topbar-tools">
+        <!-- Favorite -->
+        <button type="button" class="lightbox-tool-btn favorite" id="lightboxFavBtn" title="Toggle Favorite [F]" aria-label="Favorite image">
+          <i class="fas fa-heart"></i> <span>Favorite</span>
+        </button>
+
+        <!-- Set Cover -->
+        <button type="button" class="lightbox-tool-btn" id="lightboxSetCoverBtn" title="Set as Group Cover [C]" aria-label="Set group cover">
+          <i class="fas fa-bookmark"></i> <span>Set Cover</span>
+        </button>
+
+        <!-- Remove from Group -->
+        <button type="button" class="lightbox-tool-btn" id="lightboxRemoveBtn" style="background: rgba(239,68,68,0.2); border-color: rgba(239,68,68,0.4); color: #f87171;" title="Remove from Group [Delete]" aria-label="Remove image from group">
+          <i class="fas fa-times"></i> <span>Remove</span>
+        </button>
+
+        <!-- Close -->
+        <button type="button" class="lightbox-close-btn" id="lightboxCloseBtn" title="Close [Esc]" aria-label="Close lightbox">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Stage -->
+    <div class="lightbox-stage-container">
+      <main class="lightbox-main-stage">
+        <button type="button" class="lightbox-nav-btn prev" id="lightboxPrevBtn" title="Previous [Left Arrow]" aria-label="Previous image">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+
+        <div class="lightbox-image-wrapper" id="lightboxImageWrapper">
+          <img id="lightboxImg" src="" alt="" draggable="false">
+        </div>
+
+        <button type="button" class="lightbox-nav-btn next" id="lightboxNextBtn" title="Next [Right Arrow]" aria-label="Next image">
+          <i class="fas fa-chevron-right"></i>
+        </button>
+      </main>
+    </div>
+
+    <!-- Filmstrip -->
+    <footer class="lightbox-filmstrip-tray" id="lightboxFilmstripTray">
+      <div class="lightbox-filmstrip-toggle-bar">
+        <button type="button" class="lightbox-filmstrip-toggle-btn" id="filmstripToggleBtn">
+          <i class="fas fa-film"></i> Filmstrip
+        </button>
+      </div>
+      <div class="lightbox-filmstrip-track" id="lightboxFilmstripTrack"></div>
+    </footer>
+  </div>
+
 </div>
+{% endblock %}
 
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/gallery.js') }}"></script>
 <script>
-// Group data
-const groupId = {{ group.id }};
-const groupName = {{ group.name|tojson }};
-const groupSlug = {{ group.slug|tojson }};
-let groupImages = {{ images|tojson }};
-let favoriteImages = new Set(loadFavoriteImages());
+(function () {
+  'use strict';
 
-// DOM Elements
-const groupGrid = document.getElementById('groupGrid');
-const editGroupBtn = document.getElementById('editGroupBtn');
-const deleteGroupBtn = document.getElementById('deleteGroupBtn');
-const coverGroupBtn = document.getElementById('coverGroupBtn');
-const lightbox = document.getElementById('lightbox');
-const lightboxImage = document.getElementById('lightboxImage');
-const lightboxClose = document.getElementById('lightboxClose');
-const lightboxFilename = document.getElementById('lightboxFilename');
-const lightboxIndex = document.getElementById('lightboxIndex');
-const lightboxStatus = document.getElementById('lightboxStatus');
-const lightboxFavoriteBtn = document.getElementById('lightboxFavoriteBtn');
-const lightboxSetCoverBtn = document.getElementById('lightboxSetCoverBtn');
-const lightboxRemoveBtn = document.getElementById('lightboxRemoveBtn');
-const lightboxPrev = document.getElementById('lightboxPrev');
-const lightboxNext = document.getElementById('lightboxNext');
-let lightboxCurrentImage = null;
-let lightboxCurrentIndex = -1;
+  // ── Server-provided data ──
+  const groupId   = {{ group.id }};
+  const groupName = {{ group.name|tojson }};
+  let coverImage  = {{ (group.cover_image or '')|tojson }};
+  let groupImages = {{ images|tojson }};  // [{id, image_path, ...}]
 
-// Initialize
-function init() {
-  renderImages();
-  setupEventListeners();
-}
+  const favoriteImages = new Set(loadFavorites());
 
-// Render group images
-function renderImages() {
-  if (groupImages.length === 0) {
-    groupGrid.innerHTML = '<div class="empty-state"><i class="fas fa-images"></i><p>No images in this group yet.</p></div>';
-    return;
+  function escHtml(s) {
+    return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
-  
-  groupGrid.innerHTML = '';
-  groupImages.forEach((item, index) => {
-    const imageDiv = document.createElement('div');
-    imageDiv.className = 'group-image-item';
-    imageDiv.dataset.itemId = item.id;
-    imageDiv.dataset.imagePath = item.image_path;
-    
-    const favBtn = document.createElement('button');
-    favBtn.className = 'image-fav-btn';
-    favBtn.innerHTML = '<span class="icon favorite-icon"></span>';
-    if (favoriteImages.has(item.image_path)) {
-      favBtn.querySelector('.icon').classList.add('is-on');
+
+  function loadFavorites() {
+    try { return JSON.parse(localStorage.getItem('gallery-favorites') || '[]'); }
+    catch { return []; }
+  }
+
+  function saveFavorites() {
+    localStorage.setItem('gallery-favorites', JSON.stringify(Array.from(favoriteImages)));
+  }
+
+  // ── Lightbox state ──
+  let currentIndex = -1;
+  let lastActiveEl = null;
+  let filmstripOpen = localStorage.getItem('gallery.filmstrip') !== 'false';
+
+  // ── DOM refs ──
+  const groupGrid = document.getElementById('groupGrid');
+  const countText = document.getElementById('groupImageCountText');
+
+  const lightbox       = document.getElementById('galleryLightbox');
+  const lbImg          = document.getElementById('lightboxImg');
+  const lbFilename     = document.getElementById('lightboxFilename');
+  const lbIndexBadge   = document.getElementById('lightboxIndexBadge');
+  const lbFavBtn       = document.getElementById('lightboxFavBtn');
+  const lbSetCoverBtn  = document.getElementById('lightboxSetCoverBtn');
+  const lbRemoveBtn    = document.getElementById('lightboxRemoveBtn');
+  const lbCloseBtn     = document.getElementById('lightboxCloseBtn');
+  const lbPrevBtn      = document.getElementById('lightboxPrevBtn');
+  const lbNextBtn      = document.getElementById('lightboxNextBtn');
+  const filmstripTray  = document.getElementById('lightboxFilmstripTray');
+  const filmstripTrack = document.getElementById('lightboxFilmstripTrack');
+  const filmstripToggleBtn = document.getElementById('filmstripToggleBtn');
+
+  // ── Grid rendering ──
+  function renderGrid() {
+    groupGrid.innerHTML = '';
+    if (countText) countText.textContent = groupImages.length;
+
+    if (groupImages.length === 0) {
+      groupGrid.innerHTML = `
+        <div class="empty-state">
+          <i class="fas fa-images"></i>
+          <p>No images in this group yet.</p>
+        </div>`;
+      return;
     }
-    favBtn.onclick = (e) => {
-      e.stopPropagation();
-      toggleFavoriteImage(item.image_path, favBtn);
-    };
-    
-    const img = document.createElement('img');
-    img.src = `/gallery/image/${item.image_path}`;
-    img.alt = item.image_path;
-    img.loading = 'lazy';
-    
-    const removeBtn = document.createElement('button');
-    removeBtn.className = 'image-remove-btn';
-    removeBtn.innerHTML = '<i class="fas fa-times"></i>';
-    removeBtn.onclick = (e) => {
-      e.stopPropagation();
-      removeImage(item.id, item.image_path);
-    };
-    
-    imageDiv.appendChild(favBtn);
-    imageDiv.appendChild(img);
-    imageDiv.appendChild(removeBtn);
-    
-    imageDiv.onclick = () => openLightbox(item.image_path, index);
-    
-    groupGrid.appendChild(imageDiv);
-  });
-}
 
-function loadFavoriteImages() {
-  try {
-    const raw = localStorage.getItem('gallery-favorites');
-    if (!raw) return [];
-    return JSON.parse(raw);
-  } catch (e) {
-    console.error('Failed to load favorites', e);
-    return [];
-  }
-}
+    groupImages.forEach((item, index) => {
+      const div = document.createElement('div');
+      div.className = 'group-image-item';
+      div.dataset.itemId = item.id;
+      div.dataset.imagePath = item.image_path;
+      if (item.image_path === coverImage) div.classList.add('is-cover');
 
-function saveFavoriteImages() {
-  localStorage.setItem('gallery-favorites', JSON.stringify(Array.from(favoriteImages)));
-}
+      // Fav button
+      const favBtn = document.createElement('button');
+      favBtn.type = 'button';
+      favBtn.className = `image-fav-btn ${favoriteImages.has(item.image_path) ? 'active' : ''}`;
+      favBtn.setAttribute('aria-label', 'Favorite image');
+      favBtn.innerHTML = '<i class="fas fa-heart"></i>';
+      favBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        toggleFavorite(item.image_path, favBtn);
+      });
 
-function toggleFavoriteImage(imagePath, btn) {
-  const span = btn.querySelector('.icon');
-  if (favoriteImages.has(imagePath)) {
-    favoriteImages.delete(imagePath);
-    span.classList.remove('is-on');
-  } else {
-    favoriteImages.add(imagePath);
-    span.classList.add('is-on');
-  }
-  saveFavoriteImages();
-}
+      // Remove button
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.className = 'image-remove-btn';
+      removeBtn.setAttribute('aria-label', 'Remove from group');
+      removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+      removeBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        removeImage(item.id, item.image_path);
+      });
 
-// Remove image from group
-async function removeImage(itemId, imagePath, options = {}) {
-  const shouldConfirm = options.confirmFirst !== false;
-  if (shouldConfirm && !confirm(`Remove "${imagePath}" from this group?`)) return false;
-  
-  try {
-    const response = await fetch(`/api/gallery/groups/${groupId}/items/${itemId}`, {
-      method: 'DELETE'
-    });
-    
-    if (response.ok) {
-      groupImages = groupImages.filter(img => img.id !== itemId);
-      renderImages();
-      return true;
-    } else {
-      const error = await response.json();
-      alert(`Failed to remove image: ${error.error}`);
-    }
-  } catch (error) {
-    console.error('Error removing image:', error);
-    alert('Failed to remove image. Please try again.');
-  }
-  return false;
-}
+      // Thumbnail image
+      const img = document.createElement('img');
+      img.src = `/gallery/thumb/320/${encodeURIComponent(item.image_path)}`;
+      img.alt = item.image_path;
+      img.loading = 'lazy';
+      img.decoding = 'async';
+      img.onerror = () => {
+        // File gone — fade out and remove this card silently
+        div.style.transition = 'opacity 0.3s ease';
+        div.style.opacity = '0';
+        setTimeout(() => {
+          groupImages = groupImages.filter(i => i.id !== item.id);
+          div.remove();
+          if (countText) countText.textContent = groupImages.length;
+          // If lightbox is showing this image, move to next or close
+          if (lightbox.classList.contains('active') &&
+              groupImages[currentIndex]?.image_path === item.image_path) {
+            if (groupImages.length === 0) closeLightbox();
+            else openLightbox(Math.min(currentIndex, groupImages.length - 1));
+          }
+        }, 320);
+      };
 
-// Edit group name
-async function editGroupName() {
-  const newName = prompt('Enter new group name:', groupName);
-  if (!newName || newName.trim() === '' || newName === groupName) return;
-  
-  try {
-    const response = await fetch(`/api/gallery/groups/${groupId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: newName.trim() })
-    });
-    
-    if (response.ok) {
-      window.location.reload();
-    } else {
-      const error = await response.json();
-      alert(`Failed to update group name: ${error.error}`);
-    }
-  } catch (error) {
-    console.error('Error updating group name:', error);
-    alert('Failed to update group name. Please try again.');
-  }
-}
-
-// Delete group
-async function deleteGroup() {
-  if (!confirm(`Delete the group "${groupName}"? Images will not be deleted, only the group.`)) return;
-  
-  try {
-    const response = await fetch(`/api/gallery/groups/${groupId}`, {
-      method: 'DELETE'
-    });
-    
-    if (response.ok) {
-      window.location.href = '/gallery';
-    } else {
-      const error = await response.json();
-      alert(`Failed to delete group: ${error.error}`);
-    }
-  } catch (error) {
-    console.error('Error deleting group:', error);
-    alert('Failed to delete group. Please try again.');
-  }
-}
-
-// Open lightbox
-function openLightbox(imagePath, index = groupImages.findIndex(item => item.image_path === imagePath)) {
-  lightboxCurrentImage = imagePath;
-  lightboxCurrentIndex = index;
-  lightboxImage.src = `/gallery/image/${imagePath}`;
-  lightboxImage.alt = imagePath;
-  lightbox.classList.add('active');
-  updateLightboxMeta();
-  refreshLightboxFavoriteState();
-  setLightboxStatus('Ready. Shortcuts: arrows navigate, F favorites, C sets cover, Delete removes.');
-}
-
-// Close lightbox
-function closeLightbox() {
-  lightbox.classList.remove('active');
-  lightboxImage.src = '';
-  lightboxCurrentImage = null;
-  lightboxCurrentIndex = -1;
-  setLightboxStatus('');
-}
-
-function updateLightboxMeta() {
-  lightboxFilename.textContent = lightboxCurrentImage || '';
-  const total = groupImages.length;
-  const current = lightboxCurrentIndex >= 0 ? lightboxCurrentIndex + 1 : 0;
-  lightboxIndex.textContent = total ? `Image ${current} of ${total} in ${groupName}` : '';
-}
-
-function setLightboxStatus(message) {
-  lightboxStatus.textContent = message || '';
-}
-
-function refreshLightboxFavoriteState() {
-  const isFavorite = lightboxCurrentImage && favoriteImages.has(lightboxCurrentImage);
-  lightboxFavoriteBtn.classList.toggle('active', Boolean(isFavorite));
-  const icon = lightboxFavoriteBtn.querySelector('.icon');
-  icon.classList.toggle('is-on', Boolean(isFavorite));
-  lightboxFavoriteBtn.setAttribute('aria-pressed', isFavorite ? 'true' : 'false');
-}
-
-// Setup event listeners
-function setupEventListeners() {
-  editGroupBtn.onclick = editGroupName;
-  deleteGroupBtn.onclick = deleteGroup;
-  coverGroupBtn.onclick = enterCoverSelect;
-  lightboxClose.onclick = closeLightbox;
-  lightboxFavoriteBtn.onclick = toggleCurrentFavoriteFromLightbox;
-  lightboxSetCoverBtn.onclick = setCurrentAsCoverFromLightbox;
-  lightboxRemoveBtn.onclick = removeCurrentFromLightbox;
-  lightboxPrev.onclick = showPrevImage;
-  lightboxNext.onclick = showNextImage;
-  
-  lightbox.onclick = (e) => {
-    if (e.target === lightbox) closeLightbox();
-  };
-  
-  // Keyboard shortcuts
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && lightbox.classList.contains('active')) {
-      closeLightbox();
-      exitCoverSelect();
-    } else if (lightbox.classList.contains('active')) {
-      if (e.key === 'ArrowLeft') {
-        showPrevImage();
-      } else if (e.key === 'ArrowRight') {
-        showNextImage();
-      } else if (e.key.toLowerCase() === 'f') {
-        toggleCurrentFavoriteFromLightbox();
-      } else if (e.key.toLowerCase() === 'c') {
-        setCurrentAsCoverFromLightbox();
-      } else if (e.key === 'Delete') {
-        removeCurrentFromLightbox();
+      // Cover badge
+      if (item.image_path === coverImage) {
+        const badge = document.createElement('span');
+        badge.className = 'cover-badge';
+        badge.innerHTML = '<i class="fas fa-bookmark"></i> Cover';
+        div.appendChild(badge);
       }
-    }
-  });
-}
 
-function showLightboxImage(index) {
-  const item = groupImages[index];
-  if (!item) return;
-  lightboxCurrentIndex = index;
-  lightboxCurrentImage = item.image_path;
-  lightboxImage.src = `/gallery/image/${item.image_path}`;
-  lightboxImage.alt = item.image_path;
-  updateLightboxMeta();
-  refreshLightboxFavoriteState();
-  setLightboxStatus('');
-}
+      div.appendChild(favBtn);
+      div.appendChild(img);
+      div.appendChild(removeBtn);
 
-function showPrevImage() {
-  if (lightboxCurrentIndex <= 0) return;
-  showLightboxImage(lightboxCurrentIndex - 1);
-}
+      div.addEventListener('click', () => {
+        lastActiveEl = div;
+        openLightbox(index);
+      });
+      div.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); lastActiveEl = div; openLightbox(index); }
+      });
+      div.tabIndex = 0;
 
-function showNextImage() {
-  if (lightboxCurrentIndex === -1 || lightboxCurrentIndex >= groupImages.length - 1) return;
-  showLightboxImage(lightboxCurrentIndex + 1);
-}
-
-function toggleCurrentFavoriteFromLightbox() {
-  if (!lightboxCurrentImage) return;
-  toggleFavoriteImage(lightboxCurrentImage, lightboxFavoriteBtn);
-  refreshLightboxFavoriteState();
-  setLightboxStatus(favoriteImages.has(lightboxCurrentImage) ? 'Added to favorites.' : 'Removed from favorites.');
-}
-
-async function setCurrentAsCoverFromLightbox() {
-  if (!lightboxCurrentImage) return;
-  lightboxSetCoverBtn.disabled = true;
-  setLightboxStatus('Setting group cover...');
-  const updated = await setCover(lightboxCurrentImage, { reload: false });
-  setLightboxStatus(updated ? 'Group cover updated.' : 'Failed to update group cover.');
-  lightboxSetCoverBtn.disabled = false;
-}
-
-async function removeCurrentFromLightbox() {
-  if (!lightboxCurrentImage || lightboxCurrentIndex < 0) return;
-  if (!confirm(`Remove "${lightboxCurrentImage}" from this group?`)) return;
-  const currentItem = groupImages[lightboxCurrentIndex];
-  lightboxRemoveBtn.disabled = true;
-  setLightboxStatus('Removing from group...');
-  const removed = await removeImage(currentItem.id, currentItem.image_path, { confirmFirst: false });
-  lightboxRemoveBtn.disabled = false;
-  if (!removed) return;
-  if (groupImages.length === 0) {
-    closeLightbox();
-    return;
-  }
-  const nextIndex = Math.min(lightboxCurrentIndex, groupImages.length - 1);
-  showLightboxImage(nextIndex);
-  setLightboxStatus('Removed from group.');
-}
-
-// Cover selection mode
-let selectingCover = false;
-
-function enterCoverSelect() {
-  selectingCover = true;
-  coverGroupBtn.classList.add('active');
-  coverGroupBtn.textContent = 'Pick Cover';
-  groupGrid.classList.add('selection-mode');
-  groupGrid.querySelectorAll('.group-image-item').forEach(item => {
-    item.classList.add('selection-mode');
-    item.onclick = () => setCover(item.dataset.imagePath);
-  });
-}
-
-function exitCoverSelect() {
-  if (!selectingCover) return;
-  selectingCover = false;
-  coverGroupBtn.classList.remove('active');
-  coverGroupBtn.innerHTML = '<i class="fas fa-image"></i> Set Cover';
-  groupGrid.classList.remove('selection-mode');
-  // Restore lightbox click
-  groupGrid.querySelectorAll('.group-image-item').forEach((item, index) => {
-    item.classList.remove('selection-mode');
-    item.onclick = () => openLightbox(item.dataset.imagePath, index);
-  });
-}
-
-async function setCover(imagePath, options = {}) {
-  const shouldReload = options.reload !== false;
-  try {
-    const response = await fetch(`/api/gallery/groups/${groupId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ cover_image: imagePath })
+      groupGrid.appendChild(div);
     });
-    if (response.ok) {
-      exitCoverSelect();
-      if (shouldReload) {
-        window.location.reload();
-      }
-      return true;
+  }
+
+  function toggleFavorite(imagePath, btn) {
+    if (favoriteImages.has(imagePath)) {
+      favoriteImages.delete(imagePath);
+      btn.classList.remove('active');
     } else {
-      const error = await response.json();
-      alert(`Failed to set cover: ${error.error}`);
+      favoriteImages.add(imagePath);
+      btn.classList.add('active');
+    }
+    saveFavorites();
+    // Also sync lightbox fav button if same image
+    if (lightbox.classList.contains('active') && groupImages[currentIndex]?.image_path === imagePath) {
+      lbFavBtn.classList.toggle('active', favoriteImages.has(imagePath));
+    }
+  }
+
+  async function removeImage(itemId, imagePath) {
+    if (!confirm(`Remove "${imagePath}" from this group?`)) return;
+    try {
+      const resp = await fetch(`/api/gallery/groups/${groupId}/items/${itemId}`, { method: 'DELETE' });
+      if (resp.ok) {
+        const idx = groupImages.findIndex(i => i.id === itemId);
+        if (idx !== -1) groupImages.splice(idx, 1);
+        renderGrid();
+        if (lightbox.classList.contains('active')) {
+          if (groupImages.length === 0) {
+            closeLightbox();
+          } else {
+            openLightbox(Math.min(currentIndex, groupImages.length - 1));
+          }
+        }
+      } else {
+        const err = await resp.json();
+        alert(err.error || 'Failed to remove image');
+      }
+    } catch (e) {
+      alert('Connection error');
+    }
+  }
+
+  // ── Lightbox ──
+  function openLightbox(index) {
+    currentIndex = index;
+    lightbox.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    renderLightboxFrame();
+    renderFilmstrip();
+  }
+
+  function closeLightbox() {
+    lightbox.classList.remove('active');
+    document.body.style.overflow = '';
+    currentIndex = -1;
+    if (lastActiveEl && typeof lastActiveEl.focus === 'function') lastActiveEl.focus();
+  }
+
+  function navigate(delta) {
+    const next = currentIndex + delta;
+    if (next < 0 || next >= groupImages.length) return;
+    currentIndex = next;
+    renderLightboxFrame();
+    syncFilmstrip();
+  }
+
+  function renderLightboxFrame() {
+    const item = groupImages[currentIndex];
+    if (!item) return;
+    lbImg.src = `/gallery/thumb/1280/${encodeURIComponent(item.image_path)}`;
+    lbImg.alt = item.image_path;
+    lbImg.onerror = () => {
+      // File went missing while the lightbox was open — remove and move on
+      groupImages = groupImages.filter((_, i) => i !== currentIndex);
+      if (countText) countText.textContent = groupImages.length;
+      if (groupImages.length === 0) {
+        closeLightbox();
+      } else {
+        currentIndex = Math.min(currentIndex, groupImages.length - 1);
+        renderLightboxFrame();
+        renderFilmstrip();
+      }
+      // Re-render the card grid to remove the broken card
+      renderGrid();
+    };
+    lbFilename.textContent = item.image_path;
+    lbIndexBadge.textContent = `${currentIndex + 1} / ${groupImages.length} · ${groupName}`;
+    lbFavBtn.classList.toggle('active', favoriteImages.has(item.image_path));
+    lbSetCoverBtn.classList.toggle('active', item.image_path === coverImage);
+  }
+
+  function renderFilmstrip() {
+    filmstripTrack.innerHTML = '';
+    groupImages.forEach((item, idx) => {
+      const thumb = document.createElement('div');
+      thumb.className = `filmstrip-thumb ${idx === currentIndex ? 'active' : ''}`;
+      thumb.dataset.idx = idx;
+      thumb.innerHTML = `<img src="/gallery/thumb/160/${encodeURIComponent(item.image_path)}" alt="${escHtml(item.image_path)}" loading="lazy" decoding="async">`;
+      thumb.addEventListener('click', () => {
+        currentIndex = idx;
+        renderLightboxFrame();
+        syncFilmstrip();
+      });
+      filmstripTrack.appendChild(thumb);
+    });
+    syncFilmstrip();
+  }
+
+  function syncFilmstrip() {
+    filmstripTrack.querySelectorAll('.filmstrip-thumb').forEach(t => {
+      const isActive = parseInt(t.dataset.idx, 10) === currentIndex;
+      t.classList.toggle('active', isActive);
+      if (isActive) t.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    });
+  }
+
+  // ── Group Management ──
+  document.getElementById('editGroupBtn')?.addEventListener('click', async () => {
+    const newName = prompt('Enter new group name:', groupName);
+    if (!newName || !newName.trim() || newName.trim() === groupName) return;
+    try {
+      const resp = await fetch(`/api/gallery/groups/${groupId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newName.trim() })
+      });
+      if (resp.ok) window.location.reload();
+      else { const e = await resp.json(); alert(e.error || 'Failed to rename group'); }
+    } catch { alert('Connection error'); }
+  });
+
+  document.getElementById('deleteGroupBtn')?.addEventListener('click', async () => {
+    if (!confirm(`Delete group "${groupName}"?\nImages will not be deleted — only the group itself.`)) return;
+    try {
+      const resp = await fetch(`/api/gallery/groups/${groupId}`, { method: 'DELETE' });
+      if (resp.ok) window.location.href = '/gallery';
+      else { const e = await resp.json(); alert(e.error || 'Failed to delete group'); }
+    } catch { alert('Connection error'); }
+  });
+
+  // ── Cover selection ──
+  let selectingCover = false;
+
+  function enterCoverSelect() {
+    selectingCover = true;
+    groupGrid.classList.add('cover-select-mode');
+    document.getElementById('coverGroupBtn').classList.add('active');
+    document.getElementById('coverSelectHint').style.display = 'flex';
+
+    groupGrid.querySelectorAll('.group-image-item').forEach(el => {
+      el.addEventListener('click', onCoverItemClick);
+    });
+  }
+
+  function exitCoverSelect() {
+    selectingCover = false;
+    groupGrid.classList.remove('cover-select-mode');
+    document.getElementById('coverGroupBtn').classList.remove('active');
+    document.getElementById('coverSelectHint').style.display = 'none';
+    groupGrid.querySelectorAll('.group-image-item').forEach(el => {
+      el.removeEventListener('click', onCoverItemClick);
+    });
+  }
+
+  async function onCoverItemClick(e) {
+    const imagePath = e.currentTarget.dataset.imagePath;
+    await setCover(imagePath);
+  }
+
+  async function setCover(imagePath, { reload = true } = {}) {
+    try {
+      const resp = await fetch(`/api/gallery/groups/${groupId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cover_image: imagePath })
+      });
+      if (resp.ok) {
+        coverImage = imagePath;
+        exitCoverSelect();
+        if (reload) window.location.reload();
+        else renderGrid();
+        return true;
+      } else {
+        const e = await resp.json();
+        alert(e.error || 'Failed to set cover');
+        exitCoverSelect();
+      }
+    } catch {
+      alert('Connection error');
       exitCoverSelect();
     }
-  } catch (error) {
-    console.error('Error setting cover:', error);
-    alert('Failed to set cover. Please try again.');
-    exitCoverSelect();
+    return false;
   }
-  return false;
-}
 
-// Initialize on page load
-init();
+  document.getElementById('coverGroupBtn')?.addEventListener('click', () => {
+    if (selectingCover) exitCoverSelect();
+    else enterCoverSelect();
+  });
+
+  document.getElementById('cancelCoverSelectBtn')?.addEventListener('click', exitCoverSelect);
+
+  // ── Lightbox tool buttons ──
+  lbCloseBtn?.addEventListener('click', closeLightbox);
+  lbPrevBtn?.addEventListener('click', () => navigate(-1));
+  lbNextBtn?.addEventListener('click', () => navigate(1));
+
+  lbFavBtn?.addEventListener('click', () => {
+    const item = groupImages[currentIndex];
+    if (item) toggleFavorite(item.image_path, lbFavBtn);
+  });
+
+  lbSetCoverBtn?.addEventListener('click', async () => {
+    const item = groupImages[currentIndex];
+    if (!item) return;
+    lbSetCoverBtn.disabled = true;
+    await setCover(item.image_path, { reload: false });
+    renderLightboxFrame();
+    lbSetCoverBtn.disabled = false;
+  });
+
+  lbRemoveBtn?.addEventListener('click', async () => {
+    const item = groupImages[currentIndex];
+    if (!item || !confirm(`Remove "${item.image_path}" from this group?`)) return;
+    lbRemoveBtn.disabled = true;
+    try {
+      const resp = await fetch(`/api/gallery/groups/${groupId}/items/${item.id}`, { method: 'DELETE' });
+      if (resp.ok) {
+        groupImages.splice(currentIndex, 1);
+        renderGrid();
+        if (groupImages.length === 0) {
+          closeLightbox();
+        } else {
+          currentIndex = Math.min(currentIndex, groupImages.length - 1);
+          renderLightboxFrame();
+          renderFilmstrip();
+        }
+      }
+    } catch { alert('Connection error'); }
+    lbRemoveBtn.disabled = false;
+  });
+
+  // Filmstrip toggle
+  filmstripToggleBtn?.addEventListener('click', () => {
+    filmstripOpen = !filmstripOpen;
+    localStorage.setItem('gallery.filmstrip', filmstripOpen ? 'true' : 'false');
+    filmstripTray.classList.toggle('collapsed', !filmstripOpen);
+  });
+
+  // Apply persisted filmstrip state
+  if (!filmstripOpen) filmstripTray.classList.add('collapsed');
+
+  // ── Keyboard shortcuts ──
+  document.addEventListener('keydown', e => {
+    const tag = document.activeElement?.tagName.toLowerCase() || '';
+    if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+
+    if (!lightbox.classList.contains('active')) {
+      if (e.key === 'Escape' && selectingCover) exitCoverSelect();
+      return;
+    }
+
+    switch (e.key) {
+      case 'ArrowLeft':  e.preventDefault(); navigate(-1); break;
+      case 'ArrowRight': e.preventDefault(); navigate(1);  break;
+      case 'Escape':     e.preventDefault(); closeLightbox(); break;
+      case 'f': case 'F':
+        e.preventDefault();
+        lbFavBtn?.click();
+        break;
+      case 'c': case 'C':
+        e.preventDefault();
+        lbSetCoverBtn?.click();
+        break;
+      case 'Delete':
+        e.preventDefault();
+        lbRemoveBtn?.click();
+        break;
+    }
+  });
+
+  // ── Init ──
+  renderGrid();
+
+})();
 </script>
 {% endblock %}

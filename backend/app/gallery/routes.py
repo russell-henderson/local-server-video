@@ -17,6 +17,11 @@ def serve_gallery_image(filename: str):
     return legacy.serve_gallery_image(filename)
 
 
+@gallery_bp.route("/gallery/thumb/<int:size>/<path:filename>")
+def serve_gallery_thumbnail(size: int, filename: str):
+    return legacy.serve_gallery_thumbnail(size, filename)
+
+
 @gallery_bp.route("/gallery/groups/<slug>")
 def gallery_group(slug: str):
     return legacy.gallery_group(slug)

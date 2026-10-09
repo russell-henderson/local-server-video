@@ -1,12 +1,14 @@
 // Basic service worker for caching static assets
-const CACHE_NAME = 'local-video-server-v1';
+const CACHE_NAME = 'local-video-server-v2';
 const STATIC_CACHE_URLS = [
   '/',
   '/static/styles.css',
+  '/static/css/playlists.css',
+  '/static/css/gallery.css',
   '/static/js/ratings.js',
-  '/static/js/optimized-utils.js',
-  '/static/js/video-preview-enhanced.js',
-  // Add other critical static assets
+  '/static/optimized-utils.js',
+  '/static/video-preview-enhanced.js',
+  '/static/js/gallery.js',
 ];
 
 self.addEventListener('install', event => {

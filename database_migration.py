@@ -808,7 +808,7 @@ class VideoDatabase:
             return cursor.lastrowid
 
     def get_gallery_groups(self) -> List[Dict]:
-        """Get all gallery groups with image count"""
+        """Get all gallery groups with image count and preview images"""
         with self.get_connection() as conn:
             cursor = conn.execute(
                 """SELECT id, name, slug, cover_image,
@@ -818,7 +818,18 @@ class VideoDatabase:
                    FROM gallery_groups
                    ORDER BY name ASC"""
             )
-            return [dict(row) for row in cursor.fetchall()]
+            groups = [dict(row) for row in cursor.fetchall()]
+            previews_by_group = {group["id"]: [] for group in groups}
+            preview_rows = conn.execute(
+                "SELECT group_id, image_path FROM gallery_group_items ORDER BY group_id ASC, id ASC"
+            ).fetchall()
+            for row in preview_rows:
+                previews = previews_by_group.get(row["group_id"])
+                if previews is not None and len(previews) < 4:
+                    previews.append(row["image_path"])
+            for g in groups:
+                g["preview_images"] = previews_by_group.get(g["id"], [])
+            return groups
 
     def get_gallery_group_by_slug(self, slug: str) -> Optional[Dict]:
         """Get a gallery group by slug"""
@@ -833,7 +844,15 @@ class VideoDatabase:
                 (slug,)
             )
             row = cursor.fetchone()
-            return dict(row) if row else None
+            if not row:
+                return None
+            group = dict(row)
+            cur = conn.execute(
+                "SELECT image_path FROM gallery_group_items WHERE group_id = ? ORDER BY id ASC LIMIT 4",
+                (group["id"],)
+            )
+            group["preview_images"] = [r[0] for r in cur.fetchall()]
+            return group
 
     def get_gallery_group_by_id(self, group_id: int) -> Optional[Dict]:
         """Get a gallery group by ID"""

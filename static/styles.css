@@ -634,6 +634,43 @@ body {
   transition: background var(--transition-normal);
 }
 
+/* Keep the shared player usable on phones and coarse-pointer browsers. */
+@media (max-width: 768px) {
+  .player-controls {
+    flex-wrap: wrap;
+    row-gap: 0.5rem;
+  }
+
+  .player-controls input[data-role="seek"] {
+    order: 20;
+    flex: 1 1 100%;
+    min-width: 100%;
+    height: 12px;
+  }
+
+  .player-controls button,
+  .player-controls input[type="range"] {
+    min-height: 44px;
+  }
+
+  .player-controls input[type="range"]::-webkit-slider-thumb {
+    width: 24px;
+    height: 24px;
+  }
+
+  .player-controls input[type="range"]::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+@media (pointer: coarse), (hover: none) {
+  .player-controls button,
+  .player-controls input[type="range"] {
+    min-height: 48px;
+  }
+}
+
 .player-controls button[data-action="play"] {
   background: rgba(255, 255, 255, 0.8);
   color: #000;
@@ -1349,6 +1386,14 @@ a:hover {
 
   .search-container {
     margin: 0 auto 1rem;
+  }
+}
+
+/* Final mobile player overrides after the base range styling. */
+@media (max-width: 768px) {
+  .player-controls input[data-role="seek"] {
+    min-width: 100%;
+    height: 12px;
   }
 }
 

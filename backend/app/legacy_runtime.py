@@ -6,6 +6,8 @@ import re
 import time
 import mimetypes
 import random
+import hashlib
+import threading
 from datetime import datetime, timezone
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -81,6 +83,10 @@ INDEX_MAX_PER_PAGE = 120
 # Guarantee required folders exist
 THUMBNAIL_DIR.mkdir(parents=True, exist_ok=True)
 GALLERY_DIR = Path("images") / "gallery"
+GALLERY_THUMB_DIR = Path("static") / "gallery-thumbnails"
+GALLERY_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".webp"}
+_gallery_manifest_lock = threading.Lock()
+_gallery_manifest_cache = {"signature": None, "payload": None}
 
 # Thread pool for misc background jobs (already used by thumbnail_manager)
 executor = ThreadPoolExecutor(max_workers=2)
@@ -1029,44 +1035,7 @@ def links():
 @app.route('/gallery')
 def gallery():
     """Gallery page for images"""
-    from database_migration import VideoDatabase
-    
-    gallery_dir = Path('images/gallery')
-    images = []
-    if gallery_dir.exists():
-        # Get all image files
-        image_extensions = {'.jpg', '.jpeg', '.png', '.gif', '.webp'}
-        images = [
-            img.name for img in gallery_dir.iterdir()
-            if img.is_file() and img.suffix.lower() in image_extensions
-        ]
-    
-    print(f"\n=== GALLERY DEBUG ===")
-    print(f"All files in gallery: {images}")
-    
-    # Exclude images that are already in groups
-    try:
-        db = VideoDatabase()
-        grouped_images = set()
-        all_groups = db.get_gallery_groups()
-        print(f"Total groups: {len(all_groups)}")
-        for group in all_groups:
-            group_items = db.get_group_images(group['id'])
-            print(f"Group '{group['name']}' (ID {group['id']}) items: {group_items}")
-            grouped_images.update(group_items)
-        
-        print(f"All grouped images: {grouped_images}")
-        print(f"Gallery before filter: {len(images)} images")
-        images = [img for img in images if img not in grouped_images]
-        print(f"Gallery after filter: {len(images)} images")
-        print(f"Filtered images: {images}")
-    except Exception as e:
-        print(f"ERROR: {e}")
-        import traceback
-        traceback.print_exc()
-    
-    images.sort(reverse=True)  # Newest first
-    print(f"=== END DEBUG ===\n")
+    images = _gallery_manifest_payload()["images"]
     return render_template('gallery.html', images=images)
 
 
@@ -1083,12 +1052,31 @@ def serve_gallery_image(filename: str):
     
     mime_type, _ = mimetypes.guess_type(str(file_path))
     mime_type = mime_type or "application/octet-stream"
-    return send_file(str(file_path), mimetype=mime_type)
+    return send_file(str(file_path), mimetype=mime_type, max_age=86400, conditional=True)
+
+
+@app.route('/gallery/thumb/<int:size>/<path:filename>')
+def serve_gallery_thumbnail(size: int, filename: str):
+    """Serve a generated, cacheable gallery thumbnail with original fallback."""
+    if size not in {160, 320, 640, 1280} or '..' in filename or filename.startswith('/'):
+        abort(403)
+
+    source = GALLERY_DIR / filename
+    if not source.exists() or not source.is_file():
+        abort(404)
+    thumb = GALLERY_THUMB_DIR / str(size) / f"{Path(filename).name}.webp"
+    if thumb.exists() and thumb.stat().st_mtime_ns >= source.stat().st_mtime_ns:
+        return send_file(str(thumb), mimetype="image/webp", max_age=31536000, conditional=True)
+
+    # A missing derivative should not break the gallery while the maintenance
+    # command is catching up; the client still gets a valid image.
+    mime_type, _ = mimetypes.guess_type(str(source))
+    return send_file(str(source), mimetype=mime_type or "application/octet-stream", conditional=True)
 
 
 @app.route('/gallery/groups/<slug>')
 def gallery_group(slug: str):
-    """Display a specific gallery group"""
+    """Display a specific gallery group, filtering out files no longer on disk."""
     from database_migration import VideoDatabase
     db = VideoDatabase()
     
@@ -1100,7 +1088,22 @@ def gallery_group(slug: str):
     # Type narrowing: group_data is dict[str, Any] after the None check
     assert isinstance(group_data, dict), "group_data must be a dict"
     group_id: int = group_data.get('id', 0)
-    images = db.get_group_images_with_ids(group_id)
+    raw_images = db.get_group_images_with_ids(group_id)
+    
+    # Only pass images whose files actually exist on disk
+    gallery_dir = Path('images/gallery')
+    images = [item for item in raw_images
+              if (gallery_dir / item['image_path']).is_file()]
+    group_data['image_count'] = len(images)
+    
+    # Also prune preview_images so the collage doesn't try stale paths
+    if 'preview_images' in group_data:
+        group_data['preview_images'] = [
+            p for p in group_data['preview_images']
+            if (gallery_dir / p).is_file()
+        ]
+    if group_data.get('cover_image') and not (gallery_dir / group_data['cover_image']).is_file():
+        group_data['cover_image'] = None
     
     return render_template(
         'gallery_group.html',
@@ -1113,22 +1116,83 @@ def gallery_group(slug: str):
 
 @app.route('/api/gallery', methods=['GET'])
 def api_gallery_images():
-    """Get list of all gallery images"""
+    """Return a cached lightweight gallery manifest."""
+    payload = _gallery_manifest_payload()
+    body = jsonify(payload)
+    body.set_etag(payload["version"])
+    body.make_conditional(request)
+    body.cache_control.public = True
+    body.cache_control.max_age = 30
+    return body
+
+
+def _gallery_manifest_payload() -> dict:
+    """Build one stat-based manifest and reuse it until the directory changes."""
+    if not GALLERY_DIR.exists():
+        return {"version": "empty", "images": [], "image_meta": {}, "total": 0}
+    entries = []
+    for item in GALLERY_DIR.iterdir():
+        if item.is_file() and item.suffix.lower() in GALLERY_EXTENSIONS:
+            stat = item.stat()
+            entries.append((item.name, stat.st_size, stat.st_mtime_ns))
+    entries.sort(key=lambda value: value[0].lower())
+    signature = tuple(entries)
+    with _gallery_manifest_lock:
+        if _gallery_manifest_cache["signature"] == signature and _gallery_manifest_cache["payload"]:
+            return _gallery_manifest_cache["payload"]
+        names = [entry[0] for entry in entries]
+        version = hashlib.sha1(repr(signature).encode("utf-8")).hexdigest()[:16]
+        payload = {
+            "version": version,
+            "total": len(names),
+            "images": names,
+            "image_meta": {
+                name: {"bytes": size, "modified": modified}
+                for name, size, modified in entries
+            },
+        }
+        _gallery_manifest_cache["signature"] = signature
+        _gallery_manifest_cache["payload"] = payload
+        return payload
+
+
+def _gallery_groups_for_client(db) -> list[dict]:
+    """Return groups with only live files exposed to the gallery organizer."""
+    existing = set(_gallery_manifest_payload()["images"])
+    groups = db.get_gallery_groups()
+    for group in groups:
+        paths = [path for path in db.get_group_images(group["id"]) if path in existing]
+        cover = group.get("cover_image")
+        if cover not in existing:
+            group["cover_image"] = None
+            cover = None
+        previews = list(paths[:4])
+        if cover and cover not in previews:
+            previews.insert(0, cover)
+        group["image_paths"] = paths
+        group["preview_images"] = previews[:4]
+        group["image_count"] = len(paths)
+    return groups
+
+
+@app.route('/api/gallery/validate', methods=['POST'])
+def api_gallery_validate():
+    """Accept a JSON list of filenames; return only those that exist on disk.
+    Used by the frontend to silently prune stale references."""
+    data = request.get_json(silent=True) or {}
+    filenames = data.get('filenames', [])
+    if not isinstance(filenames, list):
+        return jsonify({'error': 'filenames must be a list'}), 400
+
     gallery_dir = Path('images/gallery')
-    if not gallery_dir.exists():
-        return jsonify({'images': []})
-    
-    images = []
-    try:
-        for item in gallery_dir.iterdir():
-            if item.is_file() and item.suffix.lower() in [
-                '.jpg', '.jpeg', '.png', '.gif', '.webp'
-            ]:
-                images.append(item.name)
-    except Exception:
-        pass
-    
-    return jsonify({'images': sorted(images)})
+    existing = [
+        name for name in filenames
+        if isinstance(name, str)
+        and '..' not in name
+        and not name.startswith('/')
+        and (gallery_dir / name).is_file()
+    ]
+    return jsonify({'existing': existing})
 
 
 @app.route('/api/gallery/groups', methods=['GET', 'POST'])
@@ -1138,8 +1202,7 @@ def api_gallery_groups():
     db = VideoDatabase()
     
     if request.method == 'GET':
-        groups = db.get_gallery_groups()
-        return jsonify(groups)
+        return jsonify(_gallery_groups_for_client(db))
     
     # POST: Create new group
     data = request.get_json()
@@ -1149,6 +1212,13 @@ def api_gallery_groups():
     
     if not name or not images:
         return jsonify({'error': 'Name and images required'}), 400
+
+    existing = set(_gallery_manifest_payload()["images"])
+    images = [image for image in images if isinstance(image, str) and image in existing]
+    if not images:
+        return jsonify({'error': 'None of the selected images still exist'}), 400
+    if cover_image not in images:
+        cover_image = images[0]
     
     try:
         group_id = db.create_gallery_group(name, cover_image)
@@ -1166,6 +1236,9 @@ def api_gallery_image_groups(filename: str):
     """Get gallery group memberships for one image."""
     if '..' in filename or filename.startswith('/'):
         abort(403)
+
+    if filename not in set(_gallery_manifest_payload()["images"]):
+        return jsonify({'groups': []})
 
     from database_migration import VideoDatabase
     db = VideoDatabase()
@@ -1284,6 +1357,11 @@ def api_add_images_to_group(group_id: int):
     
     if not images:
         return jsonify({'error': 'Images required'}), 400
+
+    existing = set(_gallery_manifest_payload()["images"])
+    missing = [image for image in images if not isinstance(image, str) or image not in existing]
+    if missing:
+        return jsonify({'error': f'{len(missing)} selected image(s) are no longer available'}), 400
     
     try:
         db.add_images_to_group(group_id, images)
@@ -1333,6 +1411,9 @@ def api_modify_group(group_id: int):
         data = request.get_json()
         name = data.get('name', '').strip()
         cover_image = data.get('cover_image', '').strip()
+
+        if cover_image and cover_image not in set(_gallery_manifest_payload()["images"]):
+            return jsonify({'error': 'Cover image is no longer available'}), 400
         
         try:
             if name:

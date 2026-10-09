@@ -8,6 +8,7 @@ services:
       - ./videos:/app/videos
       - ./images:/app/images
       - ./static/thumbnails:/app/static/thumbnails
+      - ./static/gallery-thumbnails:/app/static/gallery-thumbnails
       - ./logs:/app/logs
       # Map the directory context instead of individual files to avoid broken-link container locks
       - ./data:/app/data

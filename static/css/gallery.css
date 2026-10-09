@@ -1,0 +1,1116 @@
+/* static/css/gallery.css
+   Modernized Glassmorphic UI Styles for Image Gallery & Groups */
+
+:root {
+  --gallery-glass-bg: rgba(22, 27, 34, 0.75);
+  --gallery-glass-border: rgba(255, 255, 255, 0.08);
+  --gallery-glass-glow: 0 8px 32px rgba(0, 0, 0, 0.37);
+  --gallery-card-bg: rgba(22, 27, 34, 0.6);
+  --gallery-accent: #0ea5e9;
+  --gallery-heart: #f43f5e;
+}
+
+/* ────────────────────────────────────────────────────────────────────────
+   1. GALLERY HERO & CONTROLS TOOLBAR
+   ──────────────────────────────────────────────────────────────────────── */
+
+.gallery-hero {
+  background: radial-gradient(circle at 10% 20%, rgba(14, 165, 233, 0.12), transparent 40%),
+              radial-gradient(circle at 90% 0%, rgba(34, 197, 94, 0.08), transparent 35%),
+              var(--gallery-glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--gallery-glass-border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: var(--gallery-glass-glow);
+}
+
+.gallery-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.gallery-search-wrap {
+  position: relative;
+  flex: 1 1 240px;
+  min-width: 200px;
+  max-width: 380px;
+}
+
+.gallery-search-icon {
+  position: absolute;
+  left: 0.85rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  font-size: 0.85rem;
+  pointer-events: none;
+}
+
+.gallery-search-input {
+  width: 100%;
+  padding: 0.45rem 2rem 0.45rem 2.2rem;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  color: #f8fafc;
+  font-size: 0.88rem;
+  transition: all 0.2s ease;
+}
+
+.gallery-search-input:focus {
+  outline: none;
+  background: rgba(15, 23, 42, 0.85);
+  border-color: var(--gallery-accent);
+  box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.25);
+}
+
+.gallery-search-clear {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 0;
+  display: none;
+}
+
+.gallery-search-input:not(:placeholder-shown) + .gallery-search-clear {
+  display: block;
+}
+
+.gallery-controls-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* Tactile Segmented Controls */
+.gallery-segmented {
+  display: inline-flex;
+  background: rgba(15, 23, 42, 0.7);
+  padding: 3px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.gallery-segmented button {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  padding: 0.35rem 0.65rem;
+  border-radius: 7px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.gallery-segmented button:hover {
+  color: #f8fafc;
+}
+
+.gallery-segmented button.active {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.gallery-select {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+  padding: 0.4rem 0.8rem;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.gallery-select:focus {
+  outline: none;
+  border-color: var(--gallery-accent);
+}
+
+.gallery-btn-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: #e2e8f0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.gallery-btn-pill:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.gallery-btn-pill.active {
+  background: rgba(14, 165, 233, 0.2);
+  border-color: var(--gallery-accent);
+  color: #38bdf8;
+}
+
+/* Quick-Filter Pills Shelf */
+.gallery-pills-shelf {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding: 0.6rem 0.2rem;
+  margin-bottom: 1.25rem;
+  scrollbar-width: thin;
+}
+
+.gallery-pills-shelf::-webkit-scrollbar {
+  height: 4px;
+}
+.gallery-pills-shelf::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+
+.gallery-filter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  background: rgba(22, 27, 34, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #94a3b8;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.18s ease;
+}
+
+.gallery-filter-pill:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f1f5f9;
+}
+
+.gallery-filter-pill.active {
+  background: rgba(14, 165, 233, 0.22);
+  border-color: rgba(14, 165, 233, 0.5);
+  color: #38bdf8;
+  box-shadow: 0 0 12px rgba(14, 165, 233, 0.2);
+}
+
+/* ────────────────────────────────────────────────────────────────────────
+   2. GROUPS SECTION & 2x2 COLLAGE CARDS
+   ──────────────────────────────────────────────────────────────────────── */
+
+.groups-section {
+  margin-bottom: 2.5rem;
+}
+
+.groups-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.groups-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1.25rem;
+}
+
+.group-card {
+  background: var(--gallery-card-bg);
+  border: 1px solid var(--gallery-glass-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+}
+
+.group-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(14, 165, 233, 0.4);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+}
+
+/* 2x2 Collage Container */
+.group-collage {
+  position: relative;
+  width: 100%;
+  height: 180px;
+  background: rgba(15, 23, 42, 0.8);
+  overflow: hidden;
+}
+
+.group-collage-grid {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  gap: 2px;
+}
+
+.group-collage-grid.count-4 {
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+}
+
+.group-collage-grid.count-3 {
+  grid-template-columns: 1.2fr 1fr;
+  grid-template-rows: 1fr 1fr;
+}
+.group-collage-grid.count-3 .collage-item:first-child {
+  grid-row: span 2;
+}
+
+.group-collage-grid.count-2 {
+  grid-template-columns: 1fr 1fr;
+}
+
+.group-collage-grid.count-1 {
+  grid-template-columns: 1fr;
+}
+
+.collage-item {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+.collage-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+.group-card:hover .collage-item img {
+  transform: scale(1.05);
+}
+
+.group-collage-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: #64748b;
+  font-size: 2.5rem;
+}
+
+.group-cover-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: rgba(15, 23, 42, 0.8);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #38bdf8;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.group-card-info {
+  padding: 0.85rem 1rem;
+  background: rgba(17, 24, 39, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.65rem;
+}
+
+.group-card-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.group-card-actions {
+  display: flex;
+  gap: 0.45rem;
+}
+
+.group-card-action {
+  flex: 1;
+  min-height: 40px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #cbd5e1;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.group-card-action.primary {
+  background: rgba(14, 165, 233, 0.16);
+  border-color: rgba(56, 189, 248, 0.35);
+  color: #bae6fd;
+}
+
+.group-card-action:hover,
+.group-card-action:focus-visible {
+  background: rgba(14, 165, 233, 0.28);
+  color: #fff;
+  outline: 2px solid rgba(56, 189, 248, 0.45);
+  outline-offset: 1px;
+}
+
+.gallery-groups-refresh.is-refreshing i {
+  animation: gallery-spin 0.8s linear infinite;
+}
+
+@keyframes gallery-spin {
+  to { transform: rotate(360deg); }
+}
+
+.group-card-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #f1f5f9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.group-card-count {
+  font-size: 0.78rem;
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+/* ────────────────────────────────────────────────────────────────────────
+   3. ALL IMAGES SECTION (MASONRY & UNIFORM GRIDS)
+   ──────────────────────────────────────────────────────────────────────── */
+
+.gallery-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+/* Masonry View Mode */
+.gallery-container-grid.view-masonry.density-compact {
+  column-width: 180px;
+  column-gap: 12px;
+}
+.gallery-container-grid.view-masonry.density-medium {
+  column-width: 260px;
+  column-gap: 16px;
+}
+.gallery-container-grid.view-masonry.density-showcase {
+  column-width: 380px;
+  column-gap: 20px;
+}
+
+.gallery-container-grid.view-masonry .gallery-item {
+  break-inside: avoid;
+  margin-bottom: 16px;
+  display: inline-block;
+  width: 100%;
+}
+
+.gallery-container-grid.view-masonry .gallery-item img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Uniform Grid View Mode */
+.gallery-container-grid.view-uniform {
+  display: grid;
+}
+.gallery-container-grid.view-uniform.density-compact {
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+}
+.gallery-container-grid.view-uniform.density-medium {
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+.gallery-container-grid.view-uniform.density-showcase {
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 20px;
+}
+
+.gallery-container-grid.view-uniform .gallery-item {
+  aspect-ratio: 1 / 1;
+}
+
+.gallery-container-grid.view-uniform .gallery-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Image Card Items */
+.gallery-item {
+  position: relative;
+  background: var(--gallery-card-bg);
+  border: 1px solid var(--gallery-glass-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.gallery-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.gallery-item.selected {
+  outline: 3px solid var(--gallery-accent);
+  outline-offset: -3px;
+  border-color: var(--gallery-accent);
+}
+
+/* Image Overlay Actions */
+.image-fav-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.2s ease;
+  z-index: 5;
+}
+
+.gallery-item:hover .image-fav-btn,
+.image-fav-btn.active {
+  opacity: 1;
+}
+
+.image-fav-btn.active {
+  color: var(--gallery-heart);
+  background: rgba(244, 63, 94, 0.18);
+  border-color: rgba(244, 63, 94, 0.4);
+}
+
+.image-fav-btn:hover {
+  transform: scale(1.15);
+  color: var(--gallery-heart);
+}
+
+.gallery-item-checkbox {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.2s ease;
+  z-index: 5;
+  accent-color: var(--gallery-accent);
+}
+
+.gallery-item:hover .gallery-item-checkbox,
+.gallery-item.selection-mode .gallery-item-checkbox,
+.gallery-item-checkbox:checked {
+  opacity: 1;
+}
+
+.image-format-badge {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(6px);
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #cbd5e1;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+/* ────────────────────────────────────────────────────────────────────────
+   4. FLOATING GLASSMORPHIC BOTTOM ACTION BAR
+   ──────────────────────────────────────────────────────────────────────── */
+
+.gallery-floating-action-bar {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(120px);
+  opacity: 0;
+  pointer-events: none;
+  background: rgba(15, 23, 42, 0.92);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  padding: 0.6rem 1.25rem;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(14, 165, 233, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  z-index: 1050;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
+  max-width: 92vw;
+  flex-wrap: nowrap;
+}
+
+.gallery-floating-action-bar.active {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.selection-count-pill {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #38bdf8;
+  background: rgba(14, 165, 233, 0.16);
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.floating-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.84rem;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #f1f5f9;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.floating-action-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+  transform: translateY(-1px);
+}
+
+.floating-action-btn.primary {
+  background: var(--gallery-accent);
+  color: #fff;
+  border-color: var(--gallery-accent);
+}
+
+.floating-action-btn.primary:hover {
+  background: #0284c7;
+}
+
+.floating-action-btn.danger {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #f87171;
+}
+
+.floating-action-btn.danger:hover {
+  background: rgba(239, 68, 68, 0.35);
+}
+
+.floating-group-select {
+  background: rgba(30, 41, 59, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #f8fafc;
+  padding: 0.38rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  cursor: pointer;
+  max-width: 170px;
+}
+
+/* ────────────────────────────────────────────────────────────────────────
+   5. LIGHTBOX & COLLAPSIBLE INSPECTOR DRAWER
+   ──────────────────────────────────────────────────────────────────────── */
+
+.lightbox-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(6, 9, 14, 0.96);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+.lightbox-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Topbar Header */
+.lightbox-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.25rem;
+  background: rgba(15, 23, 42, 0.75);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  z-index: 10;
+}
+
+.lightbox-topbar-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.lightbox-filename-badge {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #f1f5f9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 320px;
+}
+
+.lightbox-index-badge {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.lightbox-topbar-tools {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.lightbox-tool-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #cbd5e1;
+  padding: 0.35rem 0.65rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: all 0.18s ease;
+}
+
+.lightbox-tool-btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+}
+
+.lightbox-tool-btn.active {
+  background: rgba(14, 165, 233, 0.22);
+  border-color: var(--gallery-accent);
+  color: #38bdf8;
+}
+
+.lightbox-tool-btn.favorite.active {
+  background: rgba(244, 63, 94, 0.22);
+  border-color: var(--gallery-heart);
+  color: var(--gallery-heart);
+}
+
+.lightbox-close-btn {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #f87171;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.lightbox-close-btn:hover {
+  background: #ef4444;
+  color: #fff;
+  transform: scale(1.1);
+}
+
+/* Lightbox Stage Body */
+.lightbox-stage-container {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.lightbox-main-stage {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  user-select: none;
+}
+
+.lightbox-image-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 1.5rem;
+}
+
+.lightbox-image-wrapper img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.8);
+  transition: transform 0.15s ease-out;
+  cursor: zoom-in;
+}
+
+.lightbox-image-wrapper.zoomed img {
+  cursor: grab;
+  max-width: none;
+  max-height: none;
+}
+
+.lightbox-image-wrapper.zoomed.panning img {
+  cursor: grabbing;
+}
+
+/* Navigation Chevrons */
+.lightbox-nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 5;
+}
+
+.lightbox-nav-btn:hover {
+  background: rgba(14, 165, 233, 0.85);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.lightbox-nav-btn.prev { left: 20px; }
+.lightbox-nav-btn.next { right: 20px; }
+
+/* Collapsible Right Inspector Drawer */
+.lightbox-inspector {
+  width: 340px;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+  gap: 1.25rem;
+  overflow-y: auto;
+  transition: width 0.25s ease, padding 0.25s ease, opacity 0.25s ease;
+}
+
+.lightbox-inspector.collapsed {
+  width: 0;
+  padding: 0;
+  opacity: 0;
+  border-left: none;
+  pointer-events: none;
+}
+
+.inspector-section h4 {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+  margin-bottom: 0.6rem;
+}
+
+.inspector-meta-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  padding: 0.3rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.inspector-meta-label { color: #94a3b8; }
+.inspector-meta-val { color: #f1f5f9; font-weight: 500; }
+
+.inspector-group-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+}
+
+.inspector-group-tag {
+  background: rgba(14, 165, 233, 0.15);
+  border: 1px solid rgba(14, 165, 233, 0.3);
+  color: #38bdf8;
+  font-size: 0.78rem;
+  padding: 0.25rem 0.55rem;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.inspector-tag-remove {
+  background: none;
+  border: none;
+  color: #f87171;
+  cursor: pointer;
+  padding: 0;
+  font-size: 0.75rem;
+}
+
+/* ────────────────────────────────────────────────────────────────────────
+   6. COLLAPSIBLE BOTTOM FILMSTRIP
+   ──────────────────────────────────────────────────────────────────────── */
+
+.lightbox-filmstrip-tray {
+  background: rgba(15, 23, 42, 0.85);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  transition: height 0.2s ease, opacity 0.2s ease;
+  z-index: 10;
+}
+
+.lightbox-filmstrip-tray.collapsed .lightbox-filmstrip-track {
+  height: 0;
+  padding: 0;
+  opacity: 0;
+  overflow: hidden;
+}
+
+.lightbox-filmstrip-toggle-bar {
+  display: flex;
+  justify-content: center;
+  padding: 0.25rem 0;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.lightbox-filmstrip-toggle-btn {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 0.75rem;
+  cursor: pointer;
+  padding: 0.1rem 0.5rem;
+  border-radius: 4px;
+}
+
+.lightbox-filmstrip-toggle-btn:hover {
+  color: #f8fafc;
+}
+
+.lightbox-filmstrip-track {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding: 0.6rem 1rem;
+  height: 78px;
+  scrollbar-width: thin;
+}
+
+.filmstrip-thumb {
+  flex: 0 0 64px;
+  height: 64px;
+  border-radius: 6px;
+  overflow: hidden;
+  cursor: pointer;
+  border: 2px solid transparent;
+  opacity: 0.6;
+  transition: all 0.2s ease;
+}
+
+.gallery-load-more {
+  display: flex;
+  justify-content: center;
+  padding: 1.25rem 0 2rem;
+}
+
+.gallery-load-more-btn {
+  min-width: 12rem;
+  min-height: 48px;
+  padding: 0.65rem 1rem;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 999px;
+  background: rgba(14, 165, 233, 0.15);
+  color: #e0f2fe;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.gallery-load-more-btn span {
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.gallery-load-more-btn:hover,
+.gallery-load-more-btn:focus-visible {
+  background: rgba(14, 165, 233, 0.28);
+  outline: 2px solid rgba(56, 189, 248, 0.55);
+  outline-offset: 2px;
+}
+
+.filmstrip-thumb:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}
+
+.filmstrip-thumb.active {
+  border-color: var(--gallery-accent);
+  opacity: 1;
+  transform: scale(1.08);
+  box-shadow: 0 0 12px rgba(14, 165, 233, 0.4);
+}
+
+.filmstrip-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ────────────────────────────────────────────────────────────────────────
+   7. RESPONSIVE MEDIA QUERIES
+   ──────────────────────────────────────────────────────────────────────── */
+
+@media (max-width: 992px) {
+  .lightbox-inspector {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    z-index: 20;
+    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.7);
+  }
+}
+
+@media (max-width: 768px) {
+  .gallery-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .gallery-search-wrap {
+    max-width: none;
+  }
+  .gallery-controls-group {
+    justify-content: space-between;
+  }
+  .gallery-floating-action-bar {
+    width: 95%;
+    flex-wrap: wrap;
+    justify-content: center;
+    border-radius: var(--radius-lg);
+  }
+  .lightbox-filename-badge {
+    max-width: 160px;
+  }
+}
+
+@media (max-width: 576px) {
+  .lightbox-nav-btn.prev { left: 8px; }
+  .lightbox-nav-btn.next { right: 8px; }
+  .lightbox-inspector { width: 100%; }
+  .filmstrip-thumb { flex-basis: 56px; height: 56px; }
+}
+
+/* Touch and Quest pointer targets remain easy to acquire without changing the visual scale. */
+@media (pointer: coarse), (hover: none) {
+  .gallery-item-checkbox,
+  .image-fav-btn,
+  .lightbox-nav-btn,
+  .lightbox-tool-btn,
+  .lightbox-close-btn,
+  .lightbox-filmstrip-toggle-btn {
+    min-width: 48px;
+    min-height: 48px;
+  }
+}

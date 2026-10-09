@@ -32,6 +32,19 @@ docker compose up --build
 
 `docker-compose.yml` sets `LVS_DB_PATH=data/video_metadata.db` for app runtime consistency.
 
+## Gallery thumbnail maintenance
+
+Gallery originals remain under `images/gallery`. Generate responsive WebP derivatives
+for the gallery grid, group collages, and lightbox with:
+
+```powershell
+python scripts/gallery_assets.py
+```
+
+The generated files live under `static/gallery-thumbnails/` and are mounted into
+the Docker Flask service. The gallery falls back to an original image if a
+derivative is temporarily missing.
+
 ## Baseline Safety Step Before Refactor Work
 
 Create a snapshot of DB/JSON artifacts:
