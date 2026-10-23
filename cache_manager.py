@@ -214,7 +214,7 @@ class VideoCache:
     
     def _scan_video_directory(self) -> List[str]:
         """Scan the filesystem for video files."""
-        allowed_extensions = ('.mp4', '.webm', '.ogg')
+        allowed_extensions = ('.mp4', '.mkv', '.webm', '.mov', '.avi', '.wmv')
         if not os.path.exists(self.video_dir):
             return []
         return [

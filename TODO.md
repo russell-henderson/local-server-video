@@ -22,6 +22,8 @@ The goal is not to rebuild the app from scratch. The goal is to tighten the expe
 - [x] Accessibility and keyboard flow
 - [x] Performance perception and speed polish
 - [x] Documentation and regression verification
+- [x] 2026-10-21: Ran Flask development server for testing and validation
+- [x] 2026-10-21: Closed Flask server and updated session documentation
 
 ### Active milestone
 

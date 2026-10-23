@@ -53,8 +53,8 @@ npm run dev
 
 ## Important URLs
 
-- Local app: http://localhost:5000/
-- Local app over local network: http://192.168.4.96:5000/
+- Local app: http://localhost:8000/
+- Local app over local network: http://192.168.4.96:8000/
 - Admin dashboard: http://localhost:3000/
 
 ## Project layout

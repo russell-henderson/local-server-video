@@ -30,8 +30,8 @@ function Show-Help {
 function Start-Dev {
     Write-Host "🚀 Starting development server with hot reload..." -ForegroundColor Green
     Write-Host "Server will restart automatically when files change"
-    Write-Host "Access at: http://localhost:5000"
-    python main.py --dev --reload
+    Write-Host "Access at: http://192.168.4.96:8000"
+    python main.py --host 192.168.4.96 --port 8000 --debug
 }
 
 function Start-Prod {
