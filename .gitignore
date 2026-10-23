@@ -184,6 +184,10 @@ images/
 static/thumbnails/
 static/gallery-thumbnails/
 
+# Documentation build artifacts
+TODO.md
+docs/
+
 # Generated thumbnails and cache
 static/thumbnails/*
 !static/thumbnails/.gitkeep
@@ -246,6 +250,8 @@ logs/
 *.gif
 *.jpeg
 *.webp
+*.err
+*.out
 
 # Test files
 # Keep source tests tracked; ignore only transient runtime artifacts.

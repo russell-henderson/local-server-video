@@ -29,6 +29,17 @@ from thumbnail_manager import (
 )
 from config import get_config
 import json
+import sys
+from pathlib import Path
+
+# Import file watcher if available
+try:
+    sys.path.append(str(Path(__file__).parent.parent.parent / "scripts" / "maintenance"))
+    from file_watcher import VideoFileWatcher
+    FILE_WATCHER_AVAILABLE = True
+except ImportError:
+    FILE_WATCHER_AVAILABLE = False
+    print("[WARN] File watcher not available")
 
 # Register API blueprints
 try:
@@ -1552,6 +1563,27 @@ def startup_tasks():
         videos = cache.get_video_list()
         print(f"📹 Found {len(videos)} videos")
         print("✅ Cache warmed and thumbnail maintenance started")
+        
+        # Start file watcher for automatic thumbnail generation on new files
+        if FILE_WATCHER_AVAILABLE:
+            try:
+                video_dir = str(Path(get_config().video_directory).resolve())
+                thumb_dir = str(Path(get_config().thumbnail_directory).resolve())
+                file_watcher = VideoFileWatcher(
+                    video_directory=video_dir,
+                    thumbnail_directory=thumb_dir,
+                    debounce_seconds=2.0,
+                    batch_size=10
+                )
+                if file_watcher.start_watching():
+                    print("👁️  File watcher started for automatic thumbnail generation")
+                else:
+                    print("❌ Failed to start file watcher")
+            except Exception as e:
+                print(f"⚠️  File watcher initialization failed: {e}")
+        else:
+            print("[INFO] File watcher skipped - not available")
+    
     executor.submit(warm_cache)
 
 # ─── PERFORMANCE MONITORING ENDPOINTS ───────────────────────────────

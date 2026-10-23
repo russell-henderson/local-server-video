@@ -24,6 +24,9 @@ The goal is not to rebuild the app from scratch. The goal is to tighten the expe
 - [x] Documentation and regression verification
 - [x] 2026-10-21: Ran Flask development server for testing and validation
 - [x] 2026-10-21: Closed Flask server and updated session documentation
+- [x] 2026-10-23: Performance Sprint A - completed baseline inspection, audit findings documented, and TODO reconciliation
+- [x] 2026-10-23: Performance Sprint B - measurement and repair: updated baseline to 599 videos and 599 thumbnails, repaired missing thumbnail for "Big Tits Mother Id Like to Copulate Doggie Style with Creampie.mp4", measured home/gallery response times (p50/p95)
+- [ ] Performance Sprint B: implement thumbnail warming system for missing thumbnails (see docs/SPRINT_B_RECOMMENDATION.md)
 
 ### Active milestone
 
@@ -432,7 +435,14 @@ The project should meet the following before considering the UI pass complete:
 - recommendation trust layer
 - accessibility pass
 
-### Milestone 4 — release readiness
+### Milestone 4 — performance foundation
+
+- performance baseline established (see docs/PERFORMANCE_BASELINE.md)
+- performance audit completed (see docs/PERFORMANCE_AUDIT_FINDINGS.md)
+- MKV streaming and thumbnail generation verified
+- performance optimization backlog refined (PERFORMANCE_TODO.md)
+
+### Milestone 5 — release readiness
 
 - performance polish
 - regression checks
