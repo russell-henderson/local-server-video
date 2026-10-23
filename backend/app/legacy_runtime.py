@@ -682,9 +682,79 @@ def popular_page():
     )
 
 
+STREAMING_CHUNK_SIZE = 256 * 1024  # 256 KB bounded streaming chunks
+
+
+def _parse_byte_range(range_header: str, file_size: int) -> tuple[int, int] | None:
+    """Parse HTTP Range header for single byte ranges.
+
+    Returns (start, end) inclusive byte offsets, or None if unsatisfiable or malformed.
+    """
+    if not range_header or not range_header.startswith("bytes="):
+        return None
+
+    value = range_header[6:].strip()
+    if not value or "," in value:
+        return None
+
+    if value.startswith("-"):
+        try:
+            suffix_len = int(value[1:])
+        except ValueError:
+            return None
+        if suffix_len <= 0 or file_size == 0:
+            return None
+        start = max(0, file_size - suffix_len)
+        end = file_size - 1
+        return (start, end)
+
+    parts = value.split("-", 1)
+    if len(parts) != 2:
+        return None
+
+    start_str, end_str = parts[0].strip(), parts[1].strip()
+    try:
+        start = int(start_str)
+    except ValueError:
+        return None
+
+    if start < 0 or start >= file_size or file_size == 0:
+        return None
+
+    if not end_str:
+        end = file_size - 1
+    else:
+        try:
+            end = int(end_str)
+        except ValueError:
+            return None
+        if end < start:
+            return None
+        end = min(end, file_size - 1)
+
+    return (start, end)
+
+
+def _iter_file_range(file_path: Path, start: int, length: int, chunk_size: int = STREAMING_CHUNK_SIZE):
+    """Yield chunks of a file range incrementally and ensure the handle closes on exit or disconnect."""
+    fh = file_path.open("rb")
+    try:
+        fh.seek(start)
+        remaining = length
+        while remaining > 0:
+            to_read = min(remaining, chunk_size)
+            chunk = fh.read(to_read)
+            if not chunk:
+                break
+            remaining -= len(chunk)
+            yield chunk
+    finally:
+        fh.close()
+
+
 @app.route("/video/<path:filename>")
 def stream_video(filename: str):
-    """Byte-range streaming endpoint with basic Range support."""
+    """Byte-range streaming endpoint with bounded chunked delivery."""
     file_path = get_video_path(filename)
     if not file_path.exists():
         abort(404)
@@ -698,24 +768,18 @@ def stream_video(filename: str):
         return send_file(str(file_path), mimetype=mime_type)
 
     size = file_path.stat().st_size
-    byte1, byte2 = 0, None
-    m = re.search(r"bytes=(\d+)-(\d*)", range_hdr)
-    if m:
-        g1, g2 = m.groups()
-        if g1:
-            byte1 = int(g1)
-        if g2:
-            byte2 = int(g2)
+    parsed_range = _parse_byte_range(range_hdr, size)
+    if parsed_range is None:
+        resp = Response("Requested Range Not Satisfiable", status=416)
+        resp.headers["Content-Range"] = f"bytes */{size}"
+        resp.headers["Accept-Ranges"] = "bytes"
+        return resp
 
-    if byte2 is None or byte2 >= size:
-        byte2 = size - 1
+    byte1, byte2 = parsed_range
     length = byte2 - byte1 + 1
 
-    with file_path.open("rb") as fh:
-        fh.seek(byte1)
-        data = fh.read(length)
-
-    rv = Response(data, 206, mimetype=mime_type, direct_passthrough=True)
+    generator = _iter_file_range(file_path, byte1, length, chunk_size=STREAMING_CHUNK_SIZE)
+    rv = Response(generator, 206, mimetype=mime_type, direct_passthrough=True)
     rv.headers["Content-Range"] = f"bytes {byte1}-{byte2}/{size}"
     rv.headers["Accept-Ranges"] = "bytes"
     rv.headers["Content-Length"] = str(length)
