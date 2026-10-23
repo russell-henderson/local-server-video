@@ -40,7 +40,7 @@
 
 ### P0-B — Reproduce and measure (READ-ONLY)
 
-- [x] **2026-10-23:** Captured baseline HTTP Range measurements on `http://127.0.0.1:8000/video/Naughty%20Stepmom%20-%20Ava%20Addams%20-VR.mp4` across 10 MB, 64 MB, and 256 MB. Measured sustained throughput of 1,000–8,800+ Mbps (TTFB 2–5 ms via `curl.exe` and `urllib`), refuting the hypothesis of a ~34.85 Mbps server transfer ceiling.
+- [x] **2026-10-23:** Captured baseline HTTP Range measurements on `http://127.0.0.1:8000/video/` across 10 MB, 64 MB, and 256 MB. Measured sustained throughput of 1,000–8,800+ Mbps (TTFB 2–5 ms via `curl.exe` and `urllib`), refuting the hypothesis of a ~34.85 Mbps server transfer ceiling.
 - [x] **2026-10-23:** Direct filesystem read control measured on host storage: 10 MB in 0.0031s (27,025 Mbps), 64 MB in 0.0200s (26,778 Mbps), 256 MB in 0.0866s (24,793 Mbps). Disk I/O is not a bottleneck.
 - [x] **2026-10-23:** Confirmed `ffprobe` stream properties: 6144×3072 @ 59.94 FPS HEVC Main Level 186, AAC stereo, 43.71 Mbps total bitrate, exact size 10,340,811,843 bytes. Verified MP4 box layout: `ftyp` at offset 0 (24 B), `moov` at offset 24 (1,059,436 B / ~1.06 MB), `mdat` at offset 1,383,622 (10,339,428,220 B). Progressive download layout is optimal.
 - [x] **2026-10-23:** Identified client-side bottlenecks: Quest 2 Snapdragon XR2 Gen 1 hardware decoder is taxed by 6K @ 60 FPS HEVC in browser HTML5 `<video>`, creating stutter independent of network throughput.
