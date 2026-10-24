@@ -314,9 +314,12 @@
 
 {% block extra_scripts %}
 <script src="{{ url_for('static', filename='js/gallery.js') }}"></script>
+<script id="galleryInitialGroup" type="application/json">{{ initial_group|default(none)|tojson }}</script>
 <script>
   document.addEventListener('DOMContentLoaded', () => {
-    window.initGallery({{ initial_group|default(none)|tojson }});
+    const groupEl = document.getElementById('galleryInitialGroup');
+    const initialGroup = groupEl && groupEl.textContent.trim() ? JSON.parse(groupEl.textContent) : null;
+    window.initGallery(initialGroup);
   });
 </script>
 {% endblock %}
